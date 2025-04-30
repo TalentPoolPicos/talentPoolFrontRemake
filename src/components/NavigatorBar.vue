@@ -16,7 +16,7 @@ const currentPath = computed(() => route.path)
 
     <nav class="links">
       <RouterLink to="/" :class="{ active: currentPath === '/' }">Início</RouterLink>
-      <RouterLink to="/sobre" :class="{ active: currentPath.startsWith('/sobre') }"
+      <RouterLink to="/about" :class="{ active: currentPath.startsWith('/about') }"
         >Sobre</RouterLink
       >
       <RouterLink to="/noticias" :class="{ active: currentPath.startsWith('/noticias') }"
