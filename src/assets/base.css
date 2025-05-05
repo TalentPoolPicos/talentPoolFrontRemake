@@ -39,6 +39,8 @@
   --md-sys-color-inverse-on-surface: #eff1f3;
   --md-sys-color-inverse-primary: #61d4ff;
 
+  --md-sys-color-always-white: #ffffff;
+
   /* --- Full MD3 semantic aliases (🚀) --- */
   --color-primary: var(--md-sys-color-primary);
   --color-on-primary: var(--md-sys-color-on-primary);
@@ -77,6 +79,8 @@
   --color-inverse-surface: var(--md-sys-color-inverse-surface);
   --color-inverse-on-surface: var(--md-sys-color-inverse-on-surface);
   --color-inverse-primary: var(--md-sys-color-inverse-primary);
+
+  --color-always-white: var(--md-sys-color-always-white);
 
   /* --- Project‑specific aliases retained for back‑compat --- */
   --color-background-soft: color-mix(
