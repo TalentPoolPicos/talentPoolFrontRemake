@@ -33,9 +33,7 @@ onUnmounted(() => {
 
     <div class="hamburger" v-if="windowWidth <= 800" @click="isMenuOpen = !isMenuOpen">&#9776;</div>
 
-    <div class="menu-dialog" v-if="isMenuOpen">
-      <div class="hamburger" @click="isMenuOpen = false">&#10005;</div>
-
+    <div class="menu-dialog" v-if="isMenuOpen" @click="isMenuOpen = false">
       <RouterLink to="/" :class="{ active: currentPath === '/' }" @click="isMenuOpen = false"
         >Início</RouterLink
       >
