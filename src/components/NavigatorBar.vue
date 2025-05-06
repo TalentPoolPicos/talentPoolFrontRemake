@@ -91,6 +91,7 @@ onUnmounted(() => {
   height: 64px;
   color: var(--color-on-primary-container);
   gap: 2rem;
+  position: relative;
 }
 
 .brand {
@@ -203,10 +204,11 @@ onUnmounted(() => {
   display: none;
   font-size: 2rem;
   cursor: pointer;
+  z-index: 1001;
 }
 
 .menu-dialog {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
@@ -216,6 +218,7 @@ onUnmounted(() => {
   justify-content: center;
   align-items: center;
   flex-direction: column;
+  z-index: 1000;
 }
 
 .menu-dialog a {
