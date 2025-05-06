@@ -106,7 +106,7 @@
 .news-header h1 {
   font-size: 2.5rem;
   font-weight: 700;
-  color: #1E1E1E;
+  color: var(--color-on-primary-container, #1E1E1E);
   margin: 0;
 }
 
@@ -158,7 +158,7 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.4);
-  color: #fff;
+  color: var(--color-always-white);
   padding: 1.25rem; /* Ajuste de padding */
   display: flex;
   flex-direction: column;
@@ -180,7 +180,6 @@
 
 .news-card__overlay span {
   font-size: 0.8rem;
-  color: var(--color-on-surface-variant);
   font-weight: 300;
   margin-top: 0.4rem;
 }

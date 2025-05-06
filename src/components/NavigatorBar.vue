@@ -19,7 +19,7 @@ const currentPath = computed(() => route.path)
       <RouterLink to="/about" :class="{ active: currentPath.startsWith('/about') }"
         >Sobre</RouterLink
       >
-      <RouterLink to="/noticias" :class="{ active: currentPath.startsWith('/noticias') }"
+      <RouterLink to="/news" :class="{ active: currentPath.startsWith('/news') }"
         >Notícias</RouterLink
       >
     </nav>
@@ -106,6 +106,7 @@ const currentPath = computed(() => route.path)
   padding-inline: 0.75rem 0.5rem;
   height: 34px;
   color: var(--color-on-surface, #000);
+  border-color: var(--color-on-primary-container, #1E1E1E);
 }
 .search-wrapper .icon {
   margin-right: 0.4rem;
@@ -118,6 +119,9 @@ const currentPath = computed(() => route.path)
   width: 120px;
   color: inherit;
   font-size: 0.9rem;
+}
+.search-wrapper input::placeholder {
+  color: var(--color-on-primary-container, #1E1E1E);
 }
 
 .btn-outline {
