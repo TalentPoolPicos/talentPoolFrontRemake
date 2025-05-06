@@ -1,39 +1,57 @@
 <template>
   <main class="news">
-    <!-- HEADER *********************************************************** -->
     <section class="news-header">
       <div class="section">
         <h1>Notícias</h1>
       </div>
     </section>
 
-    <!-- NOTÍCIAS ********************************************************* -->
     <section class="news-list">
       <div class="news-container">
-        <!-- Primeira linha com 4 cards -->
         <div class="news-card">
-          <img class="news-card__img" src="@/assets/workshop-page.png" alt="Workshop de Escrita Acadêmica" />
+          <img
+            class="news-card__img"
+            src="@/assets/workshop-page.png"
+            alt="Workshop de Escrita Acadêmica"
+          />
           <div class="news-card__overlay">
             <h2>Workshop de Escrita Acadêmica</h2>
-            <p>Workshop de Escrita Acadêmica continua com submissão aberta para envio de trabalhos até 19 de maio de 2025.</p>
+            <p>
+              Workshop de Escrita Acadêmica continua com submissão aberta para envio de trabalhos
+              até 19 de maio de 2025.
+            </p>
             <span>30 de abril de 2025</span>
           </div>
         </div>
 
         <div class="news-card">
-          <img class="news-card__img" src="@/assets/workshop-page.png" alt="Submissões abertas para Artigos Completos" />
+          <img
+            class="news-card__img"
+            src="@/assets/workshop-page.png"
+            alt="Submissões abertas para Artigos Completos"
+          />
           <div class="news-card__overlay">
             <h2>Submissões abertas para Artigos Completos</h2>
-            <p>Envia seu artigo completo ou resumo para o Workshop de Escrita Acadêmica até 19 de maio.</p>
+            <p>
+              Envia seu artigo completo ou resumo para o Workshop de Escrita Acadêmica até 19 de
+              maio.
+            </p>
             <span>29 de abril de 2025</span>
           </div>
         </div>
 
         <div class="news-card">
-          <img class="news-card__img" src="@/assets/workshop-page.png" alt="Novo Programa de Estágio" />
+          <img
+            class="news-card__img"
+            src="@/assets/workshop-page.png"
+            alt="Novo Programa de Estágio"
+          />
           <div class="news-card__overlay">
             <h2>Novo Programa de Estágio</h2>
-            <p>Programa de estágio para alunos da Universidade Federal do Piauí agora com vagas abertas.</p>
+            <p>
+              Programa de estágio para alunos da Universidade Federal do Piauí agora com vagas
+              abertas.
+            </p>
             <span>28 de abril de 2025</span>
           </div>
         </div>
@@ -47,9 +65,8 @@
           </div>
         </div>
       </div>
-      
+
       <div class="news-container">
-        <!-- Segunda linha com 4 cards -->
         <div class="news-card">
           <img class="news-card__img" src="@/assets/workshop-page.png" alt="Workshop de Inovação" />
           <div class="news-card__overlay">
@@ -69,7 +86,11 @@
         </div>
 
         <div class="news-card">
-          <img class="news-card__img" src="@/assets/workshop-page.png" alt="Palestra Motivacional" />
+          <img
+            class="news-card__img"
+            src="@/assets/workshop-page.png"
+            alt="Palestra Motivacional"
+          />
           <div class="news-card__overlay">
             <h2>Palestra Motivacional</h2>
             <p>Como se destacar no mercado de trabalho atual.</p>
@@ -97,7 +118,6 @@
   background: var(--color-background);
 }
 
-/* HEADER *********************************************************** */
 .news-header {
   padding-block: 2rem;
   text-align: center;
@@ -106,24 +126,23 @@
 .news-header h1 {
   font-size: 2.5rem;
   font-weight: 700;
-  color: var(--color-on-primary-container, #1E1E1E);
+  color: var(--color-on-primary-container, #1e1e1e);
   margin: 0;
 }
 
-/* NOTÍCIAS ********************************************************* */
 .news-list {
   padding-block: 3rem;
 }
 
 .news-container {
   display: grid;
-  grid-template-columns: repeat(4, 1fr); /* Alterado para 4 colunas */
-  gap: 2rem; /* Espaçamento entre cards */
-  row-gap: 3rem; /* Espaçamento vertical extra entre linhas */
-  max-width: 1400px; /* Aumentei a largura máxima */
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+  row-gap: 3rem;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 1rem;
-  margin-bottom: 2rem; /* Espaço entre grupos de cards */
+  margin-bottom: 2rem;
 }
 
 .news-card {
@@ -134,8 +153,10 @@
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   cursor: pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  height: 280px; /* Reduzi um pouco a altura */
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+  height: 280px;
   width: 100%;
 }
 
@@ -159,7 +180,7 @@
   bottom: 0;
   background: rgba(0, 0, 0, 0.4);
   color: var(--color-always-white);
-  padding: 1.25rem; /* Ajuste de padding */
+  padding: 1.25rem;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -167,13 +188,13 @@
 }
 
 .news-card__overlay h2 {
-  font-size: 1.2rem; /* Reduzi um pouco o tamanho da fonte */
+  font-size: 1.2rem;
   font-weight: 600;
   margin-bottom: 0.6rem;
 }
 
 .news-card__overlay p {
-  font-size: 0.9rem; /* Reduzi um pouco o tamanho da fonte */
+  font-size: 0.9rem;
   margin: 0.4rem 0;
   line-height: 1.4;
 }
@@ -184,7 +205,6 @@
   margin-top: 0.4rem;
 }
 
-/* Responsividade */
 @media (max-width: 1200px) {
   .news-container {
     grid-template-columns: repeat(3, 1fr);
@@ -204,7 +224,7 @@
     grid-template-columns: 1fr;
     max-width: 400px;
   }
-  
+
   .news-card {
     height: 250px;
   }
