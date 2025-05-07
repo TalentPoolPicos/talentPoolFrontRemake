@@ -55,6 +55,7 @@ const team = [
   font-family: Inter, sans-serif;
   background: var(--color-background);
   color: var(--color-on-surface);
+  padding-inline: 1rem; /* Adiciona padding nas laterais da tela */
 }
 
 /* ========== SOBRE EQUIPE ========== */
@@ -83,6 +84,9 @@ const team = [
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 2rem;
   justify-content: center;
+  max-width: 1200px; /* Define uma largura máxima para os cards */
+  margin: auto; /* Centraliza os cards horizontalmente */
+  padding-inline: 1rem; /* Adiciona padding interno nas laterais */
 }
 
 .team__card {
