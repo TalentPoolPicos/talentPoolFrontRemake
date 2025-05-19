@@ -1,13 +1,12 @@
 import axios from 'axios';
 
 export const http = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1',
   timeout: 10_000,
 });
 
-// Interceptor para anexar token
 http.interceptors.request.use(cfg => {
-  const t = localStorage.getItem('token');
+  const t = localStorage.getItem('normal_user_access_token');
   if (t) cfg.headers.Authorization = `Bearer ${t}`;
   return cfg;
 });
