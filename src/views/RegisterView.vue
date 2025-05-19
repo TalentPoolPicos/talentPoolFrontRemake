@@ -1,6 +1,5 @@
 <template>
   <div class="register-wrapper">
-    <!-- Formulário de cadastro -->
     <main class="register-form-container">
       <form class="card" @submit.prevent="handleSubmit">
         <div class="input-container">
@@ -62,7 +61,6 @@ function handleSubmit() {
 </script>
 
 <style scoped>
-/* Estilos do contêiner do formulário de cadastro */
 .register-wrapper {
   background: var(--color-background);
   display: flex;
@@ -75,14 +73,13 @@ function handleSubmit() {
 .register-form-container {
   width: 100%;
   max-width: 400px;
-  background: rgba(255, 255, 255, 0.1); /* Efeito de transparência */
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   padding: 3rem;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(8px); /* Efeito de desfoque no fundo */
+  backdrop-filter: blur(8px);
 }
 
-/* Estrutura do formulário */
 .card {
   display: flex;
   flex-direction: column;
@@ -112,7 +109,6 @@ function handleSubmit() {
   border-color: var(--color-primary);
 }
 
-/* Botão de submit */
 .btn--primary {
   background: linear-gradient(45deg, var(--color-primary), var(--color-primary-container));
   color: var(--color-on-primary);
