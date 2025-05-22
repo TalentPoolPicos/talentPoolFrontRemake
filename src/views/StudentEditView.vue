@@ -181,7 +181,7 @@ const historyInput = ref<HTMLInputElement>()
 
 onMounted(async () => {
   try {
-    const { data } = await api.get<StudentDto>(`/api/v1/students/${uuid}`)
+    const { data } = await api.get<StudentDto>(`/students/${uuid}`)
     Object.assign(form, data)
     tags.value = data.tags || []
   } catch (e) {
@@ -215,7 +215,7 @@ async function onCurriculumChange(e: Event) {
   try {
     const fd = new FormData()
     fd.append('file', file)
-    await api.patch(`/api/v1/students/${uuid}/curriculum`, fd, {
+    await api.patch(`/students/${uuid}/curriculum`, fd, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
     alert('Currículo enviado!')
@@ -233,7 +233,7 @@ async function onHistoryChange(e: Event) {
   try {
     const fd = new FormData()
     fd.append('file', file)
-    await api.patch(`/api/v1/students/${uuid}/history`, fd, {
+    await api.patch(`/students/${uuid}/history`, fd, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
     alert('Histórico enviado!')
@@ -250,7 +250,7 @@ async function handleSave() {
 
   saving.value = true
   try {
-    await api.patch(`/api/v1/students/${uuid}`, {
+    await api.patch(`/students/${uuid}`, {
       name: form.name,
       email: form.email,
       course: form.course,

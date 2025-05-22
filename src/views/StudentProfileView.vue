@@ -135,7 +135,8 @@ const student = reactive<StudentDto>({
 
 onMounted(async () => {
   try {
-    const { data } = await api.get<StudentDto>(`/api/v1/students/${uuid}`)
+    const { data } = await api.get<StudentDto>(`/students/${uuid}`)
+    console.log(data)
     Object.assign(student, data)
   } catch (err) {
     console.error(err)

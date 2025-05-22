@@ -49,7 +49,7 @@ async function handleSubmit() {
 
   loading.value = true
   try {
-    const res = await api.post('/api/v1/auth/student/sign-in', {
+    const res = await api.post('/auth/student/sign-in', {
       username: username.value,
       password: password.value,
     })
