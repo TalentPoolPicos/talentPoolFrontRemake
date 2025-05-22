@@ -31,19 +31,19 @@ const routes = [
     component: LoginView,
   },
   {
-    path: '/talento/:uuid',
+    path: '/talent/:uuid',
     name: 'student-profile',
     component: StudentProfileView,
     props: true,
   },
   {
-    path: '/talento/:uuid/editar',
+    path: '/talent/:uuid/editar',
     name: 'student-edit',
     component: StudentEditView,
     props: true,
   },
   {
-    path: '/empresa/:uuid',
+    path: '/enterprise/:uuid',
     name: 'enterprise-profile',
     component: EnterpriseProfileView,
     props: true,
