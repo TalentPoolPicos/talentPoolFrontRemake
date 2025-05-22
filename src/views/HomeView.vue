@@ -1,6 +1,5 @@
 <template>
   <main class="home">
-    <!-- HERO *********************************************************** -->
     <section class="hero">
       <div class="section">
         <div class="hero__content">
@@ -17,7 +16,6 @@
       </div>
     </section>
 
-    <!-- CTA TALENTO ***************************************************** -->
     <section class="talent-cta">
       <div class="section">
         <img
@@ -40,7 +38,6 @@
       </div>
     </section>
 
-    <!-- PARCEIROS ******************************************************* -->
     <section class="partner">
       <div class="section">
         <div class="partner__cards">
@@ -73,7 +70,6 @@
       </div>
     </section>
 
-    <!-- TESTEMUNHO ****************************************************** -->
     <section class="testimonial">
       <div class="testimonial__text">
         <h2>O ambiente ideal para encontrar novos profissionais&nbsp;!</h2>
@@ -96,23 +92,18 @@
 </template>
 
 <style scoped>
-/* ----------------------------------------------
-   Nenhum hard-code de cor: só tokens do base.css
-   ---------------------------------------------- */
-
-/* ---------- utilitário para centralizar ---------- */
 .section {
   max-width: 1200px;
-  margin-inline: auto; /* centra ↔ */
+  margin-inline: auto;
   display: grid;
-  grid-auto-flow: column; /* texto | imagem */
-  align-items: center; /* centra ⬆ */
+  grid-auto-flow: column;
+  align-items: center;
   gap: 3rem;
 }
 
 @media (max-width: 900px) {
   .section {
-    grid-auto-flow: row; /* empilha */
+    grid-auto-flow: row;
     text-align: center;
   }
   .section > * {
@@ -120,7 +111,6 @@
   }
 }
 
-/* ---------- layout base ---------- */
 .home {
   font-family: Inter, sans-serif;
   color: var(--color-on-surface);
@@ -128,11 +118,10 @@
   line-height: 1.6;
 }
 
-/* ========== HERO ========== */
 .hero {
   background: var(--color-primary);
   color: var(--color-on-primary);
-  padding-block: 3rem; /* top & bottom */
+  padding-block: 3rem;
 }
 
 .hero__content h1 {
@@ -149,7 +138,6 @@
   max-width: 420px;
 }
 
-/* ========== CTA “TALENTO” ========== */
 .talent-cta {
   padding-block: 3rem;
 }
@@ -170,7 +158,6 @@
   color: var(--color-on-surface-variant);
 }
 
-/* ========== PARCEIROS ========== */
 .partner {
   background: var(--color-primary-container);
   color: var(--color-on-primary-container);
@@ -216,7 +203,6 @@
   color: var(--color-on-primary-container);
 }
 
-/* ========== TESTEMUNHO ========== */
 .testimonial {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -257,7 +243,6 @@
   color: var(--color-on-surface-variant);
 }
 
-/* ========== BOTÕES ========== */
 .btn-primary,
 .btn-outline {
   cursor: pointer;
