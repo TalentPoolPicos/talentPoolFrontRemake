@@ -31,7 +31,9 @@
             estágio que combinam com o seu perfil e te aproximam do futuro profissional que você
             sempre sonhou.
           </p>
-          <button class="btn-primary">Cadastre-se</button>
+          <router-link to="/register">
+            <button class="btn-primary">Cadastre-se</button>
+          </router-link>
         </div>
       </div>
     </section>
