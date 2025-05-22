@@ -1,155 +1,412 @@
 <template>
-  <form @submit.prevent="handleSubmit">
-    <!-- campos do formulário -->
-    <button type="submit">Salvar</button>
-  </form>
+  <div class="edit-page">
+    <!-- ► Banner + Avatar -->
+    <div class="banner-container">
+      <img src="@/assets/banner.png" alt="Banner" class="banner" />
+      <div class="avatar-wrapper">
+        <img src="@/assets/perfil.png" alt="Avatar" class="avatar" />
+      </div>
+    </div>
 
-  <input type="file" @change="uploadCurriculum" />
-  <input type="file" @change="uploadHistory" />
+    <!-- ► Botões de Upload de PDF -->
+    <div class="docs-actions">
+      <button class="doc-btn" :disabled="loadingCurriculum" @click="triggerCurriculumUpload">
+        {{ loadingCurriculum ? 'Enviando...' : '↓ Currículo' }}
+      </button>
+      <button class="doc-btn" :disabled="loadingHistory" @click="triggerHistoryUpload">
+        {{ loadingHistory ? 'Enviando...' : '↓ Histórico' }}
+      </button>
+    </div>
+
+    <!-- inputs escondidos para captura de arquivo -->
+    <input
+      ref="curriculumInput"
+      type="file"
+      accept="application/pdf"
+      @change="onCurriculumChange"
+      style="display: none"
+    />
+    <input
+      ref="historyInput"
+      type="file"
+      accept="application/pdf"
+      @change="onHistoryChange"
+      style="display: none"
+    />
+
+    <!-- ► Formulário de edição -->
+    <form class="edit-form" @submit.prevent="handleSave">
+      <div class="field">
+        <label for="name">Nome</label>
+        <input id="name" v-model="form.name" type="text" required />
+      </div>
+
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" v-model="form.email" type="email" required />
+      </div>
+
+      <div class="field">
+        <label for="course">Curso</label>
+        <input id="course" v-model="form.course" type="text" />
+      </div>
+
+      <div class="field">
+        <label for="registration">Número da matrícula</label>
+        <input id="registration" v-model="form.registrationNumber" type="text" />
+      </div>
+
+      <div class="field">
+        <label for="description">Descrição</label>
+        <textarea id="description" v-model="form.description" rows="4"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="lattes">Lattes</label>
+        <input id="lattes" v-model="form.lattes" type="url" />
+      </div>
+
+      <div class="field">
+        <label for="phone">Telefone</label>
+        <input id="phone" v-model="form.phone" type="tel" />
+      </div>
+
+      <!-- TAGS -->
+      <div class="field">
+        <label for="newTag">Tags</label>
+        <div class="tags-input">
+          <input
+            id="newTag"
+            v-model="form.newTag"
+            type="text"
+            placeholder="Nova tag"
+            @keyup.enter="addTag"
+          />
+          <button type="button" class="btn-small" @click="addTag">Adicionar</button>
+        </div>
+        <div class="tags-list">
+          <span v-for="tag in tags" :key="tag" class="tag-chip">
+            {{ tag }}
+            <button type="button" @click="removeTag(tag)">×</button>
+          </span>
+        </div>
+      </div>
+
+      <!-- ENDEREÇO -->
+      <div class="field">
+        <label for="cep">CEP</label>
+        <input id="cep" v-model="form.cep" type="text" />
+      </div>
+      <div class="field">
+        <label for="street">Rua</label>
+        <input id="street" v-model="form.street" type="text" />
+      </div>
+      <div class="field">
+        <label for="neighborhood">Bairro</label>
+        <input id="neighborhood" v-model="form.neighborhood" type="text" />
+      </div>
+      <div class="field">
+        <label for="city">Cidade</label>
+        <input id="city" v-model="form.city" type="text" />
+      </div>
+      <div class="field">
+        <label for="state">Estado</label>
+        <input id="state" v-model="form.state" type="text" />
+      </div>
+
+      <!-- ► Botão Salvar -->
+      <button class="btn-save" type="submit">💾 Salvar</button>
+    </form>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/services/api'
 
-interface Student {
-  uuid: string
+interface StudentDto {
   name?: string
   email?: string
+  course?: string
   registrationNumber?: string
   description?: string
-  birthdate?: string
+  lattes?: string
+  phone?: string
   curriculum?: string
   history?: string
-  lattes?: string
-}
-
-interface ApiError {
-  response?: {
-    data?: {
-      message?: string
-    }
-  }
+  tags?: string[]
+  cep?: string
+  street?: string
+  neighborhood?: string
+  city?: string
+  state?: string
 }
 
 const route = useRoute()
 const router = useRouter()
 const uuid = String(route.params.uuid)
 
-const student = reactive<Student>({ uuid: '' })
+// refs para os inputs escondidos
+const curriculumInput = ref<HTMLInputElement>()
+const historyInput = ref<HTMLInputElement>()
+
+// loading de upload
+const loadingCurriculum = ref(false)
+const loadingHistory = ref(false)
+
+// formulário
 const form = reactive({
   name: '',
   email: '',
+  course: '',
   registrationNumber: '',
   description: '',
-  birthdate: '',
   lattes: '',
+  phone: '',
+  newTag: '',
+  cep: '',
+  street: '',
+  neighborhood: '',
+  city: '',
+  state: '',
 })
-
-const loading = ref(false)
-const error = ref('')
-const success = ref(false)
+const tags = ref<string[]>([])
 
 onMounted(async () => {
-  loading.value = true
   try {
-    const { data } = await api.get<Student>(`/api/v1/students/${uuid}`)
-    Object.assign(student, data)
+    const { data } = await api.get<StudentDto>(`/api/v1/students/${uuid}`)
+    // preenche form e tags
     form.name = data.name || ''
     form.email = data.email || ''
+    form.course = data.course || ''
     form.registrationNumber = data.registrationNumber || ''
     form.description = data.description || ''
-    form.birthdate = data.birthdate?.slice(0, 10) || ''
     form.lattes = data.lattes || ''
+    form.phone = data.phone || ''
+    form.cep = data.cep || ''
+    form.street = data.street || ''
+    form.neighborhood = data.neighborhood || ''
+    form.city = data.city || ''
+    form.state = data.state || ''
+    tags.value = data.tags ?? []
   } catch {
-    error.value = 'Não foi possível carregar dados.'
-  } finally {
-    loading.value = false
+    console.warn('não foi possível carregar estudante')
   }
 })
 
-async function handleSubmit() {
-  loading.value = true
-  error.value = ''
-  success.value = false
+function addTag() {
+  const t = form.newTag.trim()
+  if (t && !tags.value.includes(t)) tags.value.push(t)
+  form.newTag = ''
+}
+
+function removeTag(tag: string) {
+  tags.value = tags.value.filter((t) => t !== tag)
+}
+
+function triggerCurriculumUpload() {
+  curriculumInput.value?.click()
+}
+function triggerHistoryUpload() {
+  historyInput.value?.click()
+}
+
+async function onCurriculumChange(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  loadingCurriculum.value = true
   try {
-    const payload: Partial<Omit<Student, 'uuid' | 'curriculum' | 'history'>> & {
-      birthDate?: string
-    } = {
+    const fd = new FormData()
+    fd.append('file', file)
+    const { data } = await api.patch<StudentDto>('/api/v1/students/curriculum', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    alert('Currículo enviado!')
+    // se quiser, atualize a URL no form ou em algum state
+  } catch {
+    alert('Falha ao enviar currículo.')
+  } finally {
+    loadingCurriculum.value = false
+  }
+}
+
+async function onHistoryChange(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  loadingHistory.value = true
+  try {
+    const fd = new FormData()
+    fd.append('file', file)
+    const { data } = await api.patch<StudentDto>('/api/v1/students/history', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    alert('Histórico enviado!')
+  } catch {
+    alert('Falha ao enviar histórico.')
+  } finally {
+    loadingHistory.value = false
+  }
+}
+
+async function handleSave() {
+  if (!form.name) return alert('Informe o nome.')
+  if (!form.email) return alert('Informe o email.')
+  // ... outras validações
+
+  try {
+    await api.patch(`/api/v1/students`, {
       name: form.name,
       email: form.email,
+      course: form.course,
       registrationNumber: form.registrationNumber,
       description: form.description,
-      birthDate: form.birthdate,
       lattes: form.lattes,
-    }
-    Object.keys(payload).forEach(
-      (k) =>
-        !(payload as Record<string, unknown>)[k] && delete (payload as Record<string, unknown>)[k],
-    )
-    const { data } = await api.patch<Student>('/api/v1/students', payload)
-    Object.assign(student, data)
-    success.value = true
-    setTimeout(() => {
-      router.push({ name: 'student-profile', params: { uuid } })
-    }, 1000)
-  } catch (err: unknown) {
-    const apiErr = err as ApiError
-    if (
-      typeof err === 'object' &&
-      err !== null &&
-      'response' in apiErr &&
-      apiErr.response?.data?.message
-    ) {
-      error.value = apiErr.response.data.message ?? ''
-    } else {
-      error.value = 'Erro ao salvar.'
-    }
-  } finally {
-    loading.value = false
-  }
-}
-
-async function uploadCurriculum(e: Event) {
-  const file = (e.target as HTMLInputElement).files?.[0]
-  if (!file) return
-  loading.value = true
-  error.value = ''
-  success.value = false
-  try {
-    const fd = new FormData()
-    fd.append('file', file)
-    const { data } = await api.patch<Student>('/api/v1/students/curriculum', fd, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      phone: form.phone,
+      tags: tags.value,
+      cep: form.cep,
+      street: form.street,
+      neighborhood: form.neighborhood,
+      city: form.city,
+      state: form.state,
     })
-    student.curriculum = data.curriculum
-    success.value = true
+    // volta ao perfil
+    router.push({ name: 'student-profile', params: { uuid } })
   } catch {
-    error.value = 'Erro ao enviar currículo.'
-  } finally {
-    loading.value = false
-  }
-}
-
-async function uploadHistory(e: Event) {
-  const file = (e.target as HTMLInputElement).files?.[0]
-  if (!file) return
-  loading.value = true
-  error.value = ''
-  success.value = false
-  try {
-    const fd = new FormData()
-    fd.append('file', file)
-    const { data } = await api.patch<Student>('/api/v1/students/history', fd, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
-    student.history = data.history
-    success.value = true
-  } catch {
-    error.value = 'Erro ao enviar histórico.'
-  } finally {
-    loading.value = false
+    alert('Erro ao salvar dados.')
   }
 }
 </script>
+
+<style scoped>
+.edit-page {
+  max-width: 700px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  font-family: Inter, sans-serif;
+}
+
+/* Banner + avatar */
+.banner-container {
+  position: relative;
+  margin-bottom: 3rem;
+}
+.banner {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.avatar-wrapper {
+  position: absolute;
+  bottom: -40px;
+  left: 1.5rem;
+}
+.avatar {
+  width: 80px;
+  height: 80px;
+  border: 4px solid var(--color-background);
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Docs buttons */
+.docs-actions {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.doc-btn {
+  background: var(--color-on-surface);
+  color: var(--color-surface);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Form fields */
+.edit-form {
+  margin-top: 2rem;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+.field label {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: var(--color-on-surface);
+}
+.field input,
+.field textarea {
+  padding: 0.75rem;
+  border: none;
+  background: var(--color-surface-variant);
+  color: var(--color-on-surface);
+  border-radius: 999px;
+  font-size: 1rem;
+}
+.field textarea {
+  border-radius: 8px;
+}
+
+/* Tags */
+.tags-input {
+  display: flex;
+  gap: 0.5rem;
+}
+.btn-small {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border: none;
+  padding: 0 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.tags-list {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.tag-chip {
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.tag-chip button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  line-height: 1;
+}
+
+/* Botão Salvar */
+.btn-save {
+  width: 100%;
+  background: var(--color-on-surface);
+  color: var(--color-surface);
+  border: none;
+  padding: 0.75rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 2rem;
+}
+
+/* Responsivo */
+@media (max-width: 600px) {
+  .avatar-wrapper {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+</style>
