@@ -10,7 +10,7 @@ type AccessTokenDto = components['schemas']['AccessTokenDto']
 
 type Role = 'student' | 'enterprise'
 
-const STORAGE_KEY = 'normal_user'
+export const STORAGE_KEY = 'normal_user'
 const STORAGE_KEY_ACCESS_TOKEN = `${STORAGE_KEY}_access_token`
 const STORAGE_KEY_REFRESH_TOKEN = `${STORAGE_KEY}_refresh_token`
 const STORAGE_KEY_ACCESS_TOKEN_EXPIRES_IN = `${STORAGE_KEY}_access_token_expires_in`
@@ -87,14 +87,16 @@ export const useAuthStore = defineStore('auth', () => {
   const isStudent = computed(() => user.value?.role === 'student')
   const isEnterprise = computed(() => user.value?.role === 'enterprise')
 
-  const signIn = async (signInDto: SignInDto, role: Role) => {
+  const signIn = async (signInDto: SignInDto, role: Role): Promise<AccessTokenDto> => {
     const { data } = await http.post(`/auth/${role}/sign-in`, signInDto)
     populateStateFromResponse(data)
+    return data
   }
 
-  const signUp = async (signUpDto: SignUpDto, role: Role) => {
+  const signUp = async (signUpDto: SignUpDto, role: Role): Promise<AccessTokenDto> => {
     const { data } = await http.post(`/auth/${role}/sign-up`, signUpDto)
     populateStateFromResponse(data)
+    return data
   }
 
   const refreshAccessToken = async (): Promise<boolean> => {
