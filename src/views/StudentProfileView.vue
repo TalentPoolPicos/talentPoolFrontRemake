@@ -1,214 +1,174 @@
 <template>
-  <div class="profile-page">
-    <!-- ► CTA superior -->
-    <div class="cta-banner">
-      <p>
-        Quer ter mais sucesso em suas candidaturas?<br />
-        fique de olho nas postagens!
-      </p>
-      <button class="btn-icon edit-cta" @click="editCta">✎</button>
-    </div>
-
-    <!-- ► Banner principal -->
-    <div class="banner-wrapper">
-      <img v-if="user.bannerPicture" :src="user.bannerPicture" alt="Banner" class="banner" />
-      <button class="btn-icon edit-banner" @click="goToEditBanner">✎</button>
-
-      <!-- ► Avatar -->
+  <div v-if="loading" class="loading">Carregando perfil…</div>
+  <div v-else-if="error" class="error">{{ error }}</div>
+  <div v-else class="profile-page">
+    <!-- Banner + Avatar -->
+    <div class="banner-container">
+      <img :src="student.bannerUrl || defaultBanner" alt="Banner" class="banner" />
       <div class="avatar-wrapper">
-        <img v-if="user.profilePicture" :src="user.profilePicture" alt="Avatar" class="avatar" />
-        <button class="btn-icon edit-avatar" @click="goToEdit">✎</button>
+        <img :src="student.avatarUrl || defaultAvatar" alt="Avatar" class="avatar" />
       </div>
     </div>
 
-    <!-- ► Badges de documentos -->
-    <div class="docs-actions">
-      <button v-if="student.curriculum" class="badge">Currículo</button>
-      <button v-if="student.history" class="badge">Histórico</button>
-      <button v-if="student.lattes" class="badge">Lattes</button>
-    </div>
+    <!-- Conteúdo principal -->
+    <section class="main">
+      <h1>{{ student.name }}</h1>
+      <p class="subtitle">{{ student.course }} • Matrícula: {{ student.registrationNumber }}</p>
+      <p class="description">{{ student.description }}</p>
 
-    <!-- ► Conteúdo em 3 colunas -->
-    <div class="profile-content grid">
-      <!-- COLUNA 1: Informações básicas -->
-      <aside class="col info-col">
-        <h2 class="name">{{ student.name }}</h2>
-        <p class="username">{{ user.username }}</p>
-        <p class="email">{{ user.email }}</p>
-        <p class="course">{{ student.course }}</p>
-        <p class="stack">
-          <span v-for="(tag, i) in user.tags" :key="tag">
-            #{{ tag }}<span v-if="i + 1 < user.tags.length"> </span>
-          </span>
-        </p>
-        <p class="location">{{ user.location }}</p>
+      <!-- Tags -->
+      <div class="tags">
+        <span v-for="tag in student.tags" :key="tag" class="tag">
+          {{ tag }}
+        </span>
+      </div>
 
-        <div class="badge match">Match</div>
-        <button class="btn btn--primary" @click="goToEdit">Editar</button>
-      </aside>
+      <!-- Documentos -->
+      <div class="docs">
+        <a v-if="student.curriculum" :href="student.curriculum" target="_blank" class="doc-link"
+          >↓ Currículo</a
+        >
+        <a v-if="student.history" :href="student.history" target="_blank" class="doc-link"
+          >↓ Histórico</a
+        >
+      </div>
+    </section>
 
-      <!-- COLUNA 2: Descrição -->
-      <section class="col desc-col">
-        <p>{{ student.description || 'Sem descrição.' }}</p>
-      </section>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="card">
+        <h3>Conecte-se</h3>
+        <ul class="social-links">
+          <li v-if="student.lattes">
+            <a :href="student.lattes" target="_blank">
+              <i class="fas fa-graduation-cap"></i> Lattes
+            </a>
+          </li>
+          <li v-if="student.linkedinUrl">
+            <a :href="student.linkedinUrl" target="_blank">
+              <i class="fab fa-linkedin"></i> LinkedIn
+            </a>
+          </li>
+          <li v-if="student.facebookUrl">
+            <a :href="student.facebookUrl" target="_blank">
+              <i class="fab fa-facebook"></i> Facebook
+            </a>
+          </li>
+          <li v-if="student.twitterUrl">
+            <a :href="student.twitterUrl" target="_blank"> <i class="fab fa-twitter"></i> X </a>
+          </li>
+        </ul>
+      </div>
 
-      <!-- COLUNA 3: Sugestões -->
-      <aside class="col suggestion-col">
-        <div v-for="block in suggestionBlocks" :key="block.title" class="suggestion-block">
-          <h4>{{ block.title }}</h4>
-          <div class="avatars-row">
-            <img v-for="a in block.avatars" :key="a" :src="a" class="avatar-sm" />
-          </div>
+      <div class="card stats">
+        <div class="stat-item">
+          <span class="stat-number">{{ student.metrics.matches }}</span>
+          <span class="stat-label">Seus matches</span>
         </div>
-      </aside>
-    </div>
+        <div class="stat-item">
+          <span class="stat-number">{{ student.metrics.hired }}</span>
+          <span class="stat-label">Te contrataram</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">{{ student.metrics.views }}</span>
+          <span class="stat-label">Visualizações</span>
+        </div>
+      </div>
+    </aside>
   </div>
 </template>
 
 <script setup lang="ts">
 import { reactive, ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import api from '@/services/api'
 
-/** Tipagens locais **/
-interface UserDto {
-  uuid: string
-  username: string
-  email: string
-  profilePicture?: string
-  bannerPicture?: string
-  tags: string[]
-  // vamos injetar esta propriedade manualmente:
-  location: string
+interface Metrics {
+  matches: number
+  hired: number
+  views: number
 }
 interface StudentDto {
-  uuid: string
-  name?: string
-  course?: string
-  description?: string
+  name: string
+  email: string
+  course: string
+  registrationNumber: string
+  description: string
+  lattes?: string
+  linkedinUrl?: string
+  facebookUrl?: string
+  twitterUrl?: string
   curriculum?: string
   history?: string
-  lattes?: string
+  tags: string[]
+  bannerUrl?: string
+  avatarUrl?: string
+  metrics: Metrics
 }
 
-// roteamento
 const route = useRoute()
-const router = useRouter()
-const uuid = route.params.uuid as string
+const uuid = String(route.params.uuid)
 
-// estado reativo
-const user = reactive<UserDto>({
-  uuid: '',
-  username: '',
-  email: '',
-  profilePicture: '',
-  bannerPicture: '',
-  tags: [],
-  location: 'R. Cícero Duarte – Junco, Picos – PI',
-})
+const loading = ref(true)
+const error = ref<string | null>(null)
+
+import defaultBanner from '@/assets/banner.png'
+import defaultAvatar from '@/assets/perfil.png'
+
 const student = reactive<StudentDto>({
-  uuid: '',
   name: '',
-  course: 'Sistemas de Informação',
+  email: '',
+  course: '',
+  registrationNumber: '',
   description: '',
+  lattes: '',
+  linkedinUrl: '',
+  facebookUrl: '',
+  twitterUrl: '',
   curriculum: '',
   history: '',
-  lattes: '',
+  tags: [],
+  bannerUrl: '',
+  avatarUrl: '',
+  metrics: { matches: 0, hired: 0, views: 0 },
 })
-
-// sugestões hard-coded (exemplo)
-const suggestionBlocks = ref([
-  {
-    title: 'Seus matches',
-    avatars: [
-      'https://i.pravatar.cc/40?img=13',
-      'https://i.pravatar.cc/40?img=14',
-      'https://i.pravatar.cc/40?img=15',
-    ],
-  },
-  {
-    title: 'Te curtiram',
-    avatars: [
-      'https://i.pravatar.cc/40?img=20',
-      'https://i.pravatar.cc/40?img=21',
-      'https://i.pravatar.cc/40?img=22',
-    ],
-  },
-  {
-    title: 'Talvez você goste',
-    avatars: [
-      'https://i.pravatar.cc/40?img=30',
-      'https://i.pravatar.cc/40?img=31',
-      'https://i.pravatar.cc/40?img=32',
-    ],
-  },
-])
 
 onMounted(async () => {
   try {
-    // 1) busca dados do usuário
-    const { data: u } = await api.get<UserDto>(`/api/v1/users/${uuid}`)
-    Object.assign(user, u)
-
-    // 2) busca dados de estudante
-    const { data: s } = await api.get<StudentDto>(`/api/v1/students/${uuid}`)
-    student.name = s.name || student.name
-    student.course = s.course || student.course
-    student.description = s.description || ''
-    student.curriculum = s.curriculum || ''
-    student.history = s.history || ''
-    student.lattes = s.lattes || ''
-  } catch (e) {
-    console.error('falha ao carregar perfil:', e)
+    const { data } = await api.get<StudentDto>(`/api/v1/students/${uuid}`)
+    Object.assign(student, data)
+  } catch (err) {
+    console.error(err)
+    error.value = 'Falha ao carregar perfil.'
+  } finally {
+    loading.value = false
   }
 })
-
-function goToEdit() {
-  router.push({ name: 'student-edit', params: { uuid } })
-}
-function goToEditBanner() {
-  router.push({ name: 'student-edit', params: { uuid } })
-}
-function editCta() {
-  // opcional: navegar para editar banner/cta
-}
 </script>
 
 <style scoped>
 .profile-page {
-  max-width: 1200px;
-  margin: auto;
-  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+  max-width: 1000px;
+  margin: 2rem auto;
   font-family: Inter, sans-serif;
-  color: var(--color-on-surface);
 }
 
-/* ► CTA Banner */
-.cta-banner {
-  background: var(--color-primary);
-  color: var(--color-on-primary);
-  padding: 1rem;
-  border-radius: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.cta-banner p {
-  margin: 0;
-  line-height: 1.3;
-}
-.btn-icon {
-  background: var(--color-surface);
-  border: none;
-  border-radius: 50%;
-  padding: 0.4rem;
-  cursor: pointer;
+.loading,
+.error {
+  max-width: 700px;
+  margin: 3rem auto;
+  text-align: center;
+  font-size: 1.2rem;
+  color: var(--color-on-surface-variant);
 }
 
-/* ► Banner e Avatar */
-.banner-wrapper {
+/* Banner + avatar */
+.banner-container {
+  grid-column: 1 / -1;
   position: relative;
-  margin-top: 1rem;
 }
 .banner {
   width: 100%;
@@ -216,17 +176,10 @@ function editCta() {
   object-fit: cover;
   border-radius: 8px;
 }
-.edit-banner {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-}
 .avatar-wrapper {
   position: absolute;
   bottom: -40px;
   left: 1.5rem;
-  display: flex;
-  align-items: center;
 }
 .avatar {
   width: 80px;
@@ -235,104 +188,94 @@ function editCta() {
   border-radius: 50%;
   object-fit: cover;
 }
-.edit-avatar {
-  margin-left: 0.5rem;
-}
 
-/* ► Botões de docs */
-.docs-actions {
+/* Main */
+.main h1 {
   margin-top: 3rem;
-  display: flex;
-  gap: 0.5rem;
+  font-size: 2rem;
 }
-.badge {
-  padding: 0.5rem 1rem;
-  background: var(--color-surface-variant);
+.subtitle {
   color: var(--color-on-surface-variant);
-  border-radius: 12px;
-  border: none;
-  cursor: pointer;
+  margin-bottom: 1rem;
+}
+.description {
+  margin-bottom: 1.5rem;
+}
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+.tag {
+  background: var(--color-surface-variant);
+  color: var(--color-on-surface);
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
 }
 
-/* ► Grid de conteúdo */
-.profile-content.grid {
-  display: grid;
-  grid-template-columns: 1fr 2fr 1fr;
-  gap: 1.5rem;
-  margin-top: 4rem;
+/* Docs */
+.docs {
+  display: flex;
+  gap: 1rem;
+}
+.doc-link {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  text-decoration: none;
 }
 
-/* COLUNA 1 */
-.info-col {
+/* Sidebar */
+.sidebar .card {
+  background: var(--color-surface-variant);
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+.social-links {
+  list-style: none;
+  padding: 0;
+}
+.social-links li {
+  margin: 0.5rem 0;
+}
+.social-links a {
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-on-surface);
+}
+
+/* Estatísticas */
+.stats {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
-.name {
-  margin: 0;
+.stat-item {
+  text-align: center;
+}
+.stat-number {
+  display: block;
   font-size: 1.5rem;
+  font-weight: bold;
 }
-.username,
-.email,
-.course,
-.stack,
-.location {
-  margin: 0;
-  color: var(--color-on-surface-variant);
-  font-size: 0.9rem;
-}
-.match {
-  display: inline-block;
-  background: var(--color-tertiary-container);
-  color: var(--color-on-tertiary-container);
-  padding: 0.3rem 0.8rem;
-  border-radius: 12px;
-  font-size: 0.8rem;
-}
-.btn--primary {
-  margin-top: 1rem;
-  background: var(--color-primary);
-  color: var(--color-on-primary);
-  border: none;
-  padding: 0.75rem;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-/* COLUNA 2 */
-.desc-col {
-  background: var(--color-surface);
-  padding: 1rem;
-  border-radius: 8px;
-  line-height: 1.6;
-}
-
-/* COLUNA 3 */
-.suggestion-col {
-}
-.suggestion-block {
-  margin-bottom: 1.5rem;
-}
-.suggestion-block h4 {
-  margin: 0 0 0.5rem;
-  font-size: 1rem;
+.stat-label {
+  font-size: 0.875rem;
   color: var(--color-on-surface-variant);
 }
-.avatars-row {
-  display: flex;
-  gap: 0.5rem;
-}
-.avatar-sm {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-}
 
-/* responsivo */
-@media (max-width: 900px) {
-  .profile-content.grid {
+/* Responsivo */
+@media (max-width: 800px) {
+  .profile-page {
     grid-template-columns: 1fr;
+  }
+  .avatar-wrapper {
+    left: 50%;
+    transform: translateX(-50%);
   }
 }
 </style>

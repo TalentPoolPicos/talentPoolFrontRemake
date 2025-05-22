@@ -1,14 +1,16 @@
 <template>
-  <div class="edit-page">
-    <!-- ► Banner + Avatar -->
+  <div v-if="loading" class="loading">Carregando dados…</div>
+  <div v-else-if="error" class="error">{{ error }}</div>
+  <div v-else class="edit-page">
+    <!-- Banner + avatar -->
     <div class="banner-container">
-      <img src="@/assets/banner.png" alt="Banner" class="banner" />
+      <img :src="form.bannerUrl || defaultBanner" alt="Banner" class="banner" />
       <div class="avatar-wrapper">
-        <img src="@/assets/perfil.png" alt="Avatar" class="avatar" />
+        <img :src="form.avatarUrl || defaultAvatar" alt="Avatar" class="avatar" />
       </div>
     </div>
 
-    <!-- ► Botões de Upload de PDF -->
+    <!-- Botões de documentos -->
     <div class="docs-actions">
       <button class="doc-btn" :disabled="loadingCurriculum" @click="triggerCurriculumUpload">
         {{ loadingCurriculum ? 'Enviando...' : '↓ Currículo' }}
@@ -18,7 +20,6 @@
       </button>
     </div>
 
-    <!-- inputs escondidos para captura de arquivo -->
     <input
       ref="curriculumInput"
       type="file"
@@ -36,36 +37,31 @@
 
     <!-- ► Formulário de edição -->
     <form class="edit-form" @submit.prevent="handleSave">
+      <!-- Campos básicos -->
       <div class="field">
         <label for="name">Nome</label>
         <input id="name" v-model="form.name" type="text" required />
       </div>
-
       <div class="field">
         <label for="email">Email</label>
         <input id="email" v-model="form.email" type="email" required />
       </div>
-
       <div class="field">
         <label for="course">Curso</label>
         <input id="course" v-model="form.course" type="text" />
       </div>
-
       <div class="field">
         <label for="registration">Número da matrícula</label>
         <input id="registration" v-model="form.registrationNumber" type="text" />
       </div>
-
       <div class="field">
         <label for="description">Descrição</label>
         <textarea id="description" v-model="form.description" rows="4"></textarea>
       </div>
-
       <div class="field">
         <label for="lattes">Lattes</label>
         <input id="lattes" v-model="form.lattes" type="url" />
       </div>
-
       <div class="field">
         <label for="phone">Telefone</label>
         <input id="phone" v-model="form.phone" type="tel" />
@@ -114,8 +110,9 @@
         <input id="state" v-model="form.state" type="text" />
       </div>
 
-      <!-- ► Botão Salvar -->
-      <button class="btn-save" type="submit">💾 Salvar</button>
+      <button class="btn-save" type="submit" :disabled="saving">
+        {{ saving ? 'Salvando...' : 'Salvar' }}
+      </button>
     </form>
   </div>
 </template>
@@ -126,8 +123,8 @@ import { useRoute, useRouter } from 'vue-router'
 import api from '@/services/api'
 
 interface StudentDto {
-  name?: string
-  email?: string
+  name: string
+  email: string
   course?: string
   registrationNumber?: string
   description?: string
@@ -141,22 +138,25 @@ interface StudentDto {
   neighborhood?: string
   city?: string
   state?: string
+  bannerUrl?: string
+  avatarUrl?: string
+  newTag?: string
 }
 
 const route = useRoute()
 const router = useRouter()
 const uuid = String(route.params.uuid)
 
-// refs para os inputs escondidos
-const curriculumInput = ref<HTMLInputElement>()
-const historyInput = ref<HTMLInputElement>()
-
-// loading de upload
+const loading = ref(true)
+const saving = ref(false)
 const loadingCurriculum = ref(false)
 const loadingHistory = ref(false)
+const error = ref<string | null>(null)
 
-// formulário
-const form = reactive({
+import defaultBanner from '@/assets/banner.png'
+import defaultAvatar from '@/assets/perfil.png'
+
+const form = reactive<StudentDto>({
   name: '',
   email: '',
   course: '',
@@ -164,43 +164,39 @@ const form = reactive({
   description: '',
   lattes: '',
   phone: '',
-  newTag: '',
   cep: '',
   street: '',
   neighborhood: '',
   city: '',
   state: '',
+  tags: [],
+  bannerUrl: '',
+  avatarUrl: '',
+  newTag: '',
 })
 const tags = ref<string[]>([])
+
+const curriculumInput = ref<HTMLInputElement>()
+const historyInput = ref<HTMLInputElement>()
 
 onMounted(async () => {
   try {
     const { data } = await api.get<StudentDto>(`/api/v1/students/${uuid}`)
-    // preenche form e tags
-    form.name = data.name || ''
-    form.email = data.email || ''
-    form.course = data.course || ''
-    form.registrationNumber = data.registrationNumber || ''
-    form.description = data.description || ''
-    form.lattes = data.lattes || ''
-    form.phone = data.phone || ''
-    form.cep = data.cep || ''
-    form.street = data.street || ''
-    form.neighborhood = data.neighborhood || ''
-    form.city = data.city || ''
-    form.state = data.state || ''
-    tags.value = data.tags ?? []
-  } catch {
-    console.warn('não foi possível carregar estudante')
+    Object.assign(form, data)
+    tags.value = data.tags || []
+  } catch (e) {
+    console.error(e)
+    error.value = 'Não foi possível carregar os dados.'
+  } finally {
+    loading.value = false
   }
 })
 
 function addTag() {
-  const t = form.newTag.trim()
+  const t = form.newTag?.trim() || ''
   if (t && !tags.value.includes(t)) tags.value.push(t)
   form.newTag = ''
 }
-
 function removeTag(tag: string) {
   tags.value = tags.value.filter((t) => t !== tag)
 }
@@ -219,11 +215,10 @@ async function onCurriculumChange(e: Event) {
   try {
     const fd = new FormData()
     fd.append('file', file)
-    const { data } = await api.patch<StudentDto>('/api/v1/students/curriculum', fd, {
+    await api.patch(`/api/v1/students/${uuid}/curriculum`, fd, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
     alert('Currículo enviado!')
-    // se quiser, atualize a URL no form ou em algum state
   } catch {
     alert('Falha ao enviar currículo.')
   } finally {
@@ -238,7 +233,7 @@ async function onHistoryChange(e: Event) {
   try {
     const fd = new FormData()
     fd.append('file', file)
-    const { data } = await api.patch<StudentDto>('/api/v1/students/history', fd, {
+    await api.patch(`/api/v1/students/${uuid}/history`, fd, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
     alert('Histórico enviado!')
@@ -252,10 +247,10 @@ async function onHistoryChange(e: Event) {
 async function handleSave() {
   if (!form.name) return alert('Informe o nome.')
   if (!form.email) return alert('Informe o email.')
-  // ... outras validações
 
+  saving.value = true
   try {
-    await api.patch(`/api/v1/students`, {
+    await api.patch(`/api/v1/students/${uuid}`, {
       name: form.name,
       email: form.email,
       course: form.course,
@@ -270,10 +265,13 @@ async function handleSave() {
       city: form.city,
       state: form.state,
     })
-    // volta ao perfil
-    router.push({ name: 'student-profile', params: { uuid } })
-  } catch {
+    await router.push({ name: 'student-profile', params: { uuid } })
+    window.location.reload()
+  } catch (e) {
+    console.error(e)
     alert('Erro ao salvar dados.')
+  } finally {
+    saving.value = false
   }
 }
 </script>
@@ -284,6 +282,13 @@ async function handleSave() {
   margin: 2rem auto;
   padding: 0 1rem;
   font-family: Inter, sans-serif;
+}
+
+.loading,
+.error {
+  text-align: center;
+  margin: 3rem auto;
+  color: var(--color-on-surface-variant);
 }
 
 /* Banner + avatar */
