@@ -223,11 +223,8 @@
   align-items: center;
   gap: 3rem;
   padding: 3rem 1.5rem;
-<<<<<<< Updated upstream
-=======
   max-width: 1200px;
   margin: 0 auto;
->>>>>>> Stashed changes
 }
 
 .testimonial__text h2 {
