@@ -23,7 +23,7 @@ const user = ref<UserDto | null>(null)
 const refresh = async () => {
   try {
     if (props.uuid) {
-      user.value = await userStore.userByUuid(props.uuid)
+      user.value = await userStore.findByUuid(props.uuid)
     } else if (!authStore.isLoggedIn) {
       router.push({ name: Routes.Home })
     } else {
