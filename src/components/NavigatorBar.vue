@@ -2,6 +2,16 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import ThemeToggle from './ThemeToggle.vue'
 import { RouterLink, useRoute } from 'vue-router'
+import { RoutePaths, Routes } from '@/router/index'
+import { useAuthStore } from '@/stores/auth'
+import { useUserStore } from '@/stores/user'
+import { useRouter } from 'vue-router'
+
+const authStore = useAuthStore()
+const userStore = useUserStore()
+const router = useRouter()
+
+import CircleAvatar from '@/components/CircleAvatar.vue'
 
 const route = useRoute()
 const currentPath = computed(() => route.path)
@@ -22,6 +32,10 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('resize', updateWindowWidth)
 })
+
+const handleAvatarClick = () => {
+  router.push({ name: Routes.StudentLoggedProfile })
+}
 </script>
 
 <template>
@@ -34,37 +48,62 @@ onUnmounted(() => {
     <div class="hamburger" v-if="windowWidth <= 800" @click="isMenuOpen = !isMenuOpen">&#9776;</div>
 
     <div class="menu-dialog" v-if="isMenuOpen" @click="isMenuOpen = false">
-      <RouterLink to="/" :class="{ active: currentPath === '/' }" @click="isMenuOpen = false"
+      <RouterLink
+        :to="RoutePaths[Routes.Home]"
+        :class="{ active: currentPath === RoutePaths[Routes.Home] }"
+        @click="isMenuOpen = false"
         >Início</RouterLink
       >
       <RouterLink
-        to="/about"
-        :class="{ active: currentPath.startsWith('/about') }"
+        :to="RoutePaths[Routes.About]"
+        :class="{ active: currentPath.startsWith(RoutePaths[Routes.About]) }"
         @click="isMenuOpen = false"
         >Sobre</RouterLink
       >
       <RouterLink
-        to="/news"
-        :class="{ active: currentPath.startsWith('/news') }"
+        :to="RoutePaths[Routes.News]"
+        :class="{ active: currentPath.startsWith(RoutePaths[Routes.News]) }"
         @click="isMenuOpen = false"
         >Notícias</RouterLink
       >
 
       <label class="search-wrapper">
         <span class="icon">🔍</span>
-        <input type="search" placeholder="Search" />
+        <input type="search" placeholder="Pesquisar" />
       </label>
-      <RouterLink to="/login" class="btn-outline">Entrar</RouterLink>
+      <RouterLink
+        :to="RoutePaths[Routes.SignInStudent]"
+        class="btn-outline"
+        v-if="!authStore.isLoggedIn"
+        >Entrar</RouterLink
+      >
+
+      <CircleAvatar
+        :src="
+          userStore.loggedUser?.profilePicture ??
+          `https://robohash.org/${userStore.loggedUser?.username ?? 'default'}`
+        "
+        @click="handleAvatarClick"
+        v-if="authStore.isLoggedIn"
+      />
 
       <ThemeToggle />
     </div>
 
     <nav class="links" v-show="windowWidth > 800">
-      <RouterLink to="/" :class="{ active: currentPath === '/' }">Início</RouterLink>
-      <RouterLink to="/about" :class="{ active: currentPath.startsWith('/about') }"
+      <RouterLink
+        :to="RoutePaths[Routes.Home]"
+        :class="{ active: currentPath === RoutePaths[Routes.Home] }"
+        >Início</RouterLink
+      >
+      <RouterLink
+        :to="RoutePaths[Routes.About]"
+        :class="{ active: currentPath.startsWith(RoutePaths[Routes.About]) }"
         >Sobre</RouterLink
       >
-      <RouterLink to="/news" :class="{ active: currentPath.startsWith('/news') }"
+      <RouterLink
+        :to="RoutePaths[Routes.News]"
+        :class="{ active: currentPath.startsWith(RoutePaths[Routes.News]) }"
         >Notícias</RouterLink
       >
     </nav>
@@ -72,9 +111,22 @@ onUnmounted(() => {
     <div class="right-tools" v-show="windowWidth > 800">
       <label class="search-wrapper">
         <span class="icon">🔍</span>
-        <input type="search" placeholder="Search" />
+        <input type="search" placeholder="Pesquisar" />
       </label>
-      <RouterLink to="/login" class="btn-outline">Entrar</RouterLink>
+      <RouterLink
+        :to="RoutePaths[Routes.SignInStudent]"
+        class="btn-outline"
+        v-if="!authStore.isLoggedIn"
+        >Entrar</RouterLink
+      >
+      <CircleAvatar
+        :src="
+          userStore.loggedUser?.profilePicture ??
+          `https://robohash.org/${userStore.loggedUser?.username ?? 'default'}`
+        "
+        @click="handleAvatarClick"
+        v-if="authStore.isLoggedIn"
+      />
       <ThemeToggle />
     </div>
   </header>
