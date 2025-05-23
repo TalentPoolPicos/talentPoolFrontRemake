@@ -1,40 +1,22 @@
-import { defineStore, storeToRefs } from "pinia"
-import { useAuthStore } from "./auth"
-import type { components } from "@/types/api"
-import { ref, watch } from "vue"
-import { http } from "@/services/http"
+import { defineStore } from 'pinia'
+import type { components } from '@/types/api'
+import { http } from '@/services/http'
+import { useUserStore } from './user'
 
-type UserDto = components['schemas']['UserDto']
 type EnterpriseDto = components['schemas']['EnterpriseDto']
 type PartialEnterpriseDto = components['schemas']['PartialEnterpriseDto']
 type EnterprisePageDto = components['schemas']['EnterprisePageDto']
 
-
 export const useEnterpriseStore = defineStore('enterprise', () => {
-  const authStore = useAuthStore()
-  const { loggedUser } = storeToRefs(authStore)
-
-  const loggedEnterprise = ref<EnterpriseDto | null>(
-    loggedUser.value?.enterprise ? loggedUser.value.enterprise : null,
-  )
-
-  watch(loggedEnterprise, (val) => {
-    if (val) {
-      loggedUser.value = {
-        ...loggedUser.value,
-        enterprise: val,
-      } as UserDto
-    }
-  }
-  )
+  const userStore = useUserStore()
 
   const isEnterprise = () => {
-    if (loggedUser.value === null || loggedUser.value.role !== 'enterprise') {
+    if (userStore.loggedUser === null || userStore.loggedUser.role !== 'enterprise') {
       throw new Error('User not logged in or not an enterprise')
     }
   }
 
-  const enterpriseByPagination = async (queries: {
+  const byPagination = async (queries: {
     page: number
     limit: number
   }): Promise<EnterprisePageDto> => {
@@ -46,33 +28,23 @@ export const useEnterpriseStore = defineStore('enterprise', () => {
     return data
   }
 
-  const partialLoggedUpdateEnterprise = async (enterprise: PartialEnterpriseDto): Promise<EnterpriseDto> => {
+  const partialUpdate = async (enterprise: PartialEnterpriseDto): Promise<EnterpriseDto> => {
     isEnterprise()
 
     const { data } = await http.patch<EnterpriseDto>(`/enterprises`, enterprise)
-    loggedEnterprise.value = data
+    userStore.getLoggedUser()
     return data
   }
 
-  const getLoggedEnterprise = async (): Promise<EnterpriseDto> => {
-    isEnterprise()
-
-    const { data } = await http.get<EnterpriseDto>(`/enterprises/${loggedUser.value?.uuid}`)
-    loggedEnterprise.value = data
-    return data
-  }
-
-  const enterpriseByUuid = async (uuid: string): Promise<EnterpriseDto> => {
+  const findByUuid = async (uuid: string): Promise<EnterpriseDto> => {
     const { data } = await http.get<EnterpriseDto>(`/enterprises/${uuid}`)
     return data
   }
 
   return {
-    loggedEnterprise,
     isEnterprise,
-    enterpriseByPagination,
-    partialLoggedUpdateEnterprise,
-    getLoggedEnterprise,
-    enterpriseByUuid,
+    byPagination,
+    partialUpdate,
+    findByUuid,
   }
 })
