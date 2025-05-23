@@ -1,151 +1,137 @@
-<template>
-  <div v-if="loading" class="loading">Carregando perfil…</div>
-  <div v-else-if="error" class="error">{{ error }}</div>
-  <div v-else class="profile-page">
-    <!-- Banner + Avatar -->
-    <div class="banner-container">
-      <img :src="student.bannerUrl || defaultBanner" alt="Banner" class="banner" />
-      <div class="avatar-wrapper">
-        <img :src="student.avatarUrl || defaultAvatar" alt="Avatar" class="avatar" />
-      </div>
-    </div>
-
-    <!-- Conteúdo principal -->
-    <section class="main">
-      <h1>{{ student.name }}</h1>
-      <p class="subtitle">{{ student.course }} • Matrícula: {{ student.registrationNumber }}</p>
-      <p class="description">{{ student.description }}</p>
-
-      <!-- Tags -->
-      <div class="tags">
-        <span v-for="tag in student.tags" :key="tag" class="tag">
-          {{ tag }}
-        </span>
-      </div>
-
-      <!-- Documentos -->
-      <div class="docs">
-        <a v-if="student.curriculum" :href="student.curriculum" target="_blank" class="doc-link"
-          >↓ Currículo</a
-        >
-        <a v-if="student.history" :href="student.history" target="_blank" class="doc-link"
-          >↓ Histórico</a
-        >
-      </div>
-    </section>
-
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="card">
-        <h3>Conecte-se</h3>
-        <ul class="social-links">
-          <li v-if="student.lattes">
-            <a :href="student.lattes" target="_blank">
-              <i class="fas fa-graduation-cap"></i> Lattes
-            </a>
-          </li>
-          <li v-if="student.linkedinUrl">
-            <a :href="student.linkedinUrl" target="_blank">
-              <i class="fab fa-linkedin"></i> LinkedIn
-            </a>
-          </li>
-          <li v-if="student.facebookUrl">
-            <a :href="student.facebookUrl" target="_blank">
-              <i class="fab fa-facebook"></i> Facebook
-            </a>
-          </li>
-          <li v-if="student.twitterUrl">
-            <a :href="student.twitterUrl" target="_blank"> <i class="fab fa-twitter"></i> X </a>
-          </li>
-        </ul>
-      </div>
-
-      <div class="card stats">
-        <div class="stat-item">
-          <span class="stat-number">{{ student.metrics.matches }}</span>
-          <span class="stat-label">Seus matches</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-number">{{ student.metrics.hired }}</span>
-          <span class="stat-label">Te contrataram</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-number">{{ student.metrics.views }}</span>
-          <span class="stat-label">Visualizações</span>
-        </div>
-      </div>
-    </aside>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { reactive, ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import api from '@/services/api'
+import { onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { useUserStore, type UserDto } from '@/stores/user'
+import { useAuthStore } from '@/stores/auth'
+import { Routes } from '@/router'
+import CircleAvatar from '@/components/CircleAvatar.vue'
 
-interface Metrics {
-  matches: number
-  hired: number
-  views: number
-}
-interface StudentDto {
-  name: string
-  email: string
-  course: string
-  registrationNumber: string
-  description: string
-  lattes?: string
-  linkedinUrl?: string
-  facebookUrl?: string
-  twitterUrl?: string
-  curriculum?: string
-  history?: string
-  tags: string[]
-  bannerUrl?: string
-  avatarUrl?: string
-  metrics: Metrics
-}
+const router = useRouter()
+const props = defineProps<{ uuid?: string }>()
 
-const route = useRoute()
-const uuid = String(route.params.uuid)
+const userStore = useUserStore()
+const authStore = useAuthStore()
 
 const loading = ref(true)
 const error = ref<string | null>(null)
 
 import defaultBanner from '@/assets/banner.png'
-import defaultAvatar from '@/assets/perfil.png'
 
-const student = reactive<StudentDto>({
-  name: '',
-  email: '',
-  course: '',
-  registrationNumber: '',
-  description: '',
-  lattes: '',
-  linkedinUrl: '',
-  facebookUrl: '',
-  twitterUrl: '',
-  curriculum: '',
-  history: '',
-  tags: [],
-  bannerUrl: '',
-  avatarUrl: '',
-  metrics: { matches: 0, hired: 0, views: 0 },
-})
+const user = ref<UserDto | null>(null)
 
-onMounted(async () => {
+const refresh = async () => {
   try {
-    const { data } = await api.get<StudentDto>(`/students/${uuid}`)
-    console.log(data)
-    Object.assign(student, data)
+    if (props.uuid) {
+      user.value = await userStore.userByUuid(props.uuid)
+    } else if (!authStore.isLoggedIn) {
+      router.push({ name: Routes.Home })
+    } else {
+      user.value = await userStore.loggedUser
+    }
+    console.log(user)
   } catch (err) {
     console.error(err)
     error.value = 'Falha ao carregar perfil.'
   } finally {
     loading.value = false
   }
+}
+
+onMounted(() => {
+  refresh()
 })
+
+watch(() => props.uuid, refresh)
 </script>
+
+<template>
+  <div v-if="loading" class="loading">Carregando perfil…</div>
+  <div v-else-if="error" class="error">{{ error }}</div>
+  <div v-else class="profile-page">
+    <div class="banner-container">
+      <img :src="user?.bannerPicture || defaultBanner" alt="Banner" class="banner" />
+      <div class="avatar-wrapper">
+        <CircleAvatar
+          :src="user?.profilePicture ?? `https://robohash.org/${user?.username ?? 'default'}`"
+          :width="150"
+          :height="150"
+        />
+      </div>
+    </div>
+
+    <section class="main">
+      <h1>{{ user?.student?.name || 'Talento' }}</h1>
+      <p class="subtitle">Matrícula: {{ user?.student?.registrationNumber ?? 'asdasd' }}</p>
+      <p class="description">{{ user?.student?.description }}</p>
+
+      <div class="tags">
+        <span v-for="tag in user?.tags" :key="tag" class="tag">
+          {{ tag }}
+        </span>
+      </div>
+
+      <div class="docs">
+        <a
+          v-if="user?.student?.curriculum"
+          :href="user.student.curriculum"
+          target="_blank"
+          class="doc-link"
+          >↓ Currículo</a
+        >
+        <a
+          v-if="user?.student?.history"
+          :href="user.student.history"
+          target="_blank"
+          class="doc-link"
+          >↓ Histórico</a
+        >
+      </div>
+    </section>
+
+    <aside class="sidebar">
+      <div class="card">
+        <h3>Conecte-se</h3>
+        <ul class="social-links">
+          <li v-if="user?.student?.lattes">
+            <a :href="user.student.lattes" target="_blank">
+              <i class="fas fa-graduation-cap"></i> Lattes
+            </a>
+          </li>
+          <!-- <li v-if="user?.socialMedia">
+            <a :href="user.student.linkedinUrl" target="_blank">
+              <i class="fab fa-linkedin"></i> LinkedIn
+            </a>
+          </li>
+          <li v-if="user.student.facebookUrl">
+            <a :href="user.student.facebookUrl" target="_blank">
+              <i class="fab fa-facebook"></i> Facebook
+            </a>
+          </li>
+          <li v-if="user.student.twitterUrl">
+            <a :href="user.student.twitterUrl" target="_blank">
+              <i class="fab fa-twitter"></i> X
+            </a>
+          </li> -->
+        </ul>
+      </div>
+
+      <div class="card stats">
+        <div class="stat-item">
+          <span class="stat-number">{{ 0 }}</span>
+          <span class="stat-label">Seus matches</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">{{ 0 }}</span>
+          <span class="stat-label">Te contrataram</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">{{ 0 }}</span>
+          <span class="stat-label">Visualizações</span>
+        </div>
+      </div>
+    </aside>
+  </div>
+</template>
 
 <style scoped>
 .profile-page {
