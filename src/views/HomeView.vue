@@ -1,3 +1,8 @@
+<script setup lang="ts">
+import { RouterLink } from 'vue-router'
+import { Routes, RoutePaths } from '@/router/index'
+</script>
+
 <template>
   <main class="home">
     <section class="hero">
@@ -31,9 +36,9 @@
             estágio que combinam com o seu perfil e te aproximam do futuro profissional que você
             sempre sonhou.
           </p>
-          <router-link to="/register">
-            <button class="btn-primary">Cadastre-se</button>
-          </router-link>
+          <RouterLink :to="RoutePaths[Routes.SignInStudent]" class="btn-primary"
+            >Cadastre-se</RouterLink
+          >
         </div>
       </div>
     </section>
@@ -66,7 +71,9 @@
 
       <div class="partner__cta">
         <h2>Venha se tornar um parceiro!</h2>
-        <button class="btn-outline">Cadastre-se</button>
+        <RouterLink :to="RoutePaths[Routes.SignInEnterprise]" class="btn-outline"
+          >Quero me tornar um parceiro</RouterLink
+        >
       </div>
     </section>
 
@@ -259,6 +266,7 @@
   background: var(--color-primary);
   color: var(--color-on-primary);
   border: none;
+  text-decoration: none;
 }
 .btn-primary:hover {
   background: color-mix(in srgb, var(--color-primary) 80%, var(--color-background));
@@ -268,6 +276,7 @@
   background: transparent;
   color: var(--color-on-primary-container);
   border: 1px solid var(--color-on-primary-container);
+  text-decoration: none;
 }
 .btn-outline:hover {
   background: var(--color-on-primary-container);
