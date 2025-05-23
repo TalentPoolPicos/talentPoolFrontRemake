@@ -3,8 +3,14 @@ defineProps<{ loading: boolean }>()
 </script>
 
 <template>
-  <transition name="fade">
-    <div v-if="loading" class="loading-wrapper">
+  <transition
+    name="fade"
+    appear
+    mode="out-in"
+    :duration="{ enter: 500, leave: 500 }"
+    v-show="loading"
+  >
+    <div class="loading-wrapper">
       <span class="ring" />
       <div class="brand">
         <span class="small">Banco&nbsp;de</span>
@@ -17,7 +23,7 @@ defineProps<{ loading: boolean }>()
 <style scoped>
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.3s ease;
+  transition: opacity 0.5s linear;
 }
 .fade-enter-from,
 .fade-leave-to {
@@ -29,6 +35,7 @@ defineProps<{ loading: boolean }>()
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  /* background-color: var(--color-background); */
   width: 100%;
   height: 90dvh;
   gap: 0.75rem;
