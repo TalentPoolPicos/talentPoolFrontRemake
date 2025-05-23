@@ -1,6 +1,6 @@
 import type { components } from '@/types/api'
-import { defineStore } from 'pinia'
-import { STORAGE_KEY } from './auth'
+import { defineStore, storeToRefs } from 'pinia'
+import { useAuthStore } from './auth'
 import { ref, watch } from 'vue'
 import { http } from '@/services/http'
 
@@ -10,19 +10,11 @@ type PartialStudentDto = components['schemas']['PartialStudentDto']
 type StudentsPageDto = components['schemas']['StudentsPageDto']
 
 export const useStudentStore = defineStore('student', () => {
-  const userStored = localStorage.getItem(STORAGE_KEY)
-  const loggedUser = ref<UserDto | null>(userStored ? JSON.parse(userStored) : null)
+  const authStore = useAuthStore()
+  const { loggedUser } = storeToRefs(authStore)
+
   const loggedStudent = ref<StudentDto | null>(
     loggedUser.value?.student ? loggedUser.value.student : null,
-  )
-
-  watch(
-    loggedUser,
-    (val) => {
-      if (val) localStorage.setItem(STORAGE_KEY, JSON.stringify(val))
-      else localStorage.removeItem(STORAGE_KEY)
-    },
-    { immediate: true },
   )
 
   watch(loggedStudent, (val) => {
@@ -88,6 +80,7 @@ export const useStudentStore = defineStore('student', () => {
   }
 
   return {
+    loggedStudent,
     studentByPagination,
     partialLoggedUpdateStudent,
     getLoggedStudent,
