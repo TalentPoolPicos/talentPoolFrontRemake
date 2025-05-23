@@ -1,3 +1,59 @@
+<script setup lang="ts">
+import { defineProps, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore, type Role } from '@/stores/auth'
+import { Routes } from '@/router'
+
+const props = defineProps<{
+  role: Role | undefined
+}>()
+
+const auth = useAuthStore()
+
+const username = ref('')
+const password = ref('')
+const loading = ref(false)
+const router = useRouter()
+
+const handleSubmit = async () => {
+  console.log('handleSubmit', username.value, password.value, props.role)
+  if (username.value == '' || password.value == '') {
+    alert('Por favor, preencha usuário e senha.')
+    return
+  }
+
+  if (props.role == undefined) {
+    alert('Por favor, selecione um tipo de usuário.')
+    router.push({ name: Routes.Home })
+    return
+  }
+
+  loading.value = true
+  try {
+    await auth
+      .signIn(
+        {
+          username: username.value,
+          password: password.value,
+        },
+        props.role,
+      )
+      .then((value) => {
+        const user = value.user
+        if (user.role === 'student') {
+          router.push({ name: Routes.StudentLoggedProfile })
+        } else if (user.role === 'enterprise') {
+          // router.push(RoutePaths[Routes])
+        } else {
+          alert('Tipo de usuário inválido.')
+        }
+      })
+  } finally {
+    loading.value = false
+  }
+}
+</script>
+
 <template>
   <div class="login-wrapper">
     <main class="login-form-container">
@@ -22,67 +78,13 @@
             required
           />
         </div>
-        <button class="btn btn--primary" :disabled="loading">
+        <button class="btn btn--primary" :disabled="loading" @click="handleSubmit">
           {{ loading ? 'Entrando...' : 'Entrar' }}
         </button>
       </form>
     </main>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import axios from 'axios'
-import api from '@/services/api'
-
-const username = ref('')
-const password = ref('')
-const loading = ref(false)
-const router = useRouter()
-
-async function handleSubmit() {
-  if (!username.value || !password.value) {
-    alert('Por favor, preencha usuário e senha.')
-    return
-  }
-
-  loading.value = true
-  try {
-    const res = await api.post('/auth/student/sign-in', {
-      username: username.value,
-      password: password.value,
-    })
-
-    const { access_token, refresh_token, user } = res.data as {
-      access_token: string
-      refresh_token: string
-      user: { role: string; uuid: string }
-    }
-
-    localStorage.setItem('access_token', access_token)
-    localStorage.setItem('refresh_token', refresh_token)
-    api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`
-
-    if (user.role === 'student') {
-      router.push({ name: 'student-profile', params: { uuid: user.uuid } })
-    } else if (user.role === 'enterprise') {
-      router.push({ name: 'enterprise-profile', params: { uuid: user.uuid } })
-    } else {
-      router.push({ name: 'home' })
-    }
-  } catch (err: unknown) {
-    let msg = 'Erro ao fazer login.'
-    if (axios.isAxiosError(err) && err.response) {
-      const data = err.response.data as Record<string, unknown>
-      if (typeof data.message === 'string') msg = data.message
-    }
-    alert(msg)
-  } finally {
-    loading.value = false
-  }
-}
-</script>
 
 <style scoped>
 .login-wrapper {
