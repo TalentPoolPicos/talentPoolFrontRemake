@@ -32,7 +32,7 @@ export const useEnterpriseStore = defineStore('enterprise', () => {
     isEnterprise()
 
     const { data } = await http.patch<EnterpriseDto>(`/enterprises`, enterprise)
-    userStore.getLoggedUser()
+    userStore.fetch()
     return data
   }
 
