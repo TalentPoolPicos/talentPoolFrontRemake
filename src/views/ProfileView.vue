@@ -36,7 +36,7 @@ const refresh = async () => {
   } finally {
     setTimeout(() => {
       loading.value = false
-    }, 5000)
+    }, 500)
   }
 }
 
@@ -48,8 +48,8 @@ watch(() => props.uuid, refresh)
 </script>
 
 <template>
-  <LoadingBrand v-if="loading" :loading="loading" />
-  <div v-else-if="error" class="error">{{ error }}</div>
+  <LoadingBrand :loading="loading" />
+  <div v-if="error" class="error">{{ error }}</div>
   <div v-else class="profile-page">
     <div class="banner-container">
       <img :src="user?.bannerPicture || defaultBanner" alt="Banner" class="banner" />
