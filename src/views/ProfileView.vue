@@ -34,9 +34,7 @@ const refresh = async () => {
     console.error(err)
     error.value = 'Falha ao carregar perfil.'
   } finally {
-    setTimeout(() => {
-      loading.value = false
-    }, 500)
+    loading.value = false
   }
 }
 
@@ -48,59 +46,59 @@ watch(() => props.uuid, refresh)
 </script>
 
 <template>
-  <LoadingBrand :loading="loading" />
-  <div v-if="error" class="error">{{ error }}</div>
-  <div v-else class="profile-page">
-    <div class="banner-container">
-      <img :src="user?.bannerPicture || defaultBanner" alt="Banner" class="banner" />
-      <div class="avatar-wrapper">
-        <CircleAvatar
-          :src="user?.profilePicture ?? `https://robohash.org/${user?.username ?? 'default'}`"
-          :width="150"
-          :height="150"
-        />
-      </div>
-    </div>
-
-    <section class="main">
-      <h1>{{ user?.student?.name || 'Talento' }}</h1>
-      <p class="subtitle">Matrícula: {{ user?.student?.registrationNumber ?? 'asdasd' }}</p>
-      <p class="description">{{ user?.student?.description }}</p>
-
-      <div class="tags">
-        <span v-for="tag in user?.tags" :key="tag" class="tag">
-          {{ tag }}
-        </span>
+  <LoadingBrand :loading="loading">
+    <div v-if="error" class="error">{{ error }}</div>
+    <div v-else class="profile-page">
+      <div class="banner-container">
+        <img :src="user?.bannerPicture || defaultBanner" alt="Banner" class="banner" />
+        <div class="avatar-wrapper">
+          <CircleAvatar
+            :src="user?.profilePicture ?? `https://robohash.org/${user?.username ?? 'default'}`"
+            :width="150"
+            :height="150"
+          />
+        </div>
       </div>
 
-      <div class="docs">
-        <a
-          v-if="user?.student?.curriculum"
-          :href="user.student.curriculum"
-          target="_blank"
-          class="doc-link"
-          >↓ Currículo</a
-        >
-        <a
-          v-if="user?.student?.history"
-          :href="user.student.history"
-          target="_blank"
-          class="doc-link"
-          >↓ Histórico</a
-        >
-      </div>
-    </section>
+      <section class="main">
+        <h1>{{ user?.student?.name || 'Talento' }}</h1>
+        <p class="subtitle">Matrícula: {{ user?.student?.registrationNumber ?? 'asdasd' }}</p>
+        <p class="description">{{ user?.student?.description }}</p>
 
-    <aside class="sidebar">
-      <div class="card">
-        <h3>Conecte-se</h3>
-        <ul class="social-links">
-          <li v-if="user?.student?.lattes">
-            <a :href="user.student.lattes" target="_blank">
-              <i class="fas fa-graduation-cap"></i> Lattes
-            </a>
-          </li>
-          <!-- <li v-if="user?.socialMedia">
+        <div class="tags">
+          <span v-for="tag in user?.tags" :key="tag" class="tag">
+            {{ tag }}
+          </span>
+        </div>
+
+        <div class="docs">
+          <a
+            v-if="user?.student?.curriculum"
+            :href="user.student.curriculum"
+            target="_blank"
+            class="doc-link"
+            >↓ Currículo</a
+          >
+          <a
+            v-if="user?.student?.history"
+            :href="user.student.history"
+            target="_blank"
+            class="doc-link"
+            >↓ Histórico</a
+          >
+        </div>
+      </section>
+
+      <aside class="sidebar">
+        <div class="card">
+          <h3>Conecte-se</h3>
+          <ul class="social-links">
+            <li v-if="user?.student?.lattes">
+              <a :href="user.student.lattes" target="_blank">
+                <i class="fas fa-graduation-cap"></i> Lattes
+              </a>
+            </li>
+            <!-- <li v-if="user?.socialMedia">
             <a :href="user.student.linkedinUrl" target="_blank">
               <i class="fab fa-linkedin"></i> LinkedIn
             </a>
@@ -115,25 +113,26 @@ watch(() => props.uuid, refresh)
               <i class="fab fa-twitter"></i> X
             </a>
           </li> -->
-        </ul>
-      </div>
+          </ul>
+        </div>
 
-      <div class="card stats">
-        <div class="stat-item">
-          <span class="stat-number">{{ 0 }}</span>
-          <span class="stat-label">Seus matches</span>
+        <div class="card stats">
+          <div class="stat-item">
+            <span class="stat-number">{{ 0 }}</span>
+            <span class="stat-label">Seus matches</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">{{ 0 }}</span>
+            <span class="stat-label">Te contrataram</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">{{ 0 }}</span>
+            <span class="stat-label">Visualizações</span>
+          </div>
         </div>
-        <div class="stat-item">
-          <span class="stat-number">{{ 0 }}</span>
-          <span class="stat-label">Te contrataram</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-number">{{ 0 }}</span>
-          <span class="stat-label">Visualizações</span>
-        </div>
-      </div>
-    </aside>
-  </div>
+      </aside>
+    </div>
+  </LoadingBrand>
 </template>
 
 <style scoped>
