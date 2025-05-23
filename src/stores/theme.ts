@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 
 const PREFERENCES = ['auto', 'light', 'dark'] as const
-export type Theme = typeof PREFERENCES[number]
+export type Theme = (typeof PREFERENCES)[number]
 
 const STORAGE_KEY = 'theme'
 
@@ -15,9 +15,7 @@ function applyTheme(pref: Theme) {
 
 export const useThemeStore = defineStore('theme', () => {
   const stored = localStorage.getItem(STORAGE_KEY) as Theme | null
-  const theme = ref<Theme>(
-    PREFERENCES.includes(stored as Theme) ? (stored as Theme) : 'auto'
-  )
+  const theme = ref<Theme>(PREFERENCES.includes(stored as Theme) ? (stored as Theme) : 'auto')
 
   function toggle() {
     const i = (PREFERENCES.indexOf(theme.value) + 1) % PREFERENCES.length
@@ -26,11 +24,11 @@ export const useThemeStore = defineStore('theme', () => {
 
   watch(
     theme,
-    val => {
+    (val) => {
       applyTheme(val)
       localStorage.setItem(STORAGE_KEY, val)
     },
-    { immediate: true }
+    { immediate: true },
   )
 
   return { theme, toggle }
