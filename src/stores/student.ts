@@ -1,38 +1,22 @@
 import type { components } from '@/types/api'
-import { defineStore, storeToRefs } from 'pinia'
-import { useAuthStore } from './auth'
-import { ref, watch } from 'vue'
+import { defineStore } from 'pinia'
 import { http } from '@/services/http'
+import { useUserStore } from './user'
 
-type UserDto = components['schemas']['UserDto']
 type StudentDto = components['schemas']['StudentDto']
 type PartialStudentDto = components['schemas']['PartialStudentDto']
 type StudentsPageDto = components['schemas']['StudentsPageDto']
 
 export const useStudentStore = defineStore('student', () => {
-  const authStore = useAuthStore()
-  const { loggedUser } = storeToRefs(authStore)
-
-  const loggedStudent = ref<StudentDto | null>(
-    loggedUser.value?.student ? loggedUser.value.student : null,
-  )
-
-  watch(loggedStudent, (val) => {
-    if (val) {
-      loggedUser.value = {
-        ...loggedUser.value,
-        student: val,
-      } as UserDto
-    }
-  })
+  const userStore = useUserStore()
 
   const isStudent = () => {
-    if (loggedUser.value === null || loggedUser.value.role !== 'student') {
+    if (userStore.loggedUser === null || userStore.loggedUser.role !== 'student') {
       throw new Error('User not logged in or not a student')
     }
   }
 
-  const studentByPagination = async (queries: {
+  const byPagination = async (queries: {
     page: number
     limit: number
   }): Promise<StudentsPageDto> => {
@@ -44,23 +28,15 @@ export const useStudentStore = defineStore('student', () => {
     return data
   }
 
-  const partialLoggedUpdateStudent = async (student: PartialStudentDto): Promise<StudentDto> => {
+  const partialUpdate = async (student: PartialStudentDto): Promise<StudentDto> => {
     isStudent()
 
     const { data } = await http.patch<StudentDto>(`/students`, student)
-    loggedStudent.value = data
+    userStore.fetch()
     return data
   }
 
-  const getLoggedStudent = async (): Promise<StudentDto> => {
-    isStudent()
-
-    const { data } = await http.get<StudentDto>(`/students/${loggedUser.value?.uuid}`)
-    loggedStudent.value = data
-    return data
-  }
-
-  const studentByUuid = async (uuid: string): Promise<StudentDto> => {
+  const findByUuid = async (uuid: string): Promise<StudentDto> => {
     const { data } = await http.get<StudentDto>(`/students/${uuid}`)
     return data
   }
@@ -75,7 +51,7 @@ export const useStudentStore = defineStore('student', () => {
         'Content-Type': 'multipart/form-data',
       },
     })
-    loggedStudent.value = data
+    userStore.fetch()
     return data
   }
 
@@ -89,16 +65,15 @@ export const useStudentStore = defineStore('student', () => {
         'Content-Type': 'multipart/form-data',
       },
     })
-    loggedStudent.value = data
+    userStore.fetch()
     return data
   }
 
   return {
-    loggedStudent,
-    studentByPagination,
-    partialLoggedUpdateStudent,
-    getLoggedStudent,
-    studentByUuid,
+    isStudent,
+    byPagination,
+    partialUpdate,
+    findByUuid,
     uploadCurriculum,
     uploadHistory,
   }
