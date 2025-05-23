@@ -145,7 +145,7 @@ interface StudentDto {
 
 const route = useRoute()
 const router = useRouter()
-const uuid = String(route.params.uuid)
+const uuid = '52a7b48f-c7b1-4cdb-b301-f0313c85708b'
 
 const loading = ref(true)
 const saving = ref(false)
