@@ -5,6 +5,7 @@ import { useUserStore, type UserDto } from '@/stores/user'
 import { useAuthStore } from '@/stores/auth'
 import { Routes } from '@/router'
 import CircleAvatar from '@/components/CircleAvatar.vue'
+import LoadingBrand from '@/components/LoadingBrand.vue'
 
 const router = useRouter()
 const props = defineProps<{ uuid?: string }>()
@@ -33,7 +34,9 @@ const refresh = async () => {
     console.error(err)
     error.value = 'Falha ao carregar perfil.'
   } finally {
-    loading.value = false
+    setTimeout(() => {
+      loading.value = false
+    }, 5000)
   }
 }
 
@@ -45,7 +48,7 @@ watch(() => props.uuid, refresh)
 </script>
 
 <template>
-  <div v-if="loading" class="loading">Carregando perfil…</div>
+  <LoadingBrand v-if="loading" :loading="loading" />
   <div v-else-if="error" class="error">{{ error }}</div>
   <div v-else class="profile-page">
     <div class="banner-container">
