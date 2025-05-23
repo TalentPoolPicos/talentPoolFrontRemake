@@ -26,6 +26,12 @@ export const useStudentStore = defineStore('student', () => {
     }
   })
 
+  const isStudent = () => {
+    if (loggedUser.value === null || loggedUser.value.role !== 'student') {
+      throw new Error('User not logged in or not a student')
+    }
+  }
+
   const studentByPagination = async (queries: {
     page: number
     limit: number
@@ -39,12 +45,16 @@ export const useStudentStore = defineStore('student', () => {
   }
 
   const partialLoggedUpdateStudent = async (student: PartialStudentDto): Promise<StudentDto> => {
+    isStudent()
+
     const { data } = await http.patch<StudentDto>(`/students`, student)
     loggedStudent.value = data
     return data
   }
 
   const getLoggedStudent = async (): Promise<StudentDto> => {
+    isStudent()
+
     const { data } = await http.get<StudentDto>(`/students/${loggedUser.value?.uuid}`)
     loggedStudent.value = data
     return data
@@ -56,6 +66,8 @@ export const useStudentStore = defineStore('student', () => {
   }
 
   const uploadCurriculum = async (file: File): Promise<StudentDto> => {
+    isStudent()
+
     const formData = new FormData()
     formData.append('file', file)
     const { data } = await http.patch<StudentDto>(`/students/curriculum`, formData, {
@@ -68,6 +80,8 @@ export const useStudentStore = defineStore('student', () => {
   }
 
   const uploadHistory = async (file: File): Promise<StudentDto> => {
+    isStudent()
+
     const formData = new FormData()
     formData.append('file', file)
     const { data } = await http.patch<StudentDto>(`/students/history`, formData, {
