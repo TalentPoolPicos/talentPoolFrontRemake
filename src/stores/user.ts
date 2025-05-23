@@ -11,10 +11,7 @@ export const useUserStore = defineStore('user', () => {
   const authStore = useAuthStore()
   const { loggedUser } = storeToRefs(authStore)
 
-  const usersByPagination = async (queries: {
-    page: number
-    limit: number
-  }): Promise<UsersPageDto> => {
+  const byPagination = async (queries: { page: number; limit: number }): Promise<UsersPageDto> => {
     const { data } = await http.get<UsersPageDto>('/users', {
       params: {
         ...queries,
@@ -23,7 +20,7 @@ export const useUserStore = defineStore('user', () => {
     return data
   }
 
-  const partialLoggedUpdateUser = async (user: PartialUserDto): Promise<UserDto> => {
+  const partialUpdate = async (user: PartialUserDto): Promise<UserDto> => {
     if (loggedUser.value === null) {
       throw new Error('User not logged in')
     }
@@ -33,7 +30,7 @@ export const useUserStore = defineStore('user', () => {
     return data
   }
 
-  const deleteLoggedUser = async () => {
+  const remove = async () => {
     if (loggedUser.value === null) {
       throw new Error('User not logged in')
     }
@@ -42,7 +39,7 @@ export const useUserStore = defineStore('user', () => {
     authStore.logout()
   }
 
-  const getLoggedUser = async () => {
+  const fetch = async () => {
     if (loggedUser.value === null) {
       throw new Error('User not logged in')
     }
@@ -52,7 +49,7 @@ export const useUserStore = defineStore('user', () => {
     return data
   }
 
-  const userByUuid = async (uuid: string): Promise<UserDto> => {
+  const findByUuid = async (uuid: string): Promise<UserDto> => {
     const { data } = await http.get<UserDto>(`/users/${uuid}`)
     return data
   }
@@ -91,12 +88,12 @@ export const useUserStore = defineStore('user', () => {
 
   return {
     loggedUser,
-    usersByPagination,
-    partialLoggedUpdateUser,
-    deleteLoggedUser,
-    getLoggedUser,
+    byPagination,
+    partialUpdate,
+    remove,
+    fetch,
+    findByUuid,
     uploadProfilePicture,
     uploadBannerPicture,
-    userByUuid,
   }
 })
