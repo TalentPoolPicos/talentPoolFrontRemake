@@ -8,7 +8,7 @@ type SignUpDto = components['schemas']['SignUpDto']
 type SignInDto = components['schemas']['SignInDto']
 type AccessTokenDto = components['schemas']['AccessTokenDto']
 
-type Role = 'student' | 'enterprise'
+export type Role = 'student' | 'enterprise'
 
 export const STORAGE_KEY = 'normal_user'
 const STORAGE_KEY_ACCESS_TOKEN = `${STORAGE_KEY}_access_token`
@@ -23,7 +23,7 @@ export const useAuthStore = defineStore('auth', () => {
   const accessTokenExpiresInStored = localStorage.getItem(STORAGE_KEY_ACCESS_TOKEN_EXPIRES_IN)
   const refreshTokenExpiresInStored = localStorage.getItem(STORAGE_KEY_REFRESH_TOKEN_EXPIRES_IN)
 
-  const user = ref<UserDto | null>(userStored ? JSON.parse(userStored) : null)
+  const loggedUser = ref<UserDto | null>(userStored ? JSON.parse(userStored) : null)
   const accessToken = ref<string | null>(accessTokenStored)
   const refreshToken = ref<string | null>(refreshTokenStored)
   const accessTokenExpiresIn = ref<number | null>(
@@ -34,7 +34,7 @@ export const useAuthStore = defineStore('auth', () => {
   )
 
   watch(
-    user,
+    loggedUser,
     (val) => {
       if (val) localStorage.setItem(STORAGE_KEY, JSON.stringify(val))
       else localStorage.removeItem(STORAGE_KEY)
@@ -65,13 +65,10 @@ export const useAuthStore = defineStore('auth', () => {
     (val) => {
       if (val) {
         localStorage.setItem(STORAGE_KEY_ACCESS_TOKEN_EXPIRES_IN, val.toString())
-      }
-      else localStorage.removeItem(STORAGE_KEY_ACCESS_TOKEN_EXPIRES_IN)
+      } else localStorage.removeItem(STORAGE_KEY_ACCESS_TOKEN_EXPIRES_IN)
     },
     { immediate: true },
   )
-
-
 
   watch(
     refreshTokenExpiresIn,
@@ -82,10 +79,10 @@ export const useAuthStore = defineStore('auth', () => {
     { immediate: true },
   )
 
-  const isLoggedIn = computed(() => !!user.value)
-  const isAdmin = computed(() => user.value?.role === 'admin')
-  const isStudent = computed(() => user.value?.role === 'student')
-  const isEnterprise = computed(() => user.value?.role === 'enterprise')
+  const isLoggedIn = computed(() => !!loggedUser.value)
+  const isAdmin = computed(() => loggedUser.value?.role === 'admin')
+  const isStudent = computed(() => loggedUser.value?.role === 'student')
+  const isEnterprise = computed(() => loggedUser.value?.role === 'enterprise')
 
   const signIn = async (signInDto: SignInDto, role: Role): Promise<AccessTokenDto> => {
     const { data } = await http.post(`/auth/${role}/sign-in`, signInDto)
@@ -112,7 +109,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const populateStateFromResponse = (data: AccessTokenDto) => {
-    user.value = data.user ?? user.value
+    loggedUser.value = data.user ?? loggedUser.value
     accessToken.value = data.access_token
     refreshToken.value = data.refresh_token ?? refreshToken.value
     accessTokenExpiresIn.value = Date.now() + data.access_token_expires_in * 1000
@@ -159,7 +156,7 @@ export const useAuthStore = defineStore('auth', () => {
   setAuthorizationInterceptor()
 
   const logout = () => {
-    user.value = null
+    loggedUser.value = null
     accessToken.value = null
     refreshToken.value = null
     accessTokenExpiresIn.value = null
@@ -167,6 +164,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   return {
+    loggedUser,
     isLoggedIn,
     isAdmin,
     isStudent,
