@@ -3,19 +3,17 @@ defineProps<{ loading: boolean }>()
 </script>
 
 <template>
-  <transition
-    name="fade"
-    appear
-    mode="out-in"
-    :duration="{ enter: 500, leave: 500 }"
-    v-show="loading"
-  >
-    <div class="loading-wrapper">
+  <transition name="fade" mode="out-in" appear :duration="{ enter: 500, leave: 500 }">
+    <div v-if="loading" key="loader" class="loading-wrapper">
       <span class="ring" />
       <div class="brand">
         <span class="small">Banco&nbsp;de</span>
         <span class="strong">Talentos</span>
       </div>
+    </div>
+
+    <div v-else key="content" class="content-wrapper">
+      <slot />
     </div>
   </transition>
 </template>
@@ -23,7 +21,7 @@ defineProps<{ loading: boolean }>()
 <style scoped>
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.5s linear;
+  transition: opacity 0.5s ease-in-out;
 }
 .fade-enter-from,
 .fade-leave-to {
@@ -35,9 +33,8 @@ defineProps<{ loading: boolean }>()
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  /* background-color: var(--color-background); */
   width: 100%;
-  height: 90dvh;
+  min-height: 90dvh;
   gap: 0.75rem;
   user-select: none;
 }
@@ -76,12 +73,14 @@ defineProps<{ loading: boolean }>()
 .brand .small {
   font-size: 0.8rem;
   opacity: 0.9;
-  letter-spacing: 0.02em;
 }
-
 .brand .strong {
   font-weight: 700;
   font-size: 1.2rem;
-  letter-spacing: 0.02em;
+}
+
+.content-wrapper {
+  width: 100%;
+  height: 100%;
 }
 </style>
