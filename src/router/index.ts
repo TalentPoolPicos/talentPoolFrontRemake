@@ -3,49 +3,74 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 import AboutView from '@/views/AboutView.vue'
 import NewsView from '@/views/NewsView.vue'
+import SignInView from '@/views/SignInView.vue'
+import ProfileView from '@/views/ProfileView.vue'
 
-const LoginView = () => import('@/views/LoginView.vue')
-const StudentProfileView = () => import('@/views/StudentProfileView.vue')
-const StudentEditView = () => import('@/views/StudentEditView.vue')
-const EnterpriseProfileView = () => import('@/views/EnterpriseProfileView.vue')
+export enum Routes {
+  Home = 'home',
+  About = 'about',
+  News = 'news',
+  SignInStudent = 'signInStudent',
+  SignInEnterprise = 'signInEnterprise',
+  StudentLoggedProfile = 'studentLoggedProfile',
+  StudentProfile = 'studentProfile',
+  StudentEditView = 'studentEditView',
+  StudentEdit = 'studentEdit',
+}
+
+export const RoutePaths = {
+  [Routes.Home]: '/',
+  [Routes.About]: '/about',
+  [Routes.News]: '/news',
+  [Routes.SignInStudent]: '/signInStudent',
+  [Routes.SignInEnterprise]: '/signInEnterprise',
+  [Routes.StudentLoggedProfile]: '/talent',
+  [Routes.StudentEditView]: '/talent/edit',
+  [Routes.StudentProfile]: '/talent/:uuid',
+  [Routes.StudentEdit]: '/talent/edit',
+}
 
 const routes = [
   {
-    path: '/',
-    name: 'home',
+    path: RoutePaths[Routes.Home],
+    name: Routes.Home,
     component: HomeView,
   },
   {
-    path: '/about',
-    name: 'about',
+    path: RoutePaths[Routes.About],
+    name: Routes.About,
     component: AboutView,
   },
   {
-    path: '/news',
-    name: 'news',
+    path: RoutePaths[Routes.News],
+    name: Routes.News,
     component: NewsView,
   },
   {
-    path: '/login',
-    name: 'login',
-    component: LoginView,
+    path: RoutePaths[Routes.SignInStudent],
+    name: Routes.SignInStudent,
+    component: SignInView,
+    props: {
+      role: 'student',
+    },
   },
   {
-    path: '/talent/:uuid',
-    name: 'student-profile',
-    component: StudentProfileView,
-    props: true,
+    path: RoutePaths[Routes.SignInEnterprise],
+    name: Routes.SignInEnterprise,
+    component: SignInView,
+    props: {
+      role: 'enterprise',
+    },
   },
   {
-    path: '/talent/:uuid/editar',
-    name: 'student-edit',
-    component: StudentEditView,
-    props: true,
+    path: RoutePaths[Routes.StudentLoggedProfile],
+    name: Routes.StudentLoggedProfile,
+    component: ProfileView,
   },
   {
-    path: '/enterprise/:uuid',
-    name: 'enterprise-profile',
-    component: EnterpriseProfileView,
+    path: RoutePaths[Routes.StudentProfile],
+    name: Routes.StudentProfile,
+    component: ProfileView,
     props: true,
   },
 ]
