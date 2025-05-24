@@ -82,27 +82,47 @@ watch(() => props.uuid, refresh)
             :width="150"
             :height="150"
           />
+          <button
+            v-if="
+              user &&
+              authStore.loggedUser?.uuid !== user.uuid &&
+              ((authStore.loggedUser?.role === 'enterprise' && user.role === 'student') ||
+                (authStore.loggedUser?.role === 'student' && user.role === 'enterprise'))
+            "
+            class="btn match-btn"
+          >
+            Match
+          </button>
         </div>
       </div>
 
       <section class="main">
-        <h1>{{ user?.student?.name || 'Talento' }}</h1>
+        <h1>
+          <template v-if="user?.role === 'student'">
+            {{ user.student?.name || 'Talento' }}
+          </template>
+          <template v-else-if="user?.role === 'enterprise'">
+            {{ user.enterprise?.name || 'Empresa' }}
+          </template>
+        </h1>
 
+        <p class="email" v-if="user?.role === 'student'">{{ user.student?.email }}</p>
+        <p class="email" v-else-if="user?.role === 'enterprise'">{{ user.enterprise?.email }}</p>
+
+        <!-- Tags -->
         <div class="tags" v-if="user?.tags?.length">
-          <span v-for="tag in user.tags" :key="tag" class="tag">
-            {{ tag }}
-          </span>
+          <span v-for="tag in user.tags" :key="tag" class="tag">{{ tag }}</span>
         </div>
 
-        <p class="email">{{ user?.student?.email }}</p>
-
-        <div class="docs-links">
+        <div class="docs-links" v-if="user?.role === 'student'">
           <button @click="downloadCurriculum" class="doc-btn">↓ Currículo</button>
-
           <button @click="downloadHistory" class="doc-btn">↓ Histórico</button>
         </div>
 
-        <p class="description">{{ user?.student?.description }}</p>
+        <p class="description" v-if="user?.role === 'student'">{{ user.student?.description }}</p>
+        <p class="description" v-else-if="user?.role === 'enterprise'">
+          {{ user.enterprise?.description }}
+        </p>
 
         <div class="action-buttons">
           <button
@@ -133,11 +153,12 @@ watch(() => props.uuid, refresh)
         <div class="card">
           <h3>Conecte-se</h3>
           <ul class="social-links">
-            <li v-if="user?.student?.lattes">
+            <li v-if="user?.student?.lattes && user.role === 'student'">
               <a :href="user.student.lattes" target="_blank">
                 <i class="fas fa-graduation-cap"></i> Lattes
               </a>
             </li>
+            <!-- Você pode adicionar mais links sociais para empresa aqui -->
           </ul>
         </div>
 
@@ -170,7 +191,6 @@ watch(() => props.uuid, refresh)
   font-family: Inter, sans-serif;
 }
 
-.loading,
 .error {
   max-width: 700px;
   margin: 3rem auto;
@@ -195,41 +215,69 @@ watch(() => props.uuid, refresh)
   bottom: -40px;
   left: 1.5rem;
   border-radius: 50%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 .avatar-wrapper img {
   border-radius: 50%;
 }
 
+/* Botão Match ao lado do avatar */
+.match-btn {
+  background: black;
+  color: white;
+  border-radius: 15px;
+  padding: 6px 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background 0.3s;
+}
+.match-btn:hover {
+  background: #333;
+}
+
 /* Main */
 .main h1 {
-  margin-top: 4rem;
+  margin-top: 0rem;
   font-size: 2rem;
-  color: #1a73e8;
-}
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-  margin-bottom: 1rem;
-}
-.tag {
-  background: #e1ecf9;
-  color: #0b3d91;
-  padding: 0.25rem 0.75rem;
-  border-radius: 999px;
-  font-size: 0.8rem;
+  color: #000000;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.25rem;
 }
+
 .email {
   font-weight: 600;
-  margin-bottom: 1rem;
+  margin-bottom: 0.25rem;
+  font-size: 1rem;
+  color: #444;
 }
+
+.techs {
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.location {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  color: #444;
+}
+
+/* Botões de documentos */
 .docs-links {
+  display: flex;
+  gap: 0.5rem;
   margin-bottom: 1rem;
 }
 .doc-btn {
-  background: #1a73e8;
+  background: #000000;
   color: white;
   padding: 6px 12px;
   border-radius: 6px;
@@ -237,18 +285,13 @@ watch(() => props.uuid, refresh)
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  margin-right: 10px;
+  margin-right: 0;
   transition: background 0.3s;
 }
 .doc-btn:hover {
-  background: #155ab6;
+  background: #333;
 }
-.no-doc-msg {
-  font-size: 0.8rem;
-  color: #a00;
-  margin-right: 15px;
-  vertical-align: middle;
-}
+
 .description {
   margin-bottom: 1.5rem;
   line-height: 1.5;
@@ -324,6 +367,14 @@ watch(() => props.uuid, refresh)
   .avatar-wrapper {
     left: 50%;
     transform: translateX(-50%);
+  }
+  .main h1 {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  .docs-links {
+    margin-left: 0;
   }
 }
 </style>
