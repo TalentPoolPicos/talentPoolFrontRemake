@@ -29,7 +29,6 @@ const refresh = async () => {
     } else {
       user.value = await userStore.loggedUser
     }
-    console.log(user)
   } catch (err) {
     console.error(err)
     error.value = 'Falha ao carregar perfil.'
@@ -48,6 +47,22 @@ const LogoutHandler = async () => {
   }
 }
 
+const downloadCurriculum = () => {
+  if (user.value?.student?.curriculum) {
+    window.open(user.value.student.curriculum, '_blank')
+  } else {
+    alert('Usuário não cadastrou o currículo.')
+  }
+}
+
+const downloadHistory = () => {
+  if (user.value?.student?.history) {
+    window.open(user.value.student.history, '_blank')
+  } else {
+    alert('Usuário não cadastrou o histórico.')
+  }
+}
+
 onMounted(() => {
   refresh()
 })
@@ -57,8 +72,6 @@ watch(() => props.uuid, refresh)
 
 <template>
   <LoadingBrand :loading="loading">
-    <button v-if="!props.uuid" @click="LogoutHandler">teste</button>
-
     <div v-if="error" class="error">{{ error }}</div>
     <div v-else class="profile-page">
       <div class="banner-container">
@@ -74,30 +87,45 @@ watch(() => props.uuid, refresh)
 
       <section class="main">
         <h1>{{ user?.student?.name || 'Talento' }}</h1>
-        <p class="subtitle">Matrícula: {{ user?.student?.registrationNumber ?? 'asdasd' }}</p>
-        <p class="description">{{ user?.student?.description }}</p>
 
-        <div class="tags">
-          <span v-for="tag in user?.tags" :key="tag" class="tag">
+        <div class="tags" v-if="user?.tags?.length">
+          <span v-for="tag in user.tags" :key="tag" class="tag">
             {{ tag }}
           </span>
         </div>
 
-        <div class="docs">
-          <a
-            v-if="user?.student?.curriculum"
-            :href="user.student.curriculum"
-            target="_blank"
-            class="doc-link"
-            >↓ Currículo</a
+        <p class="email">{{ user?.student?.email }}</p>
+
+        <div class="docs-links">
+          <button @click="downloadCurriculum" class="doc-btn">↓ Currículo</button>
+
+          <button @click="downloadHistory" class="doc-btn">↓ Histórico</button>
+        </div>
+
+        <p class="description">{{ user?.student?.description }}</p>
+
+        <div class="action-buttons">
+          <button
+            v-if="
+              user &&
+              authStore.loggedUser?.uuid !== user.uuid &&
+              ((authStore.loggedUser?.role === 'enterprise' && user.role === 'student') ||
+                (authStore.loggedUser?.role === 'student' && user.role === 'enterprise'))
+            "
+            class="btn"
           >
-          <a
-            v-if="user?.student?.history"
-            :href="user.student.history"
-            target="_blank"
-            class="doc-link"
-            >↓ Histórico</a
+            Match
+          </button>
+          <button v-if="user && authStore.loggedUser?.uuid === user.uuid" class="btn">
+            Editar
+          </button>
+          <button
+            v-if="user && authStore.loggedUser?.uuid === user.uuid"
+            class="btn"
+            @click="LogoutHandler"
           >
+            Logout
+          </button>
         </div>
       </section>
 
@@ -110,21 +138,6 @@ watch(() => props.uuid, refresh)
                 <i class="fas fa-graduation-cap"></i> Lattes
               </a>
             </li>
-            <!-- <li v-if="user?.socialMedia">
-            <a :href="user.student.linkedinUrl" target="_blank">
-              <i class="fab fa-linkedin"></i> LinkedIn
-            </a>
-          </li>
-          <li v-if="user.student.facebookUrl">
-            <a :href="user.student.facebookUrl" target="_blank">
-              <i class="fab fa-facebook"></i> Facebook
-            </a>
-          </li>
-          <li v-if="user.student.twitterUrl">
-            <a :href="user.student.twitterUrl" target="_blank">
-              <i class="fab fa-twitter"></i> X
-            </a>
-          </li> -->
           </ul>
         </div>
 
@@ -175,62 +188,94 @@ watch(() => props.uuid, refresh)
   width: 100%;
   height: 200px;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 8px 8px 0 0;
 }
 .avatar-wrapper {
   position: absolute;
   bottom: -40px;
   left: 1.5rem;
-}
-.avatar {
-  width: 80px;
-  height: 80px;
-  border: 4px solid var(--color-background);
   border-radius: 50%;
-  object-fit: cover;
+}
+.avatar-wrapper img {
+  border-radius: 50%;
 }
 
 /* Main */
 .main h1 {
-  margin-top: 3rem;
+  margin-top: 4rem;
   font-size: 2rem;
-}
-.subtitle {
-  color: var(--color-on-surface-variant);
-  margin-bottom: 1rem;
-}
-.description {
-  margin-bottom: 1.5rem;
+  color: #1a73e8;
 }
 .tags {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 1.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
 }
 .tag {
-  background: var(--color-surface-variant);
-  color: var(--color-on-surface);
+  background: #e1ecf9;
+  color: #0b3d91;
   padding: 0.25rem 0.75rem;
   border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.email {
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+.docs-links {
+  margin-bottom: 1rem;
+}
+.doc-btn {
+  background: #1a73e8;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: 10px;
+  transition: background 0.3s;
+}
+.doc-btn:hover {
+  background: #155ab6;
+}
+.no-doc-msg {
+  font-size: 0.8rem;
+  color: #a00;
+  margin-right: 15px;
+  vertical-align: middle;
+}
+.description {
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+  color: #333;
 }
 
-/* Docs */
-.docs {
+.action-buttons {
   display: flex;
   gap: 1rem;
 }
-.doc-link {
-  background: var(--color-primary);
-  color: var(--color-on-primary);
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  text-decoration: none;
+.btn {
+  background: black;
+  color: white;
+  padding: 8px 20px;
+  border-radius: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background 0.3s;
+}
+.btn:hover {
+  background: #333;
 }
 
 /* Sidebar */
 .sidebar .card {
-  background: var(--color-surface-variant);
+  background: #f1f3f4;
   padding: 1rem;
   border-radius: 8px;
   margin-bottom: 1.5rem;
@@ -238,6 +283,7 @@ watch(() => props.uuid, refresh)
 .social-links {
   list-style: none;
   padding: 0;
+  margin: 0;
 }
 .social-links li {
   margin: 0.5rem 0;
@@ -247,7 +293,8 @@ watch(() => props.uuid, refresh)
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--color-on-surface);
+  color: #202124;
+  font-weight: 600;
 }
 
 /* Estatísticas */
@@ -266,7 +313,7 @@ watch(() => props.uuid, refresh)
 }
 .stat-label {
   font-size: 0.875rem;
-  color: var(--color-on-surface-variant);
+  color: #5f6368;
 }
 
 /* Responsivo */
