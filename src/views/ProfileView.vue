@@ -38,6 +38,16 @@ const refresh = async () => {
   }
 }
 
+const LogoutHandler = async () => {
+  try {
+    await authStore.logout()
+    router.push({ name: Routes.Home })
+  } catch (err) {
+    console.error(err)
+    error.value = 'Falha ao fazer logout.'
+  }
+}
+
 onMounted(() => {
   refresh()
 })
@@ -47,6 +57,8 @@ watch(() => props.uuid, refresh)
 
 <template>
   <LoadingBrand :loading="loading">
+    <button v-if="!props.uuid" @click="LogoutHandler">teste</button>
+
     <div v-if="error" class="error">{{ error }}</div>
     <div v-else class="profile-page">
       <div class="banner-container">
