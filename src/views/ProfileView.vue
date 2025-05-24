@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore, type UserDto } from '@/stores/user'
 import { useAuthStore } from '@/stores/auth'
+import { useTagStore } from '@/stores/tag'
 import { Routes } from '@/router'
 import CircleAvatar from '@/components/CircleAvatar.vue'
 import LoadingBrand from '@/components/LoadingBrand.vue'
@@ -12,22 +13,32 @@ const props = defineProps<{ uuid?: string }>()
 
 const userStore = useUserStore()
 const authStore = useAuthStore()
+const tagStore = useTagStore()
 
 const loading = ref(true)
 const error = ref<string | null>(null)
+const user = ref<UserDto | null>(null)
+const tags = ref<string[]>([]) // tags para exibir
 
 import defaultBanner from '@/assets/banner.png'
 
-const user = ref<UserDto | null>(null)
-
 const refresh = async () => {
+  loading.value = true
+  error.value = null
   try {
     if (props.uuid) {
       user.value = await userStore.findByUuid(props.uuid)
     } else if (!authStore.isLoggedIn) {
       router.push({ name: Routes.Home })
+      return
     } else {
       user.value = await userStore.loggedUser
+    }
+
+    if (user.value) {
+      // Busca as tags pelo UUID do usuário
+      const tagDtos = await tagStore.findAllByUserUuid(user.value.uuid)
+      tags.value = tagDtos.map((t) => t.label)
     }
   } catch (err) {
     console.error(err)
@@ -118,8 +129,8 @@ watch(() => props.uuid, refresh)
         <p class="email" v-else-if="user?.role === 'enterprise'">{{ user.enterprise?.email }}</p>
 
         <!-- Tags -->
-        <div class="tags" v-if="user?.tags?.length">
-          <span v-for="tag in user.tags" :key="tag" class="tag">{{ tag }}</span>
+        <div class="tags" v-if="tags.length">
+          <span v-for="tag in tags" :key="tag" class="tag">{{ tag }}</span>
         </div>
 
         <!-- Botões de documentos para student -->

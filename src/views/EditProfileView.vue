@@ -4,12 +4,14 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useStudentStore } from '@/stores/student'
 import { useEnterpriseStore } from '@/stores/enterprise'
+import { useTagStore } from '@/stores/tag'
 
 const router = useRouter()
 
 const userStore = useUserStore()
 const studentStore = useStudentStore()
 const enterpriseStore = useEnterpriseStore()
+const tagStore = useTagStore()
 
 const role = ref<'student' | 'enterprise'>('student')
 
@@ -29,7 +31,7 @@ const form = ref({
   socialReason: '',
 })
 
-const loadData = () => {
+const loadData = async () => {
   if (!userStore.loggedUser) {
     router.push('/')
     return
@@ -46,7 +48,12 @@ const loadData = () => {
     form.value.email = s.email ?? ''
     form.value.description = s.description ?? ''
     form.value.registrationNumber = s.registrationNumber ?? ''
-    form.value.tags = [...(userStore.loggedUser.tags ?? [])]
+
+    // Busca as tags do usuário
+    const tagDtos = (await tagStore.findAllByUserUuid)
+      ? await tagStore.findAllByUserUuid(userStore.loggedUser.uuid)
+      : []
+    form.value.tags = tagDtos.map((t: { label: string }) => t.label)
   } else if (role.value === 'enterprise' && userStore.loggedUser.enterprise) {
     const e = userStore.loggedUser.enterprise
     form.value.name = e.name ?? ''
@@ -55,7 +62,10 @@ const loadData = () => {
     form.value.fantasyName = e.fantasyName ?? ''
     form.value.cnpj = e.cnpj ?? ''
     form.value.socialReason = e.socialReason ?? ''
-    form.value.tags = [...(userStore.loggedUser.tags ?? [])]
+
+    // Busca as tags do usuário
+    const tagDtos = await tagStore.findAllByUserUuid(userStore.loggedUser.uuid)
+    form.value.tags = tagDtos.map((t) => t.label)
   } else {
     error.value = 'Perfil não disponível para edição.'
   }
@@ -105,6 +115,7 @@ const save = async () => {
   error.value = null
 
   try {
+    // Salva dados, mas NÃO envia tags neste PATCH
     if (role.value === 'student') {
       const payload = {
         name: form.value.name,
@@ -112,7 +123,6 @@ const save = async () => {
         description: form.value.description,
         course: form.value.course,
         registrationNumber: form.value.registrationNumber,
-        tags: form.value.tags,
       }
       await studentStore.partialUpdate(payload)
     } else if (role.value === 'enterprise') {
@@ -123,10 +133,28 @@ const save = async () => {
         socialReason: form.value.socialReason,
         email: form.value.email,
         description: form.value.description,
-        tags: form.value.tags,
       }
       await enterpriseStore.partialUpdate(payload)
     }
+
+    // Atualiza tags separadamente
+    // Para simplificar, primeiro removemos todas as tags existentes e depois criamos as novas
+    // Buscar tags atuais
+    const currentTags = tagStore.findAllByUserUuid
+      ? await tagStore.findAllByUserUuid(userStore.loggedUser!.uuid)
+      : []
+    const currentLabels = currentTags.map((t) => t.label)
+
+    // Tags para remover
+    const toRemove = currentTags.filter((t) => !form.value.tags.includes(t.label))
+    // Tags para adicionar
+    const toAdd = form.value.tags.filter((t) => !currentLabels.includes(t))
+
+    // Remove tags
+    await Promise.all(toRemove.map((t) => tagStore.remove(t.uuid)))
+    // Cria tags
+    await Promise.all(toAdd.map((label) => tagStore.create({ label })))
+
     alert('Perfil atualizado com sucesso!')
     await userStore.fetch()
     if (role.value === 'student') {
