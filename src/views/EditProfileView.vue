@@ -5,6 +5,7 @@ import { useUserStore } from '@/stores/user'
 import { useStudentStore } from '@/stores/student'
 import { useEnterpriseStore } from '@/stores/enterprise'
 import { useTagStore } from '@/stores/tag'
+import { Routes } from '@/router'
 
 const router = useRouter()
 
@@ -50,7 +51,7 @@ const loadData = async () => {
     form.value.registrationNumber = s.registrationNumber ?? ''
 
     // Busca as tags do usuário
-    const tagDtos = (await tagStore.findAllByUserUuid)
+    const tagDtos = userStore.loggedUser.uuid
       ? await tagStore.findAllByUserUuid(userStore.loggedUser.uuid)
       : []
     form.value.tags = tagDtos.map((t: { label: string }) => t.label)
@@ -64,7 +65,9 @@ const loadData = async () => {
     form.value.socialReason = e.socialReason ?? ''
 
     // Busca as tags do usuário
-    const tagDtos = await tagStore.findAllByUserUuid(userStore.loggedUser.uuid)
+    const tagDtos = userStore.loggedUser.uuid
+      ? await tagStore.findAllByUserUuid(userStore.loggedUser.uuid)
+      : []
     form.value.tags = tagDtos.map((t) => t.label)
   } else {
     error.value = 'Perfil não disponível para edição.'
@@ -140,8 +143,8 @@ const save = async () => {
     // Atualiza tags separadamente
     // Para simplificar, primeiro removemos todas as tags existentes e depois criamos as novas
     // Buscar tags atuais
-    const currentTags = tagStore.findAllByUserUuid
-      ? await tagStore.findAllByUserUuid(userStore.loggedUser!.uuid)
+    const currentTags = userStore.loggedUser?.uuid
+      ? await tagStore.findAllByUserUuid(userStore.loggedUser.uuid)
       : []
     const currentLabels = currentTags.map((t) => t.label)
 
@@ -157,10 +160,18 @@ const save = async () => {
 
     alert('Perfil atualizado com sucesso!')
     await userStore.fetch()
+
+    // Redireciona para a página do perfil (visualização, não edição)
     if (role.value === 'student') {
-      router.push({ name: 'StudentLoggedProfile' })
+      router.push({
+        name: Routes.StudentLoggedProfile,
+        params: { uuid: userStore.loggedUser!.uuid },
+      })
     } else {
-      router.push({ name: 'EnterpriseLoggedProfile' })
+      router.push({
+        name: Routes.EnterpriseLoggedProfile,
+        params: { uuid: userStore.loggedUser!.uuid },
+      })
     }
   } catch {
     error.value = 'Erro ao salvar o perfil.'
@@ -257,6 +268,7 @@ onMounted(() => {
   margin: 2rem auto;
   font-family: Inter, sans-serif;
   padding: 0 1rem;
+  color: var(--color-text);
 }
 
 .loading {
@@ -290,6 +302,7 @@ form {
 label {
   font-weight: 600;
   margin-bottom: 0.3rem;
+  color: var(--color-on-surface);
 }
 
 input,
@@ -297,15 +310,17 @@ textarea {
   padding: 0.6rem;
   font-size: 1rem;
   border-radius: 6px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--color-outline);
   resize: vertical;
   transition: border-color 0.3s;
+  color: var(--color-on-surface);
+  background: var(--color-surface);
 }
 
 input:focus,
 textarea:focus {
   outline: none;
-  border-color: #000;
+  border-color: var(--color-primary);
 }
 
 .tags {
@@ -316,7 +331,8 @@ textarea:focus {
 }
 
 .tag {
-  background: #eee;
+  background: var(--color-surface-variant);
+  color: var(--color-on-surface-variant);
   padding: 5px 10px;
   border-radius: 15px;
   display: flex;
@@ -324,6 +340,8 @@ textarea:focus {
   gap: 0.4rem;
   font-weight: 600;
   user-select: none;
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .tag button {
@@ -331,30 +349,31 @@ textarea:focus {
   border: none;
   font-weight: bold;
   cursor: pointer;
-  color: #a00;
+  color: var(--color-error);
   font-size: 1.1rem;
   line-height: 1;
   padding: 0 0.2rem;
+  margin-left: 0.3rem;
 }
 
 .btn-add-tag {
   background: transparent;
-  border: 1px dashed #666;
+  border: 1px dashed var(--color-outline);
   padding: 6px 14px;
   border-radius: 15px;
   cursor: pointer;
   font-weight: 600;
-  color: #333;
+  color: var(--color-on-surface-variant);
   transition: background-color 0.3s;
 }
 
 .btn-add-tag:hover {
-  background-color: #ddd;
+  background-color: var(--color-surface-variant);
 }
 
 .btn-submit {
-  background-color: black;
-  color: white;
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
   font-weight: 700;
   font-size: 1.1rem;
   padding: 12px;
@@ -367,7 +386,12 @@ textarea:focus {
 }
 
 .btn-submit:disabled {
-  background-color: #666;
+  background-color: var(--color-outline);
   cursor: not-allowed;
+}
+
+.error {
+  color: var(--color-error);
+  font-weight: 600;
 }
 </style>

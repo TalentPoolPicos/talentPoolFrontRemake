@@ -191,7 +191,7 @@ watch(() => props.uuid, refresh)
             <span class="stat-number">{{ 0 }}</span>
             <span class="stat-label">Seus matches</span>
           </div>
-          <div class="stat-item">
+          <div class="stat-item" v-if="user?.role === 'student'">
             <span class="stat-number">{{ 0 }}</span>
             <span class="stat-label">Te contrataram</span>
           </div>
@@ -249,8 +249,8 @@ watch(() => props.uuid, refresh)
 
 /* Botão Match ao lado do avatar */
 .match-btn {
-  background: black;
-  color: white;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
   border-radius: 15px;
   padding: 6px 12px;
   font-weight: 600;
@@ -259,14 +259,14 @@ watch(() => props.uuid, refresh)
   transition: background 0.3s;
 }
 .match-btn:hover {
-  background: #333;
+  background: var(--color-primary-container);
 }
 
 /* Main */
 .main h1 {
   margin-top: 0rem;
   font-size: 2rem;
-  color: #000000;
+  color: var(--color-on-surface);
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -278,20 +278,26 @@ watch(() => props.uuid, refresh)
   font-weight: 600;
   margin-bottom: 0.25rem;
   font-size: 1rem;
-  color: #444;
+  color: var(--color-on-surface-variant);
 }
 
-.techs {
-  font-weight: 600;
-  font-size: 1rem;
-  margin-bottom: 0.25rem;
-}
-
-.location {
-  font-weight: 600;
-  font-size: 0.9rem;
+/* Tags */
+.tags {
   margin-bottom: 1rem;
-  color: #444;
+}
+
+.tag {
+  background: var(--color-surface-variant);
+  color: var(--color-on-surface-variant);
+  padding: 5px 10px;
+  border-radius: 15px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+  user-select: none;
+  margin-right: 0.5rem; /* espaçamento entre tags */
+  margin-bottom: 0.5rem;
 }
 
 /* Botões de documentos */
@@ -301,8 +307,8 @@ watch(() => props.uuid, refresh)
   margin-bottom: 1rem;
 }
 .doc-btn {
-  background: #000000;
-  color: white;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
   padding: 6px 12px;
   border-radius: 6px;
   border: none;
@@ -313,13 +319,13 @@ watch(() => props.uuid, refresh)
   transition: background 0.3s;
 }
 .doc-btn:hover {
-  background: #333;
+  background: var(--color-primary-container);
 }
 
 .description {
   margin-bottom: 1.5rem;
   line-height: 1.5;
-  color: #333;
+  color: var(--color-on-surface);
 }
 
 .action-buttons {
@@ -327,8 +333,8 @@ watch(() => props.uuid, refresh)
   gap: 1rem;
 }
 .btn {
-  background: black;
-  color: white;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
   padding: 8px 20px;
   border-radius: 15px;
   font-weight: 600;
@@ -337,12 +343,12 @@ watch(() => props.uuid, refresh)
   transition: background 0.3s;
 }
 .btn:hover {
-  background: #333;
+  background: var(--color-primary-container);
 }
 
 /* Sidebar */
 .sidebar .card {
-  background: #f1f3f4;
+  background: var(--color-surface-variant);
   padding: 1rem;
   border-radius: 8px;
   margin-bottom: 1.5rem;
@@ -360,7 +366,7 @@ watch(() => props.uuid, refresh)
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #202124;
+  color: var(--color-on-surface-variant);
   font-weight: 600;
 }
 
@@ -377,10 +383,11 @@ watch(() => props.uuid, refresh)
   display: block;
   font-size: 1.5rem;
   font-weight: bold;
+  color: var(--color-primary);
 }
 .stat-label {
   font-size: 0.875rem;
-  color: #5f6368;
+  color: var(--color-on-surface-variant);
 }
 
 /* Responsivo */
