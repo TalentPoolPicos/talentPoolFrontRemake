@@ -1,47 +1,32 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useStudentStore } from '@/stores/student'
 import { useEnterpriseStore } from '@/stores/enterprise'
 
 const router = useRouter()
-const route = useRoute()
 
 const userStore = useUserStore()
 const studentStore = useStudentStore()
 const enterpriseStore = useEnterpriseStore()
 
-const role = route.query.role === 'enterprise' ? 'enterprise' : 'student' // default student
+const role = ref<'student' | 'enterprise'>('student')
 
 const loading = ref(true)
 const saving = ref(false)
 const error = ref<string | null>(null)
 
 const form = ref({
-  // Campos comuns
   name: '',
   email: '',
   description: '',
-  phone: '',
   tags: [] as string[],
-
-  // Student only
   course: '',
   registrationNumber: '',
-
-  // Enterprise only
   fantasyName: '',
   cnpj: '',
   socialReason: '',
-
-  address: {
-    cep: '',
-    street: '',
-    neighborhood: '',
-    city: '',
-    state: '',
-  },
 })
 
 const loadData = () => {
@@ -50,22 +35,26 @@ const loadData = () => {
     return
   }
 
-  if (role === 'student' && userStore.loggedUser.role === 'student') {
-    const s = userStore.loggedUser.student
-    form.value.name = s?.name ?? ''
-    form.value.email = s?.email ?? ''
-    form.value.description = s?.description ?? ''
+  role.value =
+    userStore.loggedUser.role === 'student' || userStore.loggedUser.role === 'enterprise'
+      ? userStore.loggedUser.role
+      : 'student'
 
-    form.value.registrationNumber = s?.registrationNumber ?? ''
+  if (role.value === 'student' && userStore.loggedUser.student) {
+    const s = userStore.loggedUser.student
+    form.value.name = s.name ?? ''
+    form.value.email = s.email ?? ''
+    form.value.description = s.description ?? ''
+    form.value.registrationNumber = s.registrationNumber ?? ''
     form.value.tags = [...(userStore.loggedUser.tags ?? [])]
-  } else if (role === 'enterprise' && userStore.loggedUser.role === 'enterprise') {
+  } else if (role.value === 'enterprise' && userStore.loggedUser.enterprise) {
     const e = userStore.loggedUser.enterprise
-    form.value.name = e?.name ?? ''
-    form.value.email = e?.email ?? ''
-    form.value.description = e?.description ?? ''
-    form.value.fantasyName = e?.fantasyName ?? ''
-    form.value.cnpj = e?.cnpj ?? ''
-    form.value.socialReason = e?.socialReason ?? ''
+    form.value.name = e.name ?? ''
+    form.value.email = e.email ?? ''
+    form.value.description = e.description ?? ''
+    form.value.fantasyName = e.fantasyName ?? ''
+    form.value.cnpj = e.cnpj ?? ''
+    form.value.socialReason = e.socialReason ?? ''
     form.value.tags = [...(userStore.loggedUser.tags ?? [])]
   } else {
     error.value = 'Perfil não disponível para edição.'
@@ -73,26 +62,60 @@ const loadData = () => {
   loading.value = false
 }
 
+const validate = (): boolean => {
+  error.value = null
+  if (!form.value.name.trim()) {
+    error.value = 'Nome é obrigatório.'
+    return false
+  }
+  if (!form.value.email.trim()) {
+    error.value = 'Email é obrigatório.'
+    return false
+  }
+  if (role.value === 'student') {
+    if (!form.value.course.trim()) {
+      error.value = 'Curso é obrigatório para talentos.'
+      return false
+    }
+    if (!form.value.registrationNumber.trim()) {
+      error.value = 'Número da matrícula é obrigatório para talentos.'
+      return false
+    }
+  } else if (role.value === 'enterprise') {
+    if (!form.value.fantasyName.trim()) {
+      error.value = 'Nome fantasia é obrigatório para empresas.'
+      return false
+    }
+    if (!form.value.cnpj.trim()) {
+      error.value = 'CNPJ é obrigatório para empresas.'
+      return false
+    }
+    if (!form.value.socialReason.trim()) {
+      error.value = 'Razão social é obrigatória para empresas.'
+      return false
+    }
+  }
+  return true
+}
+
 const save = async () => {
+  if (!validate()) return
+
   saving.value = true
   error.value = null
 
   try {
-    if (role === 'student') {
-      // Payload apenas com campos de estudante
+    if (role.value === 'student') {
       const payload = {
         name: form.value.name,
         email: form.value.email,
         description: form.value.description,
-        phone: form.value.phone,
         course: form.value.course,
         registrationNumber: form.value.registrationNumber,
-        address: form.value.address,
         tags: form.value.tags,
       }
       await studentStore.partialUpdate(payload)
-    } else if (role === 'enterprise') {
-      // Payload apenas com campos de empresa
+    } else if (role.value === 'enterprise') {
       const payload = {
         name: form.value.name,
         fantasyName: form.value.fantasyName,
@@ -100,16 +123,13 @@ const save = async () => {
         socialReason: form.value.socialReason,
         email: form.value.email,
         description: form.value.description,
-        phone: form.value.phone,
-        address: form.value.address,
         tags: form.value.tags,
       }
       await enterpriseStore.partialUpdate(payload)
     }
     alert('Perfil atualizado com sucesso!')
     await userStore.fetch()
-    // Redireciona para o perfil correto após salvar
-    if (role === 'student') {
+    if (role.value === 'student') {
       router.push({ name: 'StudentLoggedProfile' })
     } else {
       router.push({ name: 'EnterpriseLoggedProfile' })
@@ -141,68 +161,63 @@ onMounted(() => {
   <div class="edit-profile">
     <h1>Editar perfil: {{ role === 'student' ? 'Talento' : 'Empresa' }}</h1>
 
-    <div v-if="loading">Carregando dados...</div>
+    <div v-if="loading" class="loading">Carregando dados...</div>
     <div v-else>
       <form @submit.prevent="save">
         <div v-if="error" class="error">{{ error }}</div>
 
-        <label>Nome</label>
-        <input type="text" v-model="form.name" required />
-
-        <label>Email</label>
-        <input type="email" v-model="form.email" required />
-
-        <label>Descrição</label>
-        <textarea v-model="form.description"></textarea>
-
-        <label>Telefone</label>
-        <input type="text" v-model="form.phone" />
-
-        <div v-if="role === 'student'">
-          <label>Curso</label>
-          <input type="text" v-model="form.course" />
-
-          <label>Número da matrícula</label>
-          <input type="text" v-model="form.registrationNumber" />
+        <div class="row">
+          <div class="field">
+            <label>Nome</label>
+            <input type="text" v-model="form.name" required />
+          </div>
+          <div class="field">
+            <label>Email</label>
+            <input type="email" v-model="form.email" required />
+          </div>
         </div>
 
-        <div v-if="role === 'enterprise'">
-          <label>Nome fantasia</label>
-          <input type="text" v-model="form.fantasyName" />
+        <label>Descrição</label>
+        <textarea v-model="form.description" rows="4"></textarea>
 
-          <label>CNPJ</label>
-          <input type="text" v-model="form.cnpj" />
+        <div v-if="role === 'student'" class="row">
+          <div class="field">
+            <label>Curso</label>
+            <input type="text" v-model="form.course" required />
+          </div>
+          <div class="field">
+            <label>Número da matrícula</label>
+            <input type="text" v-model="form.registrationNumber" required />
+          </div>
+        </div>
 
-          <label>Razão social</label>
-          <input type="text" v-model="form.socialReason" />
+        <div v-if="role === 'enterprise'" class="row">
+          <div class="field">
+            <label>Nome fantasia</label>
+            <input type="text" v-model="form.fantasyName" required />
+          </div>
+          <div class="field">
+            <label>CNPJ</label>
+            <input type="text" v-model="form.cnpj" required />
+          </div>
+          <div class="field full-width">
+            <label>Razão social</label>
+            <input type="text" v-model="form.socialReason" required />
+          </div>
         </div>
 
         <h3>Tags</h3>
         <div class="tags">
           <span v-for="tag in form.tags" :key="tag" class="tag">
             {{ tag }}
-            <button type="button" @click="removeTag(tag)">x</button>
+            <button type="button" @click="removeTag(tag)">×</button>
           </span>
-          <button type="button" @click="addTag">Adicionar tag</button>
+          <button type="button" @click="addTag" class="btn-add-tag">Adicionar tag</button>
         </div>
 
-        <h3>Endereço</h3>
-        <label>CEP</label>
-        <input type="text" v-model="form.address.cep" />
-
-        <label>Rua</label>
-        <input type="text" v-model="form.address.street" />
-
-        <label>Bairro</label>
-        <input type="text" v-model="form.address.neighborhood" />
-
-        <label>Cidade</label>
-        <input type="text" v-model="form.address.city" />
-
-        <label>Estado</label>
-        <input type="text" v-model="form.address.state" />
-
-        <button type="submit" :disabled="saving">{{ saving ? 'Salvando...' : 'Salvar' }}</button>
+        <button type="submit" :disabled="saving" class="btn-submit">
+          {{ saving ? 'Salvando...' : 'Salvar' }}
+        </button>
       </form>
     </div>
   </div>
@@ -210,69 +225,121 @@ onMounted(() => {
 
 <style scoped>
 .edit-profile {
-  max-width: 600px;
+  max-width: 650px;
   margin: 2rem auto;
   font-family: Inter, sans-serif;
+  padding: 0 1rem;
+}
+
+.loading {
+  text-align: center;
+  font-weight: 600;
+  font-size: 1.2rem;
 }
 
 form {
   display: flex;
   flex-direction: column;
+  gap: 1.5rem;
+}
+
+.row {
+  display: flex;
   gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.field.full-width {
+  flex: 1 1 100%;
 }
 
 label {
   font-weight: 600;
+  margin-bottom: 0.3rem;
 }
 
 input,
 textarea {
-  padding: 0.5rem;
+  padding: 0.6rem;
   font-size: 1rem;
-  border-radius: 4px;
+  border-radius: 6px;
   border: 1px solid #ccc;
+  resize: vertical;
+  transition: border-color 0.3s;
+}
+
+input:focus,
+textarea:focus {
+  outline: none;
+  border-color: #000;
 }
 
 .tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.6rem;
   align-items: center;
 }
 
 .tag {
   background: #eee;
-  padding: 4px 8px;
-  border-radius: 12px;
+  padding: 5px 10px;
+  border-radius: 15px;
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.4rem;
+  font-weight: 600;
+  user-select: none;
 }
 
 .tag button {
   background: transparent;
   border: none;
-  cursor: pointer;
   font-weight: bold;
-  color: #a00;
-}
-
-button[type='submit'] {
-  background: black;
-  color: white;
-  padding: 10px;
-  border-radius: 8px;
-  font-weight: 600;
   cursor: pointer;
-}
-button[type='submit']:disabled {
-  background: #666;
-  cursor: not-allowed;
+  color: #a00;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0 0.2rem;
 }
 
-.error {
-  color: red;
+.btn-add-tag {
+  background: transparent;
+  border: 1px dashed #666;
+  padding: 6px 14px;
+  border-radius: 15px;
+  cursor: pointer;
   font-weight: 600;
-  margin-bottom: 1rem;
+  color: #333;
+  transition: background-color 0.3s;
+}
+
+.btn-add-tag:hover {
+  background-color: #ddd;
+}
+
+.btn-submit {
+  background-color: black;
+  color: white;
+  font-weight: 700;
+  font-size: 1.1rem;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  align-self: flex-start;
+  min-width: 120px;
+  transition: background-color 0.3s;
+}
+
+.btn-submit:disabled {
+  background-color: #666;
+  cursor: not-allowed;
 }
 </style>
