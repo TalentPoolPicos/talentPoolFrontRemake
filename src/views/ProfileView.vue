@@ -101,17 +101,6 @@ watch(() => props.uuid, refresh)
             :width="150"
             :height="150"
           />
-          <button
-            v-if="
-              user &&
-              authStore.loggedUser?.uuid !== user.uuid &&
-              ((authStore.loggedUser?.role === 'enterprise' && user.role === 'student') ||
-                (authStore.loggedUser?.role === 'student' && user.role === 'enterprise'))
-            "
-            class="btn match-btn"
-          >
-            Match
-          </button>
         </div>
       </div>
 

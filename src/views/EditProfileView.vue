@@ -141,37 +141,25 @@ const save = async () => {
     }
 
     // Atualiza tags separadamente
-    // Para simplificar, primeiro removemos todas as tags existentes e depois criamos as novas
-    // Buscar tags atuais
     const currentTags = userStore.loggedUser?.uuid
       ? await tagStore.findAllByUserUuid(userStore.loggedUser.uuid)
       : []
     const currentLabels = currentTags.map((t) => t.label)
 
-    // Tags para remover
     const toRemove = currentTags.filter((t) => !form.value.tags.includes(t.label))
-    // Tags para adicionar
     const toAdd = form.value.tags.filter((t) => !currentLabels.includes(t))
 
-    // Remove tags
     await Promise.all(toRemove.map((t) => tagStore.remove(t.uuid)))
-    // Cria tags
     await Promise.all(toAdd.map((label) => tagStore.create({ label })))
 
     alert('Perfil atualizado com sucesso!')
     await userStore.fetch()
 
-    // Redireciona para a página do perfil (visualização, não edição)
+    // Redireciona para a página do perfil logado (sem uuid)
     if (role.value === 'student') {
-      router.push({
-        name: Routes.StudentLoggedProfile,
-        params: { uuid: userStore.loggedUser!.uuid },
-      })
+      router.push({ name: Routes.StudentLoggedProfile }) // /talent
     } else {
-      router.push({
-        name: Routes.EnterpriseLoggedProfile,
-        params: { uuid: userStore.loggedUser!.uuid },
-      })
+      router.push({ name: Routes.EnterpriseLoggedProfile }) // /enterprise
     }
   } catch {
     error.value = 'Erro ao salvar o perfil.'
