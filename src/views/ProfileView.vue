@@ -63,6 +63,14 @@ const downloadHistory = () => {
   }
 }
 
+const goToEdit = () => {
+  if (user.value?.role === 'student') {
+    router.push({ name: 'EditProfile', query: { role: 'student' } })
+  } else if (user.value?.role === 'enterprise') {
+    router.push({ name: 'EditProfile', query: { role: 'enterprise' } })
+  }
+}
+
 onMounted(() => {
   refresh()
 })
@@ -137,7 +145,11 @@ watch(() => props.uuid, refresh)
           >
             Match
           </button>
-          <button v-if="user && authStore.loggedUser?.uuid === user.uuid" class="btn">
+          <button
+            v-if="user && authStore.loggedUser?.uuid === user.uuid"
+            class="btn"
+            @click="goToEdit"
+          >
             Editar
           </button>
           <button
