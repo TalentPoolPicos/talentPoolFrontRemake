@@ -114,6 +114,7 @@ watch(() => props.uuid, refresh)
           <span v-for="tag in user.tags" :key="tag" class="tag">{{ tag }}</span>
         </div>
 
+        <!-- Botões de documentos para student -->
         <div class="docs-links" v-if="user?.role === 'student'">
           <button @click="downloadCurriculum" class="doc-btn">↓ Currículo</button>
           <button @click="downloadHistory" class="doc-btn">↓ Histórico</button>
