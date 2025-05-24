@@ -16,6 +16,8 @@ export enum Routes {
   StudentProfile = 'studentProfile',
   StudentEditView = 'studentEditView',
   StudentEdit = 'studentEdit',
+  EnterpriseLoggedProfile = 'enterpriseLoggedProfile',
+  EnterpriseProfile = 'enterpriseProfile',
 }
 
 export const RoutePaths = {
@@ -28,6 +30,8 @@ export const RoutePaths = {
   [Routes.StudentEditView]: '/talent/edit',
   [Routes.StudentProfile]: '/talent/:uuid',
   [Routes.StudentEdit]: '/talent/edit',
+  [Routes.EnterpriseLoggedProfile]: '/enterprise',
+  [Routes.EnterpriseProfile]: '/enterprise/:uuid',
 }
 
 const routes = [
@@ -70,6 +74,17 @@ const routes = [
   {
     path: RoutePaths[Routes.StudentProfile],
     name: Routes.StudentProfile,
+    component: ProfileView,
+    props: true,
+  },
+  {
+    path: RoutePaths[Routes.EnterpriseLoggedProfile],
+    name: Routes.EnterpriseLoggedProfile,
+    component: ProfileView,
+  },
+  {
+    path: RoutePaths[Routes.EnterpriseProfile],
+    name: Routes.EnterpriseProfile,
     component: ProfileView,
     props: true,
   },

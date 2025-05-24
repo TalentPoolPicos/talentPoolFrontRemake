@@ -43,7 +43,7 @@ const handleSubmit = async () => {
         if (user.role === 'student') {
           router.push({ name: Routes.StudentLoggedProfile })
         } else if (user.role === 'enterprise') {
-          // router.push(RoutePaths[Routes])
+          router.push({ name: Routes.EnterpriseLoggedProfile })
         } else {
           alert('Tipo de usuário inválido.')
         }
