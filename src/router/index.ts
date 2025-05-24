@@ -24,8 +24,8 @@ export enum Routes {
   SignInEnterprise = 'signInEnterprise',
 
   // registro
-  RegisterStudent = 'registerStudent',
-  RegisterEnterprise = 'registerEnterprise',
+  RegisterStudent = 'sgnUpStudent',
+  RegisterEnterprise = 'signUpEnterprise',
 
   // perfis
   StudentLoggedProfile = 'studentLoggedProfile',
@@ -43,8 +43,8 @@ export const RoutePaths: Record<Routes, string> = {
   [Routes.SignInStudent]: '/signInStudent',
   [Routes.SignInEnterprise]: '/signInEnterprise',
 
-  [Routes.RegisterStudent]: '/register/student',
-  [Routes.RegisterEnterprise]: '/register/enterprise',
+  [Routes.RegisterStudent]: '/signUp/student',
+  [Routes.RegisterEnterprise]: '/signUp/enterprise',
 
   [Routes.StudentLoggedProfile]: '/talent',
   [Routes.StudentProfile]: '/talent/:uuid',

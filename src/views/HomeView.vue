@@ -36,7 +36,7 @@ import { Routes, RoutePaths } from '@/router/index'
             estágio que combinam com o seu perfil e te aproximam do futuro profissional que você
             sempre sonhou.
           </p>
-          <RouterLink :to="RoutePaths[Routes.SignInStudent]" class="btn-primary"
+          <RouterLink :to="RoutePaths[Routes.RegisterStudent]" class="btn-primary"
             >Cadastre-se</RouterLink
           >
         </div>
@@ -71,7 +71,7 @@ import { Routes, RoutePaths } from '@/router/index'
 
       <div class="partner__cta">
         <h2>Venha se tornar um parceiro!</h2>
-        <RouterLink :to="RoutePaths[Routes.SignInEnterprise]" class="btn-outline"
+        <RouterLink :to="RoutePaths[Routes.RegisterEnterprise]" class="btn-outline"
           >Quero me tornar um parceiro</RouterLink
         >
       </div>
