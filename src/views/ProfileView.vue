@@ -65,9 +65,9 @@ const downloadHistory = () => {
 
 const goToEdit = () => {
   if (user.value?.role === 'student') {
-    router.push({ name: 'EditProfile', query: { role: 'student' } })
+    router.push({ name: Routes.StudentEditView })
   } else if (user.value?.role === 'enterprise') {
-    router.push({ name: 'EditProfile', query: { role: 'enterprise' } })
+    router.push({ name: Routes.EnterpriseEditView })
   }
 }
 

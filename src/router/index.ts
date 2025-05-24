@@ -5,6 +5,7 @@ import AboutView from '@/views/AboutView.vue'
 import NewsView from '@/views/NewsView.vue'
 import SignInView from '@/views/SignInView.vue'
 import ProfileView from '@/views/ProfileView.vue'
+import EditProfileView from '@/views/EditProfileView.vue'
 
 export enum Routes {
   Home = 'home',
@@ -18,6 +19,8 @@ export enum Routes {
   StudentEdit = 'studentEdit',
   EnterpriseLoggedProfile = 'enterpriseLoggedProfile',
   EnterpriseProfile = 'enterpriseProfile',
+  EnterpriseEditView = 'enterpriseEditView',
+  EnterpriseEdit = 'enterpriseEdit',
 }
 
 export const RoutePaths = {
@@ -32,6 +35,8 @@ export const RoutePaths = {
   [Routes.StudentEdit]: '/talent/edit',
   [Routes.EnterpriseLoggedProfile]: '/enterprise',
   [Routes.EnterpriseProfile]: '/enterprise/:uuid',
+  [Routes.EnterpriseEditView]: '/enterprise/edit',
+  [Routes.EnterpriseEdit]: '/enterprise/edit',
 }
 
 const routes = [
@@ -87,6 +92,38 @@ const routes = [
     name: Routes.EnterpriseProfile,
     component: ProfileView,
     props: true,
+  },
+  {
+    path: RoutePaths[Routes.StudentEditView],
+    name: Routes.StudentEditView,
+    component: EditProfileView,
+    props: {
+      role: 'student',
+    },
+  },
+  {
+    path: RoutePaths[Routes.StudentEdit],
+    name: Routes.StudentEdit,
+    component: EditProfileView,
+    props: {
+      role: 'student',
+    },
+  },
+  {
+    path: RoutePaths[Routes.EnterpriseEditView],
+    name: Routes.EnterpriseEditView,
+    component: EditProfileView,
+    props: {
+      role: 'enterprise',
+    },
+  },
+  {
+    path: RoutePaths[Routes.EnterpriseEdit],
+    name: Routes.EnterpriseEdit,
+    component: EditProfileView,
+    props: {
+      role: 'enterprise',
+    },
   },
 ]
 
