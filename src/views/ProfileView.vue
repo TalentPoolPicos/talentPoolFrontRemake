@@ -5,8 +5,8 @@ import { useUserStore, type UserDto } from '@/stores/user'
 import { useAuthStore } from '@/stores/auth'
 import { useTagStore } from '@/stores/tag'
 import { Routes } from '@/router'
-import CircleAvatar from '@/components/CircleAvatar.vue'
 import LoadingBrand from '@/components/LoadingBrand.vue'
+import ImageUser from '@/components/ImageUser.vue'
 
 const router = useRouter()
 const props = defineProps<{ uuid?: string }>()
@@ -19,8 +19,6 @@ const loading = ref(true)
 const error = ref<string | null>(null)
 const user = ref<UserDto | null>(null)
 const tags = ref<string[]>([]) // tags para exibir
-
-import defaultBanner from '@/assets/banner.png'
 
 const refresh = async () => {
   loading.value = true
@@ -93,16 +91,7 @@ watch(() => props.uuid, refresh)
   <LoadingBrand :loading="loading">
     <div v-if="error" class="error">{{ error }}</div>
     <div v-else class="profile-page">
-      <div class="banner-container">
-        <img :src="user?.bannerPicture || defaultBanner" alt="Banner" class="banner" />
-        <div class="avatar-wrapper">
-          <CircleAvatar
-            :src="user?.profilePicture ?? `https://robohash.org/${user?.username ?? 'default'}`"
-            :width="150"
-            :height="150"
-          />
-        </div>
-      </div>
+      <ImageUser :user="user" class="banner-container" />
 
       <section class="main">
         <h1>
@@ -204,11 +193,12 @@ watch(() => props.uuid, refresh)
   gap: 2rem;
   max-width: 1000px;
   margin: 2rem auto;
+  padding: 1rem;
   font-family: Inter, sans-serif;
 }
 
 .error {
-  max-width: 700px;
+  max-width: 600px;
   margin: 3rem auto;
   text-align: center;
   font-size: 1.2rem;
@@ -220,25 +210,6 @@ watch(() => props.uuid, refresh)
   grid-column: 1 / -1;
   position: relative;
 }
-.banner {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  border-radius: 8px 8px 0 0;
-}
-.avatar-wrapper {
-  position: absolute;
-  bottom: -40px;
-  left: 1.5rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-.avatar-wrapper img {
-  border-radius: 50%;
-}
-
 /* Botão Match ao lado do avatar */
 .match-btn {
   background: var(--color-primary);

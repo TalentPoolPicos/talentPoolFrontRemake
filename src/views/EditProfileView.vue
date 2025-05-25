@@ -6,6 +6,8 @@ import { useStudentStore } from '@/stores/student'
 import { useEnterpriseStore } from '@/stores/enterprise'
 import { useTagStore } from '@/stores/tag'
 import { Routes } from '@/router'
+import LoadingBrand from '@/components/LoadingBrand.vue'
+import ImageUser from '@/components/ImageUser.vue'
 
 const router = useRouter()
 
@@ -49,7 +51,6 @@ const loadData = async () => {
     form.value.email = s.email ?? ''
     form.value.description = s.description ?? ''
     form.value.registrationNumber = s.registrationNumber ?? ''
-    // form.value.course = s.course ?? '' // Removido pois 'course' não existe em 'student'
 
     // Busca as tags do usuário
     const tagDtos = userStore.loggedUser.uuid
@@ -166,6 +167,7 @@ const save = async () => {
 }
 
 const addTag = () => {
+  console.log('addTag')
   const newTag = prompt('Digite uma nova tag:')
   if (newTag && !form.value.tags.includes(newTag)) {
     form.value.tags.push(newTag)
@@ -182,11 +184,13 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="edit-profile">
-    <h1>Editar perfil: {{ role === 'student' ? 'Talento' : 'Empresa' }}</h1>
+  <LoadingBrand :loading="loading">
+    <div class="image-user-container">
+      <ImageUser :user="userStore.loggedUser" class="image-user-componente" />
+    </div>
 
-    <div v-if="loading" class="loading">Carregando dados...</div>
-    <div v-else>
+    <div class="edit-profile">
+      <h1>Editar perfil: {{ role === 'student' ? 'Talento' : 'Empresa' }}</h1>
       <form @submit.prevent="save">
         <div v-if="error" class="error">{{ error }}</div>
 
@@ -256,22 +260,25 @@ onMounted(() => {
         </button>
       </form>
     </div>
-  </div>
+  </LoadingBrand>
 </template>
 
 <style scoped>
+.image-user-componente {
+  max-width: 1000px;
+  padding: 1rem;
+}
+.image-user-container {
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+}
 .edit-profile {
   max-width: 650px;
   margin: 2rem auto;
   font-family: Inter, sans-serif;
   padding: 0 1rem;
   color: var(--color-text);
-}
-
-.loading {
-  text-align: center;
-  font-weight: 600;
-  font-size: 1.2rem;
 }
 
 form {
@@ -298,7 +305,6 @@ form {
 
 label {
   font-weight: 600;
-  margin-bottom: 0.3rem;
   color: var(--color-on-surface);
 }
 
