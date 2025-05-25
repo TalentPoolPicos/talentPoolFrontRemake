@@ -49,6 +49,7 @@ const loadData = async () => {
     form.value.email = s.email ?? ''
     form.value.description = s.description ?? ''
     form.value.registrationNumber = s.registrationNumber ?? ''
+    // form.value.course = s.course ?? '' // Removido pois 'course' não existe em 'student'
 
     // Busca as tags do usuário
     const tagDtos = userStore.loggedUser.uuid
@@ -86,10 +87,6 @@ const validate = (): boolean => {
     return false
   }
   if (role.value === 'student') {
-    if (!form.value.course.trim()) {
-      error.value = 'Curso é obrigatório para talentos.'
-      return false
-    }
     if (!form.value.registrationNumber.trim()) {
       error.value = 'Número da matrícula é obrigatório para talentos.'
       return false
@@ -205,7 +202,19 @@ onMounted(() => {
         </div>
 
         <label>Descrição</label>
-        <textarea v-model="form.description" rows="4"></textarea>
+        <textarea
+          v-model="form.description"
+          placeholder="Descreva-se brevemente"
+          required
+          rows="4"
+          style="
+            resize: none;
+            min-width: 200px;
+            max-width: 620px;
+            min-height: 120px;
+            max-height: 120px;
+          "
+        ></textarea>
 
         <div v-if="role === 'student'" class="row">
           <div class="field">
@@ -299,10 +308,10 @@ textarea {
   font-size: 1rem;
   border-radius: 6px;
   border: 1px solid var(--color-outline);
-  resize: vertical;
   transition: border-color 0.3s;
   color: var(--color-on-surface);
   background: var(--color-surface);
+  font-family: Inter, sans-serif;
 }
 
 input:focus,

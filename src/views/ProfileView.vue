@@ -171,7 +171,6 @@ watch(() => props.uuid, refresh)
                 <i class="fas fa-graduation-cap"></i> Lattes
               </a>
             </li>
-            <!-- Você pode adicionar mais links sociais para empresa aqui -->
           </ul>
         </div>
 
@@ -319,6 +318,8 @@ watch(() => props.uuid, refresh)
   margin-bottom: 1.5rem;
   line-height: 1.5;
   color: var(--color-on-surface);
+  font-size: 1rem;
+  font-weight: 400;
 }
 
 .action-buttons {
