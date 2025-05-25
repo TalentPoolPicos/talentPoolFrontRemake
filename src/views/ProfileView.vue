@@ -184,6 +184,10 @@ watch(() => props.uuid, refresh)
             <span class="stat-number">{{ 0 }}</span>
             <span class="stat-label">Te contrataram</span>
           </div>
+          <div class="stat-item" v-if="user?.role === 'enterprise'">
+            <span class="stat-number">{{ 0 }}</span>
+            <span class="stat-label">Te curtiram</span>
+          </div>
           <div class="stat-item">
             <span class="stat-number">{{ 0 }}</span>
             <span class="stat-label">Visualizações</span>
