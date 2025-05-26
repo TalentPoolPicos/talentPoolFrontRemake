@@ -9,6 +9,9 @@ import { Routes } from '@/router'
 import LoadingBrand from '@/components/LoadingBrand.vue'
 import ImageUser from '@/components/ImageUser.vue'
 
+/* --------------------------------------------------------------------- */
+/* stores & router */
+
 const router = useRouter()
 
 const userStore = useUserStore()
@@ -16,8 +19,10 @@ const studentStore = useStudentStore()
 const enterpriseStore = useEnterpriseStore()
 const tagStore = useTagStore()
 
-const role = ref<'student' | 'enterprise'>('student')
+/* --------------------------------------------------------------------- */
+/* reactivity */
 
+const role = ref<'student' | 'enterprise'>('student')
 const loading = ref(true)
 const saving = ref(false)
 const error = ref<string | null>(null)
@@ -37,6 +42,9 @@ const form = ref({
   cnpj: '',
   socialReason: '',
 })
+
+/* --------------------------------------------------------------------- */
+/* helpers */
 
 const removeTag = (tag: string) => {
   form.value.tags = form.value.tags.filter((t) => t !== tag)
@@ -70,7 +78,7 @@ const loadData = async () => {
     form.value.registrationNumber = s.registrationNumber ?? ''
     form.value.lattes = s.lattes ?? ''
 
-    // Busca as tags do usuário
+    /* busca tags do usuário */
     const tagDtos = userStore.loggedUser.uuid
       ? await tagStore.findAllByUserUuid(userStore.loggedUser.uuid)
       : []
@@ -84,7 +92,6 @@ const loadData = async () => {
     form.value.cnpj = e.cnpj ?? ''
     form.value.socialReason = e.socialReason ?? ''
 
-    // Busca as tags do usuário
     const tagDtos = userStore.loggedUser.uuid
       ? await tagStore.findAllByUserUuid(userStore.loggedUser.uuid)
       : []
@@ -138,7 +145,7 @@ const save = async () => {
   error.value = null
 
   try {
-    // Salva dados, mas NÃO envia tags neste PATCH
+    /* salva dados, sem enviar tags neste PATCH */
     if (role.value === 'student') {
       const payload = {
         name: form.value.name,
@@ -149,12 +156,8 @@ const save = async () => {
         lattes: form.value.lattes,
       }
       await studentStore.partialUpdate(payload)
-      if (curriculumFile.value) {
-        await studentStore.uploadCurriculum(curriculumFile.value)
-      }
-      if (historyFile.value) {
-        await studentStore.uploadHistory(historyFile.value)
-      }
+      if (curriculumFile.value) await studentStore.uploadCurriculum(curriculumFile.value)
+      if (historyFile.value) await studentStore.uploadHistory(historyFile.value)
     } else if (role.value === 'enterprise') {
       const payload = {
         name: form.value.name,
@@ -167,7 +170,7 @@ const save = async () => {
       await enterpriseStore.partialUpdate(payload)
     }
 
-    // Atualiza tags separadamente
+    /* atualiza tags separadamente */
     const currentTags = userStore.loggedUser?.uuid
       ? await tagStore.findAllByUserUuid(userStore.loggedUser.uuid)
       : []
@@ -182,7 +185,7 @@ const save = async () => {
     alert('Perfil atualizado com sucesso!')
     await userStore.fetch()
 
-    // Redireciona para a página do perfil logado (sem uuid)
+    /* redireciona para a página do perfil logado (sem uuid) */
     if (role.value === 'student') {
       router.push({ name: Routes.StudentLoggedProfile }) // /talent
     } else {
@@ -196,26 +199,22 @@ const save = async () => {
 }
 
 const addTag = () => {
-  console.log('addTag')
   const newTag = prompt('Digite uma nova tag:')
-  if (newTag && !form.value.tags.includes(newTag)) {
-    form.value.tags.push(newTag)
-  }
+  if (newTag && !form.value.tags.includes(newTag)) form.value.tags.push(newTag)
 }
 
-onMounted(() => {
-  loadData()
-})
+onMounted(loadData)
 </script>
 
 <template>
   <LoadingBrand :loading="loading">
     <div class="image-user-container">
-      <ImageUser :user="userStore.loggedUser" class="image-user-componente" />
+      <ImageUser :user="userStore.loggedUser" editable class="image-user-componente" />
     </div>
 
     <div class="edit-profile">
       <h1>Editar perfil: {{ role === 'student' ? 'Talento' : 'Empresa' }}</h1>
+
       <form @submit.prevent="save">
         <div v-if="error" class="error">{{ error }}</div>
 
@@ -239,13 +238,24 @@ onMounted(() => {
 
         <div v-if="role === 'student'" class="row">
           <div class="field">
-            <label>Currículo (PDF)</label>
-            <input type="file" accept="application/pdf" @change="handleCurriculumChange" />
+            <label :class="{ filled: curriculumFile }">Currículo (PDF)</label>
+            <input
+              type="file"
+              accept="application/pdf"
+              @change="handleCurriculumChange"
+              class="btn-file"
+            />
             <small v-if="curriculumFile">{{ curriculumFile.name }}</small>
           </div>
+
           <div class="field">
-            <label>Histórico escolar (PDF)</label>
-            <input type="file" accept="application/pdf" @change="handleHistoryChange" />
+            <label :class="{ filled: historyFile }">Histórico escolar (PDF)</label>
+            <input
+              type="file"
+              accept="application/pdf"
+              @change="handleHistoryChange"
+              class="btn-file"
+            />
             <small v-if="historyFile">{{ historyFile.name }}</small>
           </div>
         </div>
@@ -318,6 +328,7 @@ onMounted(() => {
   display: flex;
   justify-content: center;
 }
+
 .edit-profile {
   max-width: 650px;
   margin: 2rem auto;
@@ -325,7 +336,6 @@ onMounted(() => {
   padding: 0 1rem;
   color: var(--color-text);
 }
-
 form {
   display: flex;
   flex-direction: column;
@@ -337,13 +347,11 @@ form {
   gap: 1rem;
   flex-wrap: wrap;
 }
-
 .field {
   flex: 1;
   display: flex;
   flex-direction: column;
 }
-
 .field.full-width {
   flex: 1 1 100%;
 }
@@ -364,7 +372,6 @@ textarea {
   background: var(--color-surface);
   font-family: Inter, sans-serif;
 }
-
 input:focus,
 textarea:focus {
   outline: none;
@@ -391,7 +398,6 @@ textarea:focus {
   margin-right: 0.5rem;
   margin-bottom: 0.5rem;
 }
-
 .tag button {
   background: transparent;
   border: none;
@@ -414,7 +420,6 @@ textarea:focus {
   color: var(--color-on-surface-variant);
   transition: background-color 0.3s;
 }
-
 .btn-add-tag:hover {
   background-color: var(--color-surface-variant);
 }
@@ -429,10 +434,9 @@ textarea:focus {
   border: none;
   cursor: pointer;
   align-self: flex-start;
-  min-width: 120px;
+  min-width: 100px;
   transition: background-color 0.3s;
 }
-
 .btn-submit:disabled {
   background-color: var(--color-outline);
   cursor: not-allowed;
@@ -441,5 +445,48 @@ textarea:focus {
 .error {
   color: var(--color-error);
   font-weight: 600;
+}
+
+input[type='file'].btn-file {
+  color: transparent;
+  background: transparent;
+  width: 100%;
+}
+
+/* Chrome, Edge, Safari e demais navegadores Chromium */
+input[type='file'].btn-file::file-selector-button {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.25s;
+}
+input[type='file'].btn-file:hover::file-selector-button {
+  background: var(--color-primary-container);
+}
+
+/* Firefox */
+input[type='file'].btn-file::file-upload-button {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.25s;
+}
+input[type='file'].btn-file:hover::file-upload-button {
+  background: var(--color-primary-container);
+}
+
+/* rótulo colorido quando um arquivo foi selecionado */
+label.filled {
+  color: var(--color-primary);
 }
 </style>
