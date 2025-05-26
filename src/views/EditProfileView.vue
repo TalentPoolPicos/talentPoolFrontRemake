@@ -22,6 +22,9 @@ const loading = ref(true)
 const saving = ref(false)
 const error = ref<string | null>(null)
 
+const curriculumFile = ref<File | null>(null)
+const historyFile = ref<File | null>(null)
+
 const form = ref({
   name: '',
   email: '',
@@ -29,10 +32,24 @@ const form = ref({
   tags: [] as string[],
   course: '',
   registrationNumber: '',
+  lattes: '',
   fantasyName: '',
   cnpj: '',
   socialReason: '',
 })
+
+const removeTag = (tag: string) => {
+  form.value.tags = form.value.tags.filter((t) => t !== tag)
+}
+
+const handleCurriculumChange = (e: Event) => {
+  const files = (e.target as HTMLInputElement).files
+  curriculumFile.value = files && files[0] ? files[0] : null
+}
+const handleHistoryChange = (e: Event) => {
+  const files = (e.target as HTMLInputElement).files
+  historyFile.value = files && files[0] ? files[0] : null
+}
 
 const loadData = async () => {
   if (!userStore.loggedUser) {
@@ -51,6 +68,7 @@ const loadData = async () => {
     form.value.email = s.email ?? ''
     form.value.description = s.description ?? ''
     form.value.registrationNumber = s.registrationNumber ?? ''
+    form.value.lattes = s.lattes ?? ''
 
     // Busca as tags do usuário
     const tagDtos = userStore.loggedUser.uuid
@@ -105,6 +123,10 @@ const validate = (): boolean => {
       error.value = 'Razão social é obrigatória para empresas.'
       return false
     }
+    if (form.value.lattes && !/^https?:\/\//i.test(form.value.lattes)) {
+      error.value = 'Informe um URL válido para o Lattes.'
+      return false
+    }
   }
   return true
 }
@@ -124,8 +146,15 @@ const save = async () => {
         description: form.value.description,
         course: form.value.course,
         registrationNumber: form.value.registrationNumber,
+        lattes: form.value.lattes,
       }
       await studentStore.partialUpdate(payload)
+      if (curriculumFile.value) {
+        await studentStore.uploadCurriculum(curriculumFile.value)
+      }
+      if (historyFile.value) {
+        await studentStore.uploadHistory(historyFile.value)
+      }
     } else if (role.value === 'enterprise') {
       const payload = {
         name: form.value.name,
@@ -174,10 +203,6 @@ const addTag = () => {
   }
 }
 
-const removeTag = (tag: string) => {
-  form.value.tags = form.value.tags.filter((t) => t !== tag)
-}
-
 onMounted(() => {
   loadData()
 })
@@ -202,6 +227,26 @@ onMounted(() => {
           <div class="field">
             <label>Email</label>
             <input type="email" v-model="form.email" required />
+          </div>
+        </div>
+
+        <div v-if="role === 'student'" class="row">
+          <div class="field full-width">
+            <label>Link Lattes</label>
+            <input type="url" v-model="form.lattes" placeholder="https://lattes.cnpq.br/..." />
+          </div>
+        </div>
+
+        <div v-if="role === 'student'" class="row">
+          <div class="field">
+            <label>Currículo (PDF)</label>
+            <input type="file" accept="application/pdf" @change="handleCurriculumChange" />
+            <small v-if="curriculumFile">{{ curriculumFile.name }}</small>
+          </div>
+          <div class="field">
+            <label>Histórico escolar (PDF)</label>
+            <input type="file" accept="application/pdf" @change="handleHistoryChange" />
+            <small v-if="historyFile">{{ historyFile.name }}</small>
           </div>
         </div>
 
