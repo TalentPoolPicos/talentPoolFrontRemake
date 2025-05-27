@@ -12,8 +12,7 @@ export enum Routes {
   Home = 'home',
   About = 'about',
   News = 'news',
-  SignInStudent = 'signInStudent',
-  SignInEnterprise = 'signInEnterprise',
+  SignIn = 'signIn',
   StudentLoggedProfile = 'studentLoggedProfile',
   StudentProfile = 'studentProfile',
   StudentEditView = 'studentEditView',
@@ -29,8 +28,7 @@ export const RoutePaths = {
   [Routes.Home]: '/',
   [Routes.About]: '/about',
   [Routes.News]: '/news',
-  [Routes.SignInStudent]: '/signInStudent',
-  [Routes.SignInEnterprise]: '/signInEnterprise',
+  [Routes.SignIn]: '/signIn',
   [Routes.StudentLoggedProfile]: '/talent',
   [Routes.StudentEditView]: '/talent/edit',
   [Routes.StudentProfile]: '/talent/:uuid',
@@ -59,25 +57,14 @@ const routes = [
     component: NewsView,
   },
   {
-    path: RoutePaths[Routes.SignInStudent],
-    name: Routes.SignInStudent,
+    path: RoutePaths[Routes.SignIn],
+    name: Routes.SignIn,
     component: SignInView,
-    props: {
-      role: 'student',
-    },
   },
   {
     path: RoutePaths[Routes.SearchResults],
     name: Routes.SearchResults,
     component: SearchResultsView,
-},
-  {
-    path: RoutePaths[Routes.SignInEnterprise],
-    name: Routes.SignInEnterprise,
-    component: SignInView,
-    props: {
-      role: 'enterprise',
-    },
   },
   {
     path: RoutePaths[Routes.StudentLoggedProfile],
