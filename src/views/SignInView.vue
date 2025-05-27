@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, ref } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore, type Role } from '@/stores/auth'
 import { Routes } from '@/router'

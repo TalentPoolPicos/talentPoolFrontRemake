@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { defineProps, defineEmits } from 'vue'
-
 defineProps<{
   src: string
   alt?: string | null
