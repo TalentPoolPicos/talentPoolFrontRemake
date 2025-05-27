@@ -61,7 +61,7 @@ export const useUserStore = defineStore('user', () => {
 
     const formData = new FormData()
     formData.append('file', file)
-    const { data } = await http.post<UserDto>(`/users/profile-picture`, formData, {
+    const { data } = await http.put<UserDto>(`/users/profile-picture`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -77,7 +77,7 @@ export const useUserStore = defineStore('user', () => {
 
     const formData = new FormData()
     formData.append('file', file)
-    const { data } = await http.post<UserDto>(`/users/banner-picture`, formData, {
+    const { data } = await http.put<UserDto>(`/users/banner-picture`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

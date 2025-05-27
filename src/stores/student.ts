@@ -46,7 +46,7 @@ export const useStudentStore = defineStore('student', () => {
 
     const formData = new FormData()
     formData.append('file', file)
-    const { data } = await http.patch<StudentDto>(`/students/curriculum`, formData, {
+    const { data } = await http.put<StudentDto>(`/students/curriculum`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -60,7 +60,7 @@ export const useStudentStore = defineStore('student', () => {
 
     const formData = new FormData()
     formData.append('file', file)
-    const { data } = await http.patch<StudentDto>(`/students/history`, formData, {
+    const { data } = await http.put<StudentDto>(`/students/history`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
