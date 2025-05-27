@@ -3,33 +3,41 @@ import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore, type UserDto } from '@/stores/user'
 import { useAuthStore } from '@/stores/auth'
+import { useTagStore } from '@/stores/tag'
 import { Routes } from '@/router'
-import CircleAvatar from '@/components/CircleAvatar.vue'
 import LoadingBrand from '@/components/LoadingBrand.vue'
+import ImageUser from '@/components/ImageUser.vue'
 
 const router = useRouter()
 const props = defineProps<{ uuid?: string }>()
 
 const userStore = useUserStore()
 const authStore = useAuthStore()
+const tagStore = useTagStore()
 
 const loading = ref(true)
 const error = ref<string | null>(null)
-
-import defaultBanner from '@/assets/banner.png'
-
 const user = ref<UserDto | null>(null)
+const tags = ref<string[]>([]) // tags para exibir
 
 const refresh = async () => {
+  loading.value = true
+  error.value = null
   try {
     if (props.uuid) {
       user.value = await userStore.findByUuid(props.uuid)
     } else if (!authStore.isLoggedIn) {
       router.push({ name: Routes.Home })
+      return
     } else {
       user.value = await userStore.loggedUser
     }
-    console.log(user)
+
+    if (user.value) {
+      // Busca as tags pelo UUID do usuário
+      const tagDtos = await tagStore.findAllByUserUuid(user.value.uuid)
+      tags.value = tagDtos.map((t) => t.label)
+    }
   } catch (err) {
     console.error(err)
     error.value = 'Falha ao carregar perfil.'
@@ -48,6 +56,30 @@ const LogoutHandler = async () => {
   }
 }
 
+const downloadCurriculum = () => {
+  if (user.value?.student?.curriculum) {
+    window.open(user.value.student.curriculum, '_blank')
+  } else {
+    alert('Usuário não cadastrou o currículo.')
+  }
+}
+
+const downloadHistory = () => {
+  if (user.value?.student?.history) {
+    window.open(user.value.student.history, '_blank')
+  } else {
+    alert('Usuário não cadastrou o histórico.')
+  }
+}
+
+const goToEdit = () => {
+  if (user.value?.role === 'student') {
+    router.push({ name: Routes.StudentEditView })
+  } else if (user.value?.role === 'enterprise') {
+    router.push({ name: Routes.EnterpriseEditView })
+  }
+}
+
 onMounted(() => {
   refresh()
 })
@@ -57,47 +89,65 @@ watch(() => props.uuid, refresh)
 
 <template>
   <LoadingBrand :loading="loading">
-    <button v-if="!props.uuid" @click="LogoutHandler">teste</button>
-
     <div v-if="error" class="error">{{ error }}</div>
     <div v-else class="profile-page">
-      <div class="banner-container">
-        <img :src="user?.bannerPicture || defaultBanner" alt="Banner" class="banner" />
-        <div class="avatar-wrapper">
-          <CircleAvatar
-            :src="user?.profilePicture ?? `https://robohash.org/${user?.username ?? 'default'}`"
-            :width="150"
-            :height="150"
-          />
-        </div>
-      </div>
+      <ImageUser :user="user" class="banner-container" />
 
       <section class="main">
-        <h1>{{ user?.student?.name || 'Talento' }}</h1>
-        <p class="subtitle">Matrícula: {{ user?.student?.registrationNumber ?? 'asdasd' }}</p>
-        <p class="description">{{ user?.student?.description }}</p>
+        <h1>
+          <template v-if="user?.role === 'student'">
+            {{ user.student?.name || 'Talento' }}
+          </template>
+          <template v-else-if="user?.role === 'enterprise'">
+            {{ user.enterprise?.name || 'Empresa' }}
+          </template>
+        </h1>
 
-        <div class="tags">
-          <span v-for="tag in user?.tags" :key="tag" class="tag">
-            {{ tag }}
-          </span>
+        <p class="email" v-if="user?.role === 'student'">{{ user.student?.email }}</p>
+        <p class="email" v-else-if="user?.role === 'enterprise'">{{ user.enterprise?.email }}</p>
+
+        <!-- Tags -->
+        <div class="tags" v-if="tags.length">
+          <span v-for="tag in tags" :key="tag" class="tag">{{ tag }}</span>
         </div>
 
-        <div class="docs">
-          <a
-            v-if="user?.student?.curriculum"
-            :href="user.student.curriculum"
-            target="_blank"
-            class="doc-link"
-            >↓ Currículo</a
+        <!-- Botões de documentos para student -->
+        <div class="docs-links" v-if="user?.role === 'student'">
+          <button @click="downloadCurriculum" class="doc-btn">↓ Currículo</button>
+          <button @click="downloadHistory" class="doc-btn">↓ Histórico</button>
+        </div>
+
+        <p class="description" v-if="user?.role === 'student'">{{ user.student?.description }}</p>
+        <p class="description" v-else-if="user?.role === 'enterprise'">
+          {{ user.enterprise?.description }}
+        </p>
+
+        <div class="action-buttons">
+          <button
+            v-if="
+              user &&
+              authStore.loggedUser?.uuid !== user.uuid &&
+              ((authStore.loggedUser?.role === 'enterprise' && user.role === 'student') ||
+                (authStore.loggedUser?.role === 'student' && user.role === 'enterprise'))
+            "
+            class="btn"
           >
-          <a
-            v-if="user?.student?.history"
-            :href="user.student.history"
-            target="_blank"
-            class="doc-link"
-            >↓ Histórico</a
+            Match
+          </button>
+          <button
+            v-if="user && authStore.loggedUser?.uuid === user.uuid"
+            class="btn"
+            @click="goToEdit"
           >
+            Editar
+          </button>
+          <button
+            v-if="user && authStore.loggedUser?.uuid === user.uuid"
+            class="btn"
+            @click="LogoutHandler"
+          >
+            Logout
+          </button>
         </div>
       </section>
 
@@ -105,26 +155,11 @@ watch(() => props.uuid, refresh)
         <div class="card">
           <h3>Conecte-se</h3>
           <ul class="social-links">
-            <li v-if="user?.student?.lattes">
+            <li v-if="user?.student?.lattes && user.role === 'student'">
               <a :href="user.student.lattes" target="_blank">
                 <i class="fas fa-graduation-cap"></i> Lattes
               </a>
             </li>
-            <!-- <li v-if="user?.socialMedia">
-            <a :href="user.student.linkedinUrl" target="_blank">
-              <i class="fab fa-linkedin"></i> LinkedIn
-            </a>
-          </li>
-          <li v-if="user.student.facebookUrl">
-            <a :href="user.student.facebookUrl" target="_blank">
-              <i class="fab fa-facebook"></i> Facebook
-            </a>
-          </li>
-          <li v-if="user.student.twitterUrl">
-            <a :href="user.student.twitterUrl" target="_blank">
-              <i class="fab fa-twitter"></i> X
-            </a>
-          </li> -->
           </ul>
         </div>
 
@@ -133,9 +168,13 @@ watch(() => props.uuid, refresh)
             <span class="stat-number">{{ 0 }}</span>
             <span class="stat-label">Seus matches</span>
           </div>
-          <div class="stat-item">
+          <div class="stat-item" v-if="user?.role === 'student'">
             <span class="stat-number">{{ 0 }}</span>
             <span class="stat-label">Te contrataram</span>
+          </div>
+          <div class="stat-item" v-if="user?.role === 'enterprise'">
+            <span class="stat-number">{{ 0 }}</span>
+            <span class="stat-label">Te curtiram</span>
           </div>
           <div class="stat-item">
             <span class="stat-number">{{ 0 }}</span>
@@ -154,12 +193,12 @@ watch(() => props.uuid, refresh)
   gap: 2rem;
   max-width: 1000px;
   margin: 2rem auto;
+  padding: 1rem;
   font-family: Inter, sans-serif;
 }
 
-.loading,
 .error {
-  max-width: 700px;
+  max-width: 600px;
   margin: 3rem auto;
   text-align: center;
   font-size: 1.2rem;
@@ -171,61 +210,105 @@ watch(() => props.uuid, refresh)
   grid-column: 1 / -1;
   position: relative;
 }
-.banner {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  border-radius: 8px;
+/* Botão Match ao lado do avatar */
+.match-btn {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border-radius: 15px;
+  padding: 6px 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background 0.3s;
 }
-.avatar-wrapper {
-  position: absolute;
-  bottom: -40px;
-  left: 1.5rem;
-}
-.avatar {
-  width: 80px;
-  height: 80px;
-  border: 4px solid var(--color-background);
-  border-radius: 50%;
-  object-fit: cover;
+.match-btn:hover {
+  background: var(--color-primary-container);
 }
 
 /* Main */
 .main h1 {
-  margin-top: 3rem;
+  margin-top: 0rem;
   font-size: 2rem;
-}
-.subtitle {
-  color: var(--color-on-surface-variant);
-  margin-bottom: 1rem;
-}
-.description {
-  margin-bottom: 1.5rem;
-}
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-}
-.tag {
-  background: var(--color-surface-variant);
   color: var(--color-on-surface);
-  padding: 0.25rem 0.75rem;
-  border-radius: 999px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.25rem;
 }
 
-/* Docs */
-.docs {
+.email {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  font-size: 1rem;
+  color: var(--color-on-surface-variant);
+}
+
+/* Tags */
+.tags {
+  margin-bottom: 1rem;
+}
+
+.tag {
+  background: var(--color-surface-variant);
+  color: var(--color-on-surface-variant);
+  padding: 5px 10px;
+  border-radius: 15px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+  user-select: none;
+  margin-right: 0.5rem; /* espaçamento entre tags */
+  margin-bottom: 0.5rem;
+}
+
+/* Botões de documentos */
+.docs-links {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.doc-btn {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: 0;
+  transition: background 0.3s;
+}
+.doc-btn:hover {
+  background: var(--color-primary-container);
+}
+
+.description {
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+  color: var(--color-on-surface);
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.action-buttons {
   display: flex;
   gap: 1rem;
 }
-.doc-link {
+.btn {
   background: var(--color-primary);
   color: var(--color-on-primary);
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  text-decoration: none;
+  padding: 8px 20px;
+  border-radius: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background 0.3s;
+}
+.btn:hover {
+  background: var(--color-primary-container);
 }
 
 /* Sidebar */
@@ -238,6 +321,7 @@ watch(() => props.uuid, refresh)
 .social-links {
   list-style: none;
   padding: 0;
+  margin: 0;
 }
 .social-links li {
   margin: 0.5rem 0;
@@ -247,7 +331,8 @@ watch(() => props.uuid, refresh)
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--color-on-surface);
+  color: var(--color-on-surface-variant);
+  font-weight: 600;
 }
 
 /* Estatísticas */
@@ -263,6 +348,7 @@ watch(() => props.uuid, refresh)
   display: block;
   font-size: 1.5rem;
   font-weight: bold;
+  color: var(--color-primary);
 }
 .stat-label {
   font-size: 0.875rem;
@@ -277,6 +363,14 @@ watch(() => props.uuid, refresh)
   .avatar-wrapper {
     left: 50%;
     transform: translateX(-50%);
+  }
+  .main h1 {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  .docs-links {
+    margin-left: 0;
   }
 }
 </style>
