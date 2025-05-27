@@ -9,8 +9,8 @@ type CreateTagDto = components['schemas']['CreateTagDto']
 export const useTagStore = defineStore('tag', () => {
   const userStore = useUserStore()
 
-  const findAllByUserUuid = async (uuid: string): Promise<TagDto[]> => {
-    const { data } = await http.get<TagDto[]>(`/tag/${uuid}`)
+  const findAllByUserUuid = async (userUuid: string): Promise<TagDto[]> => {
+    const { data } = await http.get<TagDto[]>(`/tag/${userUuid}`)
     return data
   }
 
