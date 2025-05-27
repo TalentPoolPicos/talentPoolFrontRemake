@@ -509,6 +509,62 @@ export interface components {
        */
       state?: string | null;
     };
+    SocialMediaDto: {
+      /** @description The uuid of the social media */
+      uuid: string;
+      /**
+       * @description The type of social media
+       * @example instagram
+       * @enum {string}
+       */
+      type:
+      | 'x'
+      | 'facebook'
+      | 'instagram'
+      | 'linkedin'
+      | 'youtube'
+      | 'tiktok'
+      | 'github'
+      | 'gitlab'
+      | 'reddit'
+      | 'telegram'
+      | 'whatsapp'
+      | 'discord';
+      /**
+       * @description The URL of the social media
+       * @example https://instagram.com/john
+       */
+      url: string;
+      /**
+       * Format: date-time
+       * @description The date the social media was created
+       */
+      createdAt: string;
+      /**
+       * Format: date-time
+       * @description The date the social media was last updated
+       */
+      updatedAt: string;
+    };
+    TagDto: {
+      /** @description The uuid of the social media */
+      uuid: string;
+      /**
+       * Format: date-time
+       * @description The date the social media was created
+       */
+      createdAt: string;
+      /**
+       * Format: date-time
+       * @description The date the social media was last updated
+       */
+      updatedAt: string;
+      /**
+       * @description The label of the tag
+       * @example nodejs
+       */
+      label: string;
+    };
     StudentDto: {
       /** @description The uuid of the student */
       uuid: string;
@@ -605,9 +661,9 @@ export interface components {
       /** @description The address of the user */
       address?: components['schemas']['AddressDto'] | null;
       /** @description The social media of the user */
-      socialMedia: string[];
+      socialMedia: components['schemas']['SocialMediaDto'][];
       /** @description The tags of the user */
-      tags: string[];
+      tags: components['schemas']['TagDto'][];
       /** @description The student of the user */
       student?: components['schemas']['StudentDto'];
       /** @description The enterprise of the user */
@@ -615,7 +671,7 @@ export interface components {
     };
     UsersPageDto: {
       /** @description The list of users */
-      users: components['schemas']['UserDto'];
+      users: components['schemas']['UserDto'][];
       /** @description The total number of users */
       total: number;
     };
@@ -683,7 +739,7 @@ export interface components {
     };
     EnterprisePageDto: {
       /** @description The list of enterprises */
-      enterprises: components['schemas']['EnterpriseDto'];
+      enterprises: components['schemas']['EnterpriseDto'][];
       /** @description The total number of enterprises */
       total: number;
     };
@@ -703,7 +759,7 @@ export interface components {
     };
     StudentsPageDto: {
       /** @description The list of students */
-      students: components['schemas']['StudentDto'];
+      students: components['schemas']['StudentDto'][];
       /** @description The total number of students */
       total: number;
     };
@@ -727,43 +783,6 @@ export interface components {
       course?: string;
       /** @description The student description */
       description?: string;
-    };
-    SocialMediaDto: {
-      /** @description The uuid of the social media */
-      uuid: string;
-      /**
-       * @description The type of social media
-       * @example instagram
-       * @enum {string}
-       */
-      type:
-      | 'x'
-      | 'facebook'
-      | 'instagram'
-      | 'linkedin'
-      | 'youtube'
-      | 'tiktok'
-      | 'github'
-      | 'gitlab'
-      | 'reddit'
-      | 'telegram'
-      | 'whatsapp'
-      | 'discord';
-      /**
-       * @description The URL of the social media
-       * @example https://instagram.com/john
-       */
-      url: string;
-      /**
-       * Format: date-time
-       * @description The date the social media was created
-       */
-      createdAt: string;
-      /**
-       * Format: date-time
-       * @description The date the social media was last updated
-       */
-      updatedAt: string;
     };
     CreateSocialMediaDto: {
       /**
@@ -790,25 +809,6 @@ export interface components {
        */
       url: string;
     };
-    TagDto: {
-      /** @description The uuid of the social media */
-      uuid: string;
-      /**
-       * Format: date-time
-       * @description The date the social media was created
-       */
-      createdAt: string;
-      /**
-       * Format: date-time
-       * @description The date the social media was last updated
-       */
-      updatedAt: string;
-      /**
-       * @description The label of the tag
-       * @example nodejs
-       */
-      label: string;
-    };
     CreateTagDto: {
       /**
        * @description The label of the tag
@@ -818,7 +818,7 @@ export interface components {
     };
     SearchResultDto: {
       /** @description The list of users found by the search query */
-      users: components['schemas']['UserDto'];
+      users: components['schemas']['UserDto'][];
       /** @description The total number of users found by the search query */
       total: number;
     };
