@@ -1,12 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore, type Role } from '@/stores/auth'
+import { useAuthStore } from '@/stores/auth'
 import { Routes } from '@/router'
-
-const props = defineProps<{
-  role: Role | undefined
-}>()
 
 const auth = useAuthStore()
 
@@ -16,28 +12,18 @@ const loading = ref(false)
 const router = useRouter()
 
 const handleSubmit = async () => {
-  console.log('handleSubmit', username.value, password.value, props.role)
   if (username.value == '' || password.value == '') {
     alert('Por favor, preencha usuário e senha.')
-    return
-  }
-
-  if (props.role == undefined) {
-    alert('Por favor, selecione um tipo de usuário.')
-    router.push({ name: Routes.Home })
     return
   }
 
   loading.value = true
   try {
     await auth
-      .signIn(
-        {
-          username: username.value,
-          password: password.value,
-        },
-        props.role,
-      )
+      .signIn({
+        username: username.value,
+        password: password.value,
+      })
       .then((value) => {
         const user = value.user
         if (user.role === 'student') {

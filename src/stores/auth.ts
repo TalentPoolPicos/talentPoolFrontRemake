@@ -84,8 +84,8 @@ export const useAuthStore = defineStore('auth', () => {
   const isStudent = computed(() => loggedUser.value?.role === 'student')
   const isEnterprise = computed(() => loggedUser.value?.role === 'enterprise')
 
-  const signIn = async (signInDto: SignInDto, role: Role): Promise<AccessTokenDto> => {
-    const { data } = await http.post(`/auth/${role}/sign-in`, signInDto)
+  const signIn = async (signInDto: SignInDto): Promise<AccessTokenDto> => {
+    const { data } = await http.post(`/auth/sign-in`, signInDto)
     populateStateFromResponse(data)
     return data
   }
