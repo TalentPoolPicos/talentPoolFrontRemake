@@ -1,24 +1,34 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import ThemeToggle from './ThemeToggle.vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { RoutePaths, Routes } from '@/router/index'
 import { useAuthStore } from '@/stores/auth'
 import { useUserStore } from '@/stores/user'
-import { useRouter } from 'vue-router'
+import CircleAvatar from '@/components/CircleAvatar.vue'
 
 const authStore = useAuthStore()
 const userStore = useUserStore()
 const router = useRouter()
-
-import CircleAvatar from '@/components/CircleAvatar.vue'
-
 const route = useRoute()
+
 const currentPath = computed(() => route.path)
-
 const isMenuOpen = ref(false)
-
 const windowWidth = ref(0)
+
+const searchTerm = ref('')
+function search() {
+  const term = searchTerm.value.trim()
+  if (term) {
+    if (route.name === 'search') {
+      router.replace({ name: 'search', query: { q: term } })
+    } else {
+      router.push({ name: 'search', query: { q: term } })
+    }
+    searchTerm.value = ''
+    isMenuOpen.value = false
+  }
+}
 
 const updateWindowWidth = () => {
   windowWidth.value = window.innerWidth
@@ -69,7 +79,12 @@ const handleAvatarClick = () => {
 
       <label class="search-wrapper">
         <span class="icon">🔍</span>
-        <input type="search" placeholder="Pesquisar" />
+        <input
+          type="search"
+          placeholder="Pesquisar"
+          v-model="searchTerm"
+          @keyup.enter="search"
+        />
       </label>
       <RouterLink
         :to="RoutePaths[Routes.SignInStudent]"
@@ -79,10 +94,7 @@ const handleAvatarClick = () => {
       >
 
       <CircleAvatar
-        :src="
-          userStore.loggedUser?.profilePicture ??
-          `https://robohash.org/${userStore.loggedUser?.username ?? 'default'}`
-        "
+        :src="userStore.loggedUser?.profilePicture ?? `https://robohash.org/${userStore.loggedUser?.username ?? 'default'}`"
         @click="handleAvatarClick"
         v-if="authStore.isLoggedIn"
       />
@@ -111,7 +123,12 @@ const handleAvatarClick = () => {
     <div class="right-tools" v-show="windowWidth > 800">
       <label class="search-wrapper">
         <span class="icon">🔍</span>
-        <input type="search" placeholder="Pesquisar" />
+        <input
+          type="search"
+          placeholder="Pesquisar"
+          v-model="searchTerm"
+          @keyup.enter="search"
+        />
       </label>
       <RouterLink
         :to="RoutePaths[Routes.SignInStudent]"
@@ -120,10 +137,7 @@ const handleAvatarClick = () => {
         >Entrar</RouterLink
       >
       <CircleAvatar
-        :src="
-          userStore.loggedUser?.profilePicture ??
-          `https://robohash.org/${userStore.loggedUser?.username ?? 'default'}`
-        "
+        :src="userStore.loggedUser?.profilePicture ?? `https://robohash.org/${userStore.loggedUser?.username ?? 'default'}`"
         @click="handleAvatarClick"
         v-if="authStore.isLoggedIn"
       />
@@ -133,7 +147,7 @@ const handleAvatarClick = () => {
 </template>
 
 <style scoped>
-.nav-bar {
+ .nav-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;

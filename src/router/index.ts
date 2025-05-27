@@ -5,6 +5,7 @@ import AboutView from '@/views/AboutView.vue'
 import NewsView from '@/views/NewsView.vue'
 import SignInView from '@/views/SignInView.vue'
 import ProfileView from '@/views/ProfileView.vue'
+import SearchResultsView from '@/views/SearchResultsView.vue'
 import EditProfileView from '@/views/EditProfileView.vue'
 
 export enum Routes {
@@ -17,6 +18,7 @@ export enum Routes {
   StudentProfile = 'studentProfile',
   StudentEditView = 'studentEditView',
   StudentEdit = 'studentEdit',
+  SearchResults = 'search',
   EnterpriseLoggedProfile = 'enterpriseLoggedProfile',
   EnterpriseProfile = 'enterpriseProfile',
   EnterpriseEditView = 'enterpriseEditView',
@@ -33,6 +35,7 @@ export const RoutePaths = {
   [Routes.StudentEditView]: '/talent/edit',
   [Routes.StudentProfile]: '/talent/:uuid',
   [Routes.StudentEdit]: '/talent/edit',
+  [Routes.SearchResults]: '/search',
   [Routes.EnterpriseLoggedProfile]: '/enterprise',
   [Routes.EnterpriseProfile]: '/enterprise/:uuid',
   [Routes.EnterpriseEditView]: '/enterprise/edit',
@@ -63,6 +66,11 @@ const routes = [
       role: 'student',
     },
   },
+  {
+    path: RoutePaths[Routes.SearchResults],
+    name: Routes.SearchResults,
+    component: SearchResultsView,
+},
   {
     path: RoutePaths[Routes.SignInEnterprise],
     name: Routes.SignInEnterprise,
