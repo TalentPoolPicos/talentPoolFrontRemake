@@ -79,22 +79,17 @@ const handleAvatarClick = () => {
 
       <label class="search-wrapper">
         <span class="icon">🔍</span>
-        <input
-          type="search"
-          placeholder="Pesquisar"
-          v-model="searchTerm"
-          @keyup.enter="search"
-        />
+        <input type="search" placeholder="Pesquisar" v-model="searchTerm" @keyup.enter="search" />
       </label>
-      <RouterLink
-        :to="RoutePaths[Routes.SignInStudent]"
-        class="btn-outline"
-        v-if="!authStore.isLoggedIn"
+      <RouterLink :to="RoutePaths[Routes.SignIn]" class="btn-outline" v-if="!authStore.isLoggedIn"
         >Entrar</RouterLink
       >
 
       <CircleAvatar
-        :src="userStore.loggedUser?.profilePicture ?? `https://robohash.org/${userStore.loggedUser?.username ?? 'default'}`"
+        :src="
+          userStore.loggedUser?.profilePicture ??
+          `https://robohash.org/${userStore.loggedUser?.username ?? 'default'}`
+        "
         @click="handleAvatarClick"
         v-if="authStore.isLoggedIn"
       />
@@ -123,21 +118,16 @@ const handleAvatarClick = () => {
     <div class="right-tools" v-show="windowWidth > 800">
       <label class="search-wrapper">
         <span class="icon">🔍</span>
-        <input
-          type="search"
-          placeholder="Pesquisar"
-          v-model="searchTerm"
-          @keyup.enter="search"
-        />
+        <input type="search" placeholder="Pesquisar" v-model="searchTerm" @keyup.enter="search" />
       </label>
-      <RouterLink
-        :to="RoutePaths[Routes.SignInStudent]"
-        class="btn-outline"
-        v-if="!authStore.isLoggedIn"
+      <RouterLink :to="RoutePaths[Routes.SignIn]" class="btn-outline" v-if="!authStore.isLoggedIn"
         >Entrar</RouterLink
       >
       <CircleAvatar
-        :src="userStore.loggedUser?.profilePicture ?? `https://robohash.org/${userStore.loggedUser?.username ?? 'default'}`"
+        :src="
+          userStore.loggedUser?.profilePicture ??
+          `https://robohash.org/${userStore.loggedUser?.username ?? 'default'}`
+        "
         @click="handleAvatarClick"
         v-if="authStore.isLoggedIn"
       />
@@ -147,7 +137,7 @@ const handleAvatarClick = () => {
 </template>
 
 <style scoped>
- .nav-bar {
+.nav-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
