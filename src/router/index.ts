@@ -4,6 +4,7 @@ import HomeView from '@/views/HomeView.vue'
 import AboutView from '@/views/AboutView.vue'
 import NewsView from '@/views/NewsView.vue'
 import SignInView from '@/views/SignInView.vue'
+import SignUpView from '@/views/SignUpView.vue'
 import ProfileView from '@/views/ProfileView.vue'
 import SearchResultsView from '@/views/SearchResultsView.vue'
 import EditProfileView from '@/views/EditProfileView.vue'
@@ -13,6 +14,8 @@ export enum Routes {
   About = 'about',
   News = 'news',
   SignIn = 'signIn',
+  StudentSignUp = 'studentSignUp',
+  EnterpriseSignUp = 'enterpriseSignUp',
   StudentLoggedProfile = 'studentLoggedProfile',
   StudentProfile = 'studentProfile',
   StudentEditView = 'studentEditView',
@@ -29,6 +32,8 @@ export const RoutePaths = {
   [Routes.About]: '/about',
   [Routes.News]: '/news',
   [Routes.SignIn]: '/signIn',
+  [Routes.StudentSignUp]: '/signUp/student',
+  [Routes.EnterpriseSignUp]: '/signUp/enterprise',
   [Routes.StudentLoggedProfile]: '/talent',
   [Routes.StudentEditView]: '/talent/edit',
   [Routes.StudentProfile]: '/talent/:uuid',
@@ -60,6 +65,18 @@ const routes = [
     path: RoutePaths[Routes.SignIn],
     name: Routes.SignIn,
     component: SignInView,
+  },
+  {
+    path: RoutePaths[Routes.StudentSignUp],
+    name: Routes.StudentSignUp,
+    component: SignUpView,
+    props: { role: 'student' },
+  },
+  {
+    path: RoutePaths[Routes.EnterpriseSignUp],
+    name: Routes.EnterpriseSignUp,
+    component: SignUpView,
+    props: { role: 'enterprise' },
   },
   {
     path: RoutePaths[Routes.SearchResults],
