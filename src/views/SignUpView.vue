@@ -185,4 +185,55 @@ const onRegister = async () => {
   font-size: 1.1rem; font-weight: 600; cursor: pointer;
 }
 .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* =================== tablets (≤ 1024 px) =================== */
+@media (max-width: 1024px) {
+  .registration-grid {
+    padding: 2rem;
+    gap: 1.5rem;
+  }
+  .registration-card {
+    padding: 2rem;
+  }
+  .registration-card h2 {
+    font-size: 1.6rem;
+  }
+}
+
+/* =================== móveis (≤ 768 px) =================== */
+@media (max-width: 768px) {
+  .registration-grid {
+    grid-template-columns: 1fr;           /* quebra em 1 coluna */
+    padding: 1.5rem;
+  }
+  .illustration {
+    display: none;                        /* oculta imagem */
+  }
+  .registration-card {
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+  .page-header.registration {
+    font-size: 1rem;
+    padding-inline: 1rem;
+  }
+}
+
+/* =================== mini-móveis (≤ 480 px) =================== */
+@media (max-width: 480px) {
+  .registration-card {
+    padding: 1.5rem;
+  }
+  .registration-card h2 {
+    font-size: 1.4rem;
+  }
+  .auth-form input {
+    font-size: 0.9rem;
+  }
+  .btn-primary {
+    font-size: 1rem;
+  }
+}
 </style>
+
