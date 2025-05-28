@@ -23,7 +23,7 @@
           <!-- nome do usuário ou organização -->
           <input
             type="text"
-            placeholder="Nome completo ou nome da organização"
+            placeholder="Nome"
             v-model="username"
             required
           />
@@ -72,36 +72,42 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import NavBar from '@/components/NavigatorBar.vue'
+import { ref, defineProps } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { Routes } from '@/router'        // garanta que "Home" existe
+import { Routes } from '@/router'
 import type { components } from '@/types/api'
-import eyeOpen   from '@/assets/1visibility_pass.svg'
+import eyeOpen from '@/assets/1visibility_pass.svg'
 import eyeClosed from '@/assets/0visibility_pass.svg'
 
 type SignUpDto = components['schemas']['SignUpDto']
 
-/* ----- estado ----- */
-const username  = ref('')
-const email     = ref('')
-const password  = ref('')
+// Define prop role recebida da rota
+const props = defineProps<{ role: 'student' | 'enterprise' }>()
+const role = props.role ?? 'student'  // fallback
+
+console.log('Role recebido:', role)
+
+const username = ref('')
+const email = ref('')
+const password = ref('')
 const password2 = ref('')
 
-const showPwd   = ref(false)
-const showPwd2  = ref(false)
-const loading   = ref(false)
+const showPwd = ref(false)
+const showPwd2 = ref(false)
+const loading = ref(false)
 
-/* ----- serviços ----- */
-const auth   = useAuthStore()
+const auth = useAuthStore()
 const router = useRouter()
 
-/* ----- submit ----- */
 const onRegister = async () => {
   if (password.value !== password2.value) {
     alert('As senhas não coincidem.')
     return
   }
+
+  // Se precisar, faça validações específicas do role aqui
 
   const payload: SignUpDto = {
     username: username.value,
@@ -111,8 +117,8 @@ const onRegister = async () => {
 
   loading.value = true
   try {
-    await auth.signUp(payload, ) // pode mudar o segundo argumento para um termo mais genérico
-
+    // Passa o role recebido para a função de signUp
+    await auth.signUp(payload, role)
     router.push({ name: Routes.Home })
   } catch (err: any) {
     console.error(err)
@@ -122,6 +128,7 @@ const onRegister = async () => {
   }
 }
 </script>
+
 
 <style scoped>
 /* estilos adaptados com novos nomes */
@@ -185,6 +192,11 @@ const onRegister = async () => {
   font-size: 1.1rem; font-weight: 600; cursor: pointer;
 }
 .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+
+.btn-primary:hover:not(:disabled) {
+  opacity: 0.85;
+}
 
 /* =================== tablets (≤ 1024 px) =================== */
 @media (max-width: 1024px) {
