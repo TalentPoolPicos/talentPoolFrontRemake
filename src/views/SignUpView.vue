@@ -122,3 +122,67 @@ const onRegister = async () => {
   }
 }
 </script>
+
+<style scoped>
+/* estilos adaptados com novos nomes */
+
+.nav-bar { position: relative; z-index: 10; }
+
+.page-header.registration {
+  width: 100%; height: 3rem;
+  background: var(--color-secondary-container);
+  display: flex; align-items: center;
+  padding-inline: 2rem;
+  border-radius: 0 0 0.5rem 0.5rem;
+  color: var(--color-on-secondary-container);
+  font-size: 1.1rem; font-weight: 500;
+}
+
+.registration-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem; align-items: center;
+  padding: 2rem 4rem; background: var(--color-surface);
+  min-height: calc(100vh - 64px - 3rem);
+}
+
+.illustration { position: relative; }
+.shape {
+  position: absolute; width: 100%; height: 100%;
+  background: var(--color-background-mute);
+  border-radius: 1.5rem; top: -1rem; left: -1rem; z-index: 0;
+}
+.illustration img { position: relative; width: 100%; height: auto; z-index: 1; }
+
+.registration-card {
+  background: var(--color-secondary-container); padding: 2.5rem;
+  border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.registration-card h2 {
+  margin-bottom: 1.5rem; color: var(--color-text);
+  font-size: 1.75rem; line-height: 1.2;
+}
+
+.auth-form { display: flex; flex-direction: column; gap: 1rem; }
+.auth-form input {
+  height: 2.5rem; border-radius: 0.75rem; border: none;
+  padding: 0 1rem 0 1rem; padding-right: 3rem;
+  font-size: 0.95rem; background: var(--color-always-white);
+  width: 100%; box-sizing: border-box;
+}
+
+.pwd-wrapper { position: relative; width: 100%; }
+.pwd-wrapper .eye {
+  position: absolute; top: 50%; right: 1rem; transform: translateY(-50%);
+  width: 1.25rem; height: 1.25rem; cursor: pointer;
+}
+.pwd-wrapper .eye img { width: 100%; height: 100%; display: block; }
+
+.btn-primary {
+  width: 100%; margin-top: 1rem;
+  background: var(--color-primary); color: var(--color-on-primary);
+  height: 3.5rem; border-radius: 0.75rem;
+  font-size: 1.1rem; font-weight: 600; cursor: pointer;
+}
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+</style>
