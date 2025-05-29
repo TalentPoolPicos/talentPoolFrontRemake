@@ -33,3 +33,13 @@ const fetchResults = async (q: string) => {
     loading.value = false
   }
 }
+
+watch(
+  () => route.query.q,
+  (newQ) => {
+    query.value = newQ as string
+    fetchResults(query.value)
+  },
+  { immediate: true },
+)
+</script>
