@@ -92,3 +92,33 @@ watch(
   </div>
 </LoadingBrand>
 </template>
+
+<style scoped>
+.search-page {
+  padding: 2rem;
+  align-content: center;
+  text-align: center;
+}
+
+.result-item {
+  margin-bottom: 1.2rem;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 1rem;
+}
+
+.no-results-container {
+  text-align: center;
+  align-content: center;
+  margin: 0.5rem 0 auto;
+  height: 75vh;
+}
+
+.no-results-container a {
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+.not-found-img {
+  max-width: 300px;
+  margin-bottom: 1rem;
+}
