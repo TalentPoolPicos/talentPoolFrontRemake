@@ -7,6 +7,8 @@ import notFoundIcon from '@/assets/undraw_back-home_3dun.svg'
 import type { components } from '@/types/api'
 import type { UserDto } from '@/stores/user'
 import { useRouter } from 'vue-router'
+import { RoutePaths, Routes } from '@/router/index'
+
 
 
 
@@ -42,10 +44,11 @@ const fetchResults = async (q: string) => {
 }
 
 const handleSearch = (user: UserDto) => {
+  console.log('Usuário selecionado:', user)
   if (user.role === 'student') {
-    router.push({ name: 'StudentProfile' })
+    router.push(RoutePaths[Routes.StudentProfile].replace(':uuid', user.uuid))
   } else if (user.role === 'enterprise') {
-    router.push({ name: 'EnterpriseProfile' })
+    router.push(RoutePaths[Routes.EnterpriseProfile].replace(':uuid', user.uuid))
   }
 }
 
