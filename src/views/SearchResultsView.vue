@@ -13,38 +13,38 @@ type SearchResultDto = components['schemas']['SearchResultDto']
 
 const route = useRoute()
 const query = ref(route.query.q as string || '')
-const results = ref<SearchResultDto>()
+const results = ref<SearchResultDto>({
+  users: [],
+  total: 0
+})
 const loading = ref(false)
 const router = useRouter()
 
 const currentPage = ref(1)
 const pageSize = 10
 
-const fetchResults = async (q: string) => {
+const fetchResults = async (q: string, page = 1) => {
   if (!q) return
 
   loading.value = true
-  currentPage.value = 1
 
   try {
-    const response = await http.get<SearchResultDto>(`/search/${q}`, {})
-    const data = response.data
-    results.value = data
+    const response = await http.get<SearchResultDto>(`/search/${q}`, {
+      params: {
+        page,
+        limit: pageSize
+      }
+    })
+    results.value = response.data
   } catch (err) {
     results.value = {
       users: [],
-      total: 0,
+      total: 0
     }
   } finally {
     loading.value = false
   }
 }
-
-const paginatedUsers = computed(() => {
-  if (!results.value?.users) return []
-  const start = (currentPage.value - 1) * pageSize
-  return results.value.users.slice(start, start + pageSize)
-})
 
 const totalPages = computed(() => {
   return results.value ? Math.ceil((results.value.total || 0) / pageSize) : 1
@@ -61,6 +61,7 @@ const handleSearch = (user: UserDto) => {
 function goToPage(page: number) {
   if (page >= 1 && page <= totalPages.value) {
     currentPage.value = page
+    fetchResults(query.value, page)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 }
@@ -69,7 +70,8 @@ watch(
   () => route.query.q,
   (newQ) => {
     query.value = newQ as string
-    fetchResults(query.value)
+    currentPage.value = 1
+    fetchResults(query.value, 1)
   },
   { immediate: true },
 )
@@ -92,7 +94,7 @@ watch(
     </div>
 
     <ul>
-      <li v-for="user in paginatedUsers" :key="user.uuid" class="result-item">
+      <li v-for="user in results?.users" :key="user.uuid" class="result-item">
         <button @click="handleSearch(user)">
           <p>
             <strong>{{ user.username }}</strong> - {{ user.email }}
