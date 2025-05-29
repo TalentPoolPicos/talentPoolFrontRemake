@@ -7,4 +7,7 @@ import notFoundIcon from '@/assets/undraw_back-home_3dun.svg'
 import type { components } from '@/types/api'
 
 type SearchResultDto = components['schemas']['SearchResultDto']
-</script>
+const route = useRoute()
+const query = ref(route.query.q as string || '')
+const results = ref<SearchResultDto>()
+const loading = ref(false)
