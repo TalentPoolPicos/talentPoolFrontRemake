@@ -129,12 +129,14 @@ watch(
 
 <style scoped>
 .search-page {
-  padding: 2rem 2vw;
+  padding: 2rem 4vw;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .results-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
   padding: 0;
   margin: 2rem 0;
@@ -144,21 +146,46 @@ watch(
 .result-card {
   background-color: #fff;
   border-radius: 10px;
-  padding: 1rem;
+  padding: 1.2rem;
   border: 1px solid #ddd;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   transition: box-shadow 0.2s ease;
+  cursor: pointer;
+  min-height: 220px;
+  max-width: 400px;      /* Limita a largura máxima do card */
+  width: 100%;           /* Faz o card ocupar toda a coluna da grid */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .result-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+.no-results-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  text-align: center;
+  margin: 2rem 0;
+}
+
+.not-found-img {
+  max-width: 400px;
+  width: 100%;
+  margin-bottom: 1rem;
+  display: block;
+}
+
 .card-content {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.8rem;
   position: relative;
-  gap: 1rem;
 }
 
 .avatar {
@@ -168,6 +195,7 @@ watch(
   object-fit: cover;
   border: 2px solid #2196f3;
   background-color: #eee;
+  margin-bottom: 0.5rem;
 }
 
 .info {
