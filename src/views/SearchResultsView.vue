@@ -5,12 +5,19 @@ import { useRoute } from 'vue-router'
 import LoadingBrand from '@/components/LoadingBrand.vue'
 import notFoundIcon from '@/assets/undraw_back-home_3dun.svg'
 import type { components } from '@/types/api'
+import type { UserDto } from '@/stores/user'
+import { useRouter } from 'vue-router'
+
+
+
 
 type SearchResultDto = components['schemas']['SearchResultDto']
+
 const route = useRoute()
 const query = ref(route.query.q as string || '')
 const results = ref<SearchResultDto>()
 const loading = ref(false)
+const router = useRouter()
 
 const fetchResults = async (q: string) => {
   if (!q) return
@@ -31,6 +38,14 @@ const fetchResults = async (q: string) => {
     }
   } finally {
     loading.value = false
+  }
+}
+
+const handleSearch = (user: UserDto) => {
+  if (user.role === 'student') {
+    router.push({ name: 'StudentProfile' })
+  } else if (user.role === 'enterprise') {
+    router.push({ name: 'EnterpriseProfile' })
   }
 }
 
