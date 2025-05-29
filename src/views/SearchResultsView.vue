@@ -76,12 +76,14 @@ watch(
     </div>
 
     <ul>
-      <li v-for="item in results?.users" :key="item.uuid" class="result-item">
-        <p>
-          <strong>{{ item.username }}</strong> - {{ item.email }}
-        </p>
-        <p v-if="item.student">Aluno: {{ item.student.name }}</p>
-        <p v-if="item.enterprise">Empresa: {{ item.enterprise.name }}</p>
+      <li v-for="user in results?.users" :key="user.uuid" class="result-item">
+        <button @click="handleSearch(user)">
+          <p>
+            <strong>{{ user.username }}</strong> - {{ user.email }}
+          </p>
+          <p v-if="user.student">Aluno: {{ user.student.name }}</p>
+          <p v-if="user.enterprise">Empresa: {{ user.enterprise.name }}</p>
+        </button>
       </li>
     </ul>
   </div>
