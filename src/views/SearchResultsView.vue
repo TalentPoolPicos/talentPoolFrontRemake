@@ -43,3 +43,32 @@ watch(
   { immediate: true },
 )
 </script>
+
+<template>
+<LoadingBrand :loading="loading">
+  <div class="search-page">
+    <h2>
+      Resultados para <span class="search-query">{{ query }}</span>
+      <span v-if="(results?.total || 0) > 0">({{ results?.total }})</span>
+    </h2>
+
+    <div v-if="results?.total == 0" class="no-results-container">
+      <img class="not-found-img" :src="notFoundIcon" alt="Nenhum resultado encontrado" />
+      <p>Nenhum resultado encontrado para "{{ query }}".</p>
+      <p>
+        Tente ajustar sua busca ou <router-link to="/">voltar para a página inicial</router-link>.
+      </p>
+    </div>
+
+    <ul>
+      <li v-for="item in results?.users" :key="item.uuid" class="result-item">
+        <p>
+          <strong>{{ item.username }}</strong> - {{ item.email }}
+        </p>
+        <p v-if="item.student">Aluno: {{ item.student.name }}</p>
+        <p v-if="item.enterprise">Empresa: {{ item.enterprise.name }}</p>
+      </li>
+    </ul>
+  </div>
+</LoadingBrand>
+</template>
