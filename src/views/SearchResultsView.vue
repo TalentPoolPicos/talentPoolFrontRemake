@@ -122,3 +122,22 @@ watch(
   max-width: 300px;
   margin-bottom: 1rem;
 }
+
+.search-query {
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+.search-query:hover {
+  text-decoration: underline;
+}
+
+.search-query:focus {
+  outline: none;
+  box-shadow: 0 0 2px var(--primary-color);
+}
+
+.search-query:active {
+  color: var(--primary-color-dark);
+}
+</style>
