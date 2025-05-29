@@ -1,7 +1,7 @@
 <!-- src/views/Registration.vue -->
 <template>
   <div class="page registration">
-    <NavBar />
+  
 
     <!-- barra de título -->
     <div class="page-header registration">
@@ -48,6 +48,7 @@
               <img :src="showPwd ? eyeClosed : eyeOpen" alt="Exibir/ocultar senha" />
             </span>
           </div>
+          <p v-if="passwordError" class="error-message">{{ passwordError }}</p>
 
           <!-- confirmar senha -->
           <div class="pwd-wrapper">
@@ -101,7 +102,27 @@ const loading = ref(false)
 const auth = useAuthStore()
 const router = useRouter()
 
+function isStrongPassword(pwd: string): boolean {
+  // Pelo menos 8 caracteres, com letras maiúsculas, minúsculas, números e símbolos
+  const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/
+  return strongRegex.test(pwd)
+}
+
+const passwordError = ref('')
+
 const onRegister = async () => {
+  passwordError.value = ''
+
+  if (!isStrongPassword(password.value)) {
+    passwordError.value = 'Senha fraca: use maiúsculas, minúsculas, números e símbolos, mínimo 8 caracteres.'
+    return
+  }
+
+  if (password.value !== password2.value) {
+    alert('As senhas não coincidem.')
+    return
+  }
+
   if (password.value !== password2.value) {
     alert('As senhas não coincidem.')
     return
@@ -196,6 +217,13 @@ const onRegister = async () => {
 
 .btn-primary:hover:not(:disabled) {
   opacity: 0.85;
+}
+
+.error-message {
+  color: var(--color-error);
+  font-size: 0.85rem;
+  margin-top: 0.2rem;
+  margin-bottom: 0.8rem;
 }
 
 /* =================== tablets (≤ 1024 px) =================== */
