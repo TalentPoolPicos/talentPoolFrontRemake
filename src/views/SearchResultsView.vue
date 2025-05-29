@@ -78,54 +78,141 @@ watch(
 </script>
 
 <template>
-<LoadingBrand :loading="loading">
-  <div class="search-page">
-    <h2>
-      Resultados para <span class="search-query">{{ query }}</span>
-      <span v-if="(results?.total || 0) > 0">({{ results?.total }})</span>
-    </h2>
+  <LoadingBrand :loading="loading">
+    <div class="search-page">
+      <h2>
+        Resultados para <span class="search-query">{{ query }}</span>
+        <span v-if="(results?.total || 0) > 0">({{ results?.total }})</span>
+      </h2>
 
-    <div v-if="results?.total == 0" class="no-results-container">
-      <img class="not-found-img" :src="notFoundIcon" alt="Nenhum resultado encontrado" />
-      <p>Nenhum resultado encontrado para "{{ query }}".</p>
-      <p>
-        Tente ajustar sua busca ou <router-link to="/">voltar para a página inicial</router-link>.
-      </p>
-    </div>
+      <div v-if="results?.total == 0" class="no-results-container">
+        <img class="not-found-img" :src="notFoundIcon" alt="Nenhum resultado encontrado" />
+        <p>Nenhum resultado encontrado para "{{ query }}".</p>
+        <p>
+          Tente ajustar sua busca ou <router-link to="/">voltar para a página inicial</router-link>.
+        </p>
+      </div>
 
-    <ul>
-      <li v-for="user in results?.users" :key="user.uuid" class="result-item">
-        <button @click="handleSearch(user)">
-          <p>
-            <strong>{{ user.username }}</strong> - {{ user.email }}
-          </p>
-          <p v-if="user.student">Aluno: {{ user.student.name }}</p>
-          <p v-if="user.enterprise">Empresa: {{ user.enterprise.name }}</p>
+      <ul class="results-grid">
+        <li v-for="user in results?.users" :key="user.uuid" class="result-card" @click="handleSearch(user)">
+          <div class="card-content">
+            <img
+              :src="user.profilePicture || 'https://via.placeholder.com/80'"
+              alt="Avatar"
+              class="avatar"
+            />
+            <div class="info">
+              <p><strong>{{ user.username }}</strong></p>
+              <p>Picos, PI</p>
+              <div class="tags">
+                <span class="tag" v-for="tag in user.tags" :key="tag.uuid">{{ tag.label }}</span>
+              </div>
+            </div>
+            <span class="match">👁 Match</span>
+          </div>
+        </li>
+      </ul>
+
+      <div v-if="totalPages > 1" class="pagination">
+        <button
+          v-for="page in totalPages"
+          :key="page"
+          :class="{ active: page === currentPage }"
+          @click="goToPage(page)"
+        >
+          {{ page }}
         </button>
-      </li>
-    </ul>
-
-    <div v-if="totalPages > 1" class="pagination">
-      <button
-        v-for="page in totalPages"
-        :key="page"
-        :class="{ active: page === currentPage }"
-        @click="goToPage(page)"
-      >
-        {{ page }}
-      </button>
+      </div>
     </div>
-  </div>
-</LoadingBrand>
+  </LoadingBrand>
 </template>
 
 <style scoped>
+.search-page {
+  padding: 2rem 2vw;
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  padding: 0;
+  margin: 2rem 0;
+  list-style: none;
+}
+
+.result-card {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s ease;
+}
+
+.result-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.card-content {
+  display: flex;
+  align-items: center;
+  position: relative;
+  gap: 1rem;
+}
+
+.avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #2196f3;
+  background-color: #eee;
+}
+
+.info {
+  flex: 1;
+}
+
+.info p {
+  margin: 0;
+  line-height: 1.3;
+}
+
+.tags {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.tag {
+  background-color: #2196f3;
+  color: #fff;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.match {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  background-color: #333;
+  color: #fff;
+  font-size: 0.7rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+}
+
 .pagination {
   display: flex;
   justify-content: center;
   gap: 0.5rem;
   margin-top: 2rem;
 }
+
 .pagination button {
   background: var(--color-surface, #f0f0f0);
   border: 1px solid var(--color-border, #ccc);
