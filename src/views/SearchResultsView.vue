@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { http } from '@/services/http'
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import LoadingBrand from '@/components/LoadingBrand.vue'
 import notFoundIcon from '@/assets/undraw_back-home_3dun.svg'
@@ -8,10 +8,6 @@ import type { components } from '@/types/api'
 import type { UserDto } from '@/stores/user'
 import { useRouter } from 'vue-router'
 import { RoutePaths, Routes } from '@/router/index'
-
-
-
-
 
 type SearchResultDto = components['schemas']['SearchResultDto']
 
@@ -21,19 +17,20 @@ const results = ref<SearchResultDto>()
 const loading = ref(false)
 const router = useRouter()
 
+const currentPage = ref(1)
+const pageSize = 10
+
 const fetchResults = async (q: string) => {
   if (!q) return
 
   loading.value = true
+  currentPage.value = 1
 
   try {
     const response = await http.get<SearchResultDto>(`/search/${q}`, {})
     const data = response.data
     results.value = data
-
-    console.log('Quantidade', data.users.length)
   } catch (err) {
-    console.error('Erro na busca:', err)
     results.value = {
       users: [],
       total: 0,
@@ -43,12 +40,28 @@ const fetchResults = async (q: string) => {
   }
 }
 
+const paginatedUsers = computed(() => {
+  if (!results.value?.users) return []
+  const start = (currentPage.value - 1) * pageSize
+  return results.value.users.slice(start, start + pageSize)
+})
+
+const totalPages = computed(() => {
+  return results.value ? Math.ceil((results.value.total || 0) / pageSize) : 1
+})
+
 const handleSearch = (user: UserDto) => {
-  console.log('Usuário selecionado:', user)
   if (user.role === 'student') {
     router.push(RoutePaths[Routes.StudentProfile].replace(':uuid', user.uuid))
   } else if (user.role === 'enterprise') {
     router.push(RoutePaths[Routes.EnterpriseProfile].replace(':uuid', user.uuid))
+  }
+}
+
+function goToPage(page: number) {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 }
 
@@ -79,7 +92,7 @@ watch(
     </div>
 
     <ul>
-      <li v-for="user in results?.users" :key="user.uuid" class="result-item">
+      <li v-for="user in paginatedUsers" :key="user.uuid" class="result-item">
         <button @click="handleSearch(user)">
           <p>
             <strong>{{ user.username }}</strong> - {{ user.email }}
@@ -89,55 +102,42 @@ watch(
         </button>
       </li>
     </ul>
+
+    <div v-if="totalPages > 1" class="pagination">
+      <button
+        v-for="page in totalPages"
+        :key="page"
+        :class="{ active: page === currentPage }"
+        @click="goToPage(page)"
+      >
+        {{ page }}
+      </button>
+    </div>
   </div>
 </LoadingBrand>
 </template>
 
 <style scoped>
-.search-page {
-  padding: 2rem;
-  align-content: center;
-  text-align: center;
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
 }
-
-.result-item {
-  margin-bottom: 1.2rem;
-  border-bottom: 1px solid #ccc;
-  padding-bottom: 1rem;
+.pagination button {
+  background: var(--color-surface, #f0f0f0);
+  border: 1px solid var(--color-border, #ccc);
+  border-radius: 4px;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--color-on-surface, #333);
+  transition: background 0.2s;
 }
-
-.no-results-container {
-  text-align: center;
-  align-content: center;
-  margin: 0.5rem 0 auto;
-  height: 75vh;
-}
-
-.no-results-container a {
-  color: var(--primary-color);
-  font-weight: bold;
-}
-
-.not-found-img {
-  max-width: 300px;
-  margin-bottom: 1rem;
-}
-
-.search-query {
-  color: var(--primary-color);
-  font-weight: bold;
-}
-
-.search-query:hover {
-  text-decoration: underline;
-}
-
-.search-query:focus {
-  outline: none;
-  box-shadow: 0 0 2px var(--primary-color);
-}
-
-.search-query:active {
-  color: var(--primary-color-dark);
+.pagination button.active,
+.pagination button:hover {
+  background: var(--color-primary, #1976d2);
+  color: #fff;
+  border-color: var(--color-primary, #1976d2);
 }
 </style>
