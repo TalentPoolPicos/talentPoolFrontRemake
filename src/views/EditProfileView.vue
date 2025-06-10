@@ -41,6 +41,15 @@ const form = ref({
   fantasyName: '',
   cnpj: '',
   socialReason: '',
+  adress: '',
+  phone: '',
+  website: '',
+  linkedin: '',
+  instagram: '',
+  facebook: '',
+  twitter: '',
+  youtube: '',
+  github: '',
 })
 
 /* --------------------------------------------------------------------- */
@@ -77,6 +86,7 @@ const loadData = async () => {
     form.value.description = s.description ?? ''
     form.value.registrationNumber = s.registrationNumber ?? ''
     form.value.lattes = s.lattes ?? ''
+    form.value.course = s.course ?? ''
 
     /* busca tags do usuário */
     const tagDtos = userStore.loggedUser.uuid

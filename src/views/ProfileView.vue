@@ -104,6 +104,7 @@ watch(() => props.uuid, refresh)
         </h1>
 
         <p class="email" v-if="user?.role === 'student'">{{ user.student?.email }}</p>
+        <p class="course" v-if="user?.role === 'student'">{{ user.student?.course }}</p>
         <p class="email" v-else-if="user?.role === 'enterprise'">{{ user.enterprise?.email }}</p>
 
         <!-- Tags -->
@@ -239,6 +240,13 @@ watch(() => props.uuid, refresh)
 
 .email {
   font-weight: 600;
+  margin-bottom: 0.25rem;
+  font-size: 1rem;
+  color: var(--color-on-surface-variant);
+}
+
+.course {
+  font-weight: 500;
   margin-bottom: 0.25rem;
   font-size: 1rem;
   color: var(--color-on-surface-variant);
