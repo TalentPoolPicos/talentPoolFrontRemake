@@ -5,7 +5,7 @@ import { useUserStore, type UserDto } from '@/stores/user'
 import { useAuthStore } from '@/stores/auth'
 import { useTagStore } from '@/stores/tag'
 import { useAddressStore } from '@/stores/address'
-import { userSocialMediaStore } from '@/stores/socialmedia' // ⬅️ novo
+import { userSocialMediaStore } from '@/stores/socialmedia'
 import type { components } from '@/types/api'
 import { Routes } from '@/router'
 
@@ -22,7 +22,7 @@ const userStore = useUserStore()
 const authStore = useAuthStore()
 const tagStore = useTagStore()
 const addressStore = useAddressStore()
-const socialStore = userSocialMediaStore() // ⬅️ novo
+const socialStore = userSocialMediaStore()
 
 /* ---------- props / state ---------- */
 const props = defineProps<{ uuid?: string }>()
@@ -32,7 +32,7 @@ const error = ref<string | null>(null)
 const user = ref<UserDto | null>(null)
 const tags = ref<string[]>([])
 const address = ref<AddressDto | null>(null)
-const socials = ref<SocialLink[]>([]) // ⬅️ novo
+const socials = ref<SocialLink[]>([])
 
 /* ---------- helpers ---------- */
 const iconMap: Record<SocialLink['type'], string> = {
@@ -219,7 +219,6 @@ watch(() => props.uuid, refresh)
           </ul>
         </div>
 
-        <!-- estatísticas (sem alterações) -->
         <div class="card stats">
           <div class="stat-item">
             <span class="stat-number">0</span>
@@ -305,7 +304,7 @@ watch(() => props.uuid, refresh)
 }
 
 .main h1 {
-  margin: 0.25rem 0 0.25rem; /* menor distância do banner */
+  margin: 0.25rem 0 0.25rem;
   font-size: 2.1rem;
   font-weight: 700;
   color: var(--color-on-surface);
@@ -369,7 +368,7 @@ watch(() => props.uuid, refresh)
   transform: translateY(-1px);
 }
 
-/* Descrição com limite de largura p/ legibilidade */
+/* Descrição*/
 .description {
   max-width: 60ch;
   line-height: 1.6;
@@ -378,7 +377,7 @@ watch(() => props.uuid, refresh)
   text-align: justify;
 }
 
-/* Endereço com ícone θ opcional (usa pseudo) */
+/* Endereço*/
 .address {
   font-size: 0.95rem;
   color: var(--color-on-surface-variant);
