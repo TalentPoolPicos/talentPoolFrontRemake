@@ -1,41 +1,53 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore, type UserDto } from '@/stores/user'
 import { useAuthStore } from '@/stores/auth'
 import { useTagStore } from '@/stores/tag'
 import { useAddressStore } from '@/stores/address'
+import { userSocialMediaStore } from '@/stores/socialmedia' // ⬅️ novo
 import type { components } from '@/types/api'
 import { Routes } from '@/router'
+
 import LoadingBrand from '@/components/LoadingBrand.vue'
 import ImageUser from '@/components/ImageUser.vue'
 
-/* tipos ---------------------------------------------------------------- */
+/* ---------- tipos ---------- */
 type AddressDto = components['schemas']['AddressDto']
+type SocialLink = { type: 'discord' | 'linkedin' | 'github'; url: string }
 
-/* stores / router ------------------------------------------------------ */
+/* ---------- stores / router ---------- */
 const router = useRouter()
 const userStore = useUserStore()
 const authStore = useAuthStore()
 const tagStore = useTagStore()
 const addressStore = useAddressStore()
+const socialStore = userSocialMediaStore() // ⬅️ novo
 
-/* reatividade ---------------------------------------------------------- */
+/* ---------- props / state ---------- */
 const props = defineProps<{ uuid?: string }>()
-
 const loading = ref(true)
 const error = ref<string | null>(null)
+
 const user = ref<UserDto | null>(null)
 const tags = ref<string[]>([])
 const address = ref<AddressDto | null>(null)
+const socials = ref<SocialLink[]>([]) // ⬅️ novo
 
-/* funções -------------------------------------------------------------- */
+/* ---------- helpers ---------- */
+const iconMap: Record<SocialLink['type'], string> = {
+  discord: 'fa-brands fa-discord',
+  linkedin: 'fa-brands fa-linkedin',
+  github: 'fa-brands fa-github',
+}
+
+/* ---------- ações ---------- */
 const refresh = async () => {
   loading.value = true
   error.value = null
 
   try {
-    /* user */
+    /* usuário */
     if (props.uuid) {
       user.value = await userStore.findByUuid(props.uuid)
     } else if (!authStore.isLoggedIn) {
@@ -50,8 +62,15 @@ const refresh = async () => {
       const tagDtos = await tagStore.findAllByUserUuid(user.value.uuid)
       tags.value = tagDtos.map((t) => t.label)
 
-      /* address */
+      /* endereço */
       address.value = await addressStore.findByUserUuid(user.value.uuid)
+
+      /* links sociais ------------------------------------ */
+      const list = await socialStore.findAllByUserUuid(user.value.uuid)
+      // mantém apenas links com URL preenchida
+      socials.value = list
+        .filter((s) => s.url.trim())
+        .map((s) => ({ type: s.type as SocialLink['type'], url: s.url }))
     }
   } catch (e) {
     console.error(e)
@@ -61,7 +80,6 @@ const refresh = async () => {
   }
 }
 
-/* ações de UI ---------------------------------------------------------- */
 const logoutHandler = async () => {
   try {
     await authStore.logout()
@@ -75,16 +93,18 @@ const downloadCurriculum = () => {
   if (user.value?.student?.curriculum) window.open(user.value.student.curriculum, '_blank')
   else alert('Usuário não cadastrou o currículo.')
 }
+
 const downloadHistory = () => {
   if (user.value?.student?.history) window.open(user.value.student.history, '_blank')
   else alert('Usuário não cadastrou o histórico.')
 }
+
 const goToEdit = () => {
   if (user.value?.role === 'student') router.push({ name: Routes.StudentEditView })
   else if (user.value?.role === 'enterprise') router.push({ name: Routes.EnterpriseEditView })
 }
 
-/* ciclo --------------------------------------------------------------- */
+/* ---------- ciclo ---------- */
 onMounted(refresh)
 watch(() => props.uuid, refresh)
 </script>
@@ -94,7 +114,7 @@ watch(() => props.uuid, refresh)
     <div v-if="error" class="error">{{ error }}</div>
 
     <div v-else class="profile-page">
-      <!-- banner + avatar -->
+      <!-- Banner + avatar -->
       <ImageUser :user="user" class="banner-container" />
 
       <!-- MAIN -------------------------------------------------------- -->
@@ -172,17 +192,34 @@ watch(() => props.uuid, refresh)
 
       <!-- SIDEBAR ------------------------------------------------------ -->
       <aside class="sidebar">
+        <!-- NOVA seção “Conecte-se” -->
         <div class="card">
           <h3>Conecte-se</h3>
           <ul class="social-links">
+            <!-- Lattes (estudante) -->
             <li v-if="user?.student?.lattes && user.role === 'student'">
-              <a :href="user.student.lattes" target="_blank">
+              <a :href="user.student.lattes" target="_blank" class="sm-link">
                 <i class="fas fa-graduation-cap"></i> Lattes
+              </a>
+            </li>
+
+            <!-- Discord / LinkedIn / GitHub -->
+            <li v-for="link in socials" :key="link.type">
+              <a :href="link.url" target="_blank" class="sm-link">
+                <i :class="iconMap[link.type]"></i>
+                {{
+                  link.type === 'github'
+                    ? 'GitHub'
+                    : link.type === 'linkedin'
+                      ? 'LinkedIn'
+                      : 'Discord'
+                }}
               </a>
             </li>
           </ul>
         </div>
 
+        <!-- estatísticas (sem alterações) -->
         <div class="card stats">
           <div class="stat-item">
             <span class="stat-number">0</span>

@@ -301,7 +301,7 @@ onMounted(loadData)
           </div>
         </div>
         <!-- links sociais -->
-        <div class="row two-cols">
+        <div class="row" style="flex-direction: column">
           <div class="field">
             <label>Discord</label>
             <input v-model="socials.discord" type="url" placeholder="https://discord.gg/…" />
