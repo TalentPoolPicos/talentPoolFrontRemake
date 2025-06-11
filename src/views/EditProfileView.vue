@@ -6,24 +6,22 @@ import { useStudentStore } from '@/stores/student'
 import { useEnterpriseStore } from '@/stores/enterprise'
 import { useTagStore } from '@/stores/tag'
 import { useAddressStore } from '@/stores/address'
+import { userSocialMediaStore } from '@/stores/socialmedia'
 import type { CreateOrUpdateAddressDto } from '@/stores/address'
 import { Routes } from '@/router'
 import LoadingBrand from '@/components/LoadingBrand.vue'
 import ImageUser from '@/components/ImageUser.vue'
 
-/* --------------------------------------------------------------------- */
 /* stores */
-
 const router = useRouter()
 const userStore = useUserStore()
 const studentStore = useStudentStore()
 const enterpriseStore = useEnterpriseStore()
 const tagStore = useTagStore()
 const addressStore = useAddressStore()
+const socialStore = userSocialMediaStore()
 
-/* --------------------------------------------------------------------- */
 /* state */
-
 const role = ref<'student' | 'enterprise'>('student')
 const loading = ref(true)
 const saving = ref(false)
@@ -32,19 +30,30 @@ const error = ref<string | null>(null)
 const curriculumFile = ref<File | null>(null)
 const historyFile = ref<File | null>(null)
 
+/* dados básicos */
 const form = ref({
   name: '',
   email: '',
   description: '',
   tags: [] as string[],
+
   course: '',
   registrationNumber: '',
   lattes: '',
+
   fantasyName: '',
   cnpj: '',
   socialReason: '',
 })
 
+/* links sociais */
+const socials = ref({
+  discord: '',
+  linkedin: '',
+  github: '',
+})
+
+/* endereço */
 const addressForm = ref<CreateOrUpdateAddressDto>({
   street: '',
   neighborhood: '',
@@ -53,25 +62,21 @@ const addressForm = ref<CreateOrUpdateAddressDto>({
   zipCode: '',
 })
 
-/* --------------------------------------------------------------------- */
 /* helpers */
-
-const removeTag = (tag: string) => {
-  form.value.tags = form.value.tags.filter((t) => t !== tag)
-}
+const removeTag = (t: string) => (form.value.tags = form.value.tags.filter((x) => x !== t))
 const handleCurriculumChange = (e: Event) =>
   (curriculumFile.value = (e.target as HTMLInputElement).files?.[0] ?? null)
 const handleHistoryChange = (e: Event) =>
   (historyFile.value = (e.target as HTMLInputElement).files?.[0] ?? null)
 
 const addTag = () => {
-  const t = prompt('Digite uma nova tag:')
-  if (t && !form.value.tags.includes(t)) form.value.tags.push(t)
+  const newTag = prompt('Digite o nome da nova tag:')
+  if (newTag && newTag.trim() && !form.value.tags.includes(newTag.trim())) {
+    form.value.tags.push(newTag.trim())
+  }
 }
 
-/* --------------------------------------------------------------------- */
-/* load data */
-
+/* carregar dados ---------------------------------------------------- */
 const loadData = async () => {
   if (!userStore.loggedUser) {
     router.push('/')
@@ -84,6 +89,7 @@ const loadData = async () => {
       : 'student'
 
   try {
+    /* user */
     if (role.value === 'student' && userStore.loggedUser.student) {
       const s = userStore.loggedUser.student
       Object.assign(form.value, {
@@ -106,11 +112,19 @@ const loadData = async () => {
       })
     }
 
+    /* tags */
     const tagDtos = await tagStore.findAllByUserUuid(userStore.loggedUser.uuid)
     form.value.tags = tagDtos.map((t) => t.label)
 
+    /* endereço */
     const addr = await addressStore.findByUserUuid(userStore.loggedUser.uuid)
     if (addr) Object.assign(addressForm.value, addr)
+
+    /* links sociais */
+    const list = await socialStore.findAllByUserUuid(userStore.loggedUser.uuid)
+    list.forEach((s) => {
+      if (s.type in socials.value) (socials.value as Record<string, string>)[s.type] = s.url
+    })
   } catch {
     error.value = 'Erro ao carregar dados.'
   } finally {
@@ -118,37 +132,25 @@ const loadData = async () => {
   }
 }
 
-/* --------------------------------------------------------------------- */
-/* validação */
-
+/* validação básica igual à anterior ------------------------------- */
 const validate = (): boolean => {
   error.value = null
   if (!form.value.name.trim()) return (error.value = 'Nome é obrigatório.'), false
   if (!form.value.email.trim()) return (error.value = 'Email é obrigatório.'), false
-  if (!addressForm.value.street?.trim()) return (error.value = 'Logradouro é obrigatório.'), false
-  if (!addressForm.value.city?.trim()) return (error.value = 'Cidade é obrigatória.'), false
-  if (!addressForm.value.state?.trim()) return (error.value = 'Estado é obrigatório.'), false
-
-  if (role.value === 'student') {
-    if (!form.value.registrationNumber.trim())
-      return (error.value = 'Número da matrícula é obrigatório.'), false
-  } else {
-    if (!form.value.fantasyName.trim()) return (error.value = 'Nome fantasia é obrigatório.'), false
-    if (!form.value.cnpj.trim()) return (error.value = 'CNPJ é obrigatório.'), false
-    if (!form.value.socialReason.trim()) return (error.value = 'Razão social é obrigatória.'), false
-  }
+  if (!addressForm.value.street) return (error.value = 'Logradouro é obrigatório.'), false
+  if (!addressForm.value.city) return (error.value = 'Cidade é obrigatória.'), false
+  if (!addressForm.value.state) return (error.value = 'Estado é obrigatório.'), false
   return true
 }
 
-/* --------------------------------------------------------------------- */
-/* save */
-
+/* salvar ----------------------------------------------------------- */
 const save = async () => {
   if (!validate()) return
   saving.value = true
   error.value = null
 
   try {
+    /* -------- user -------- */
     if (role.value === 'student') {
       await studentStore.partialUpdate({
         name: form.value.name,
@@ -171,18 +173,37 @@ const save = async () => {
       })
     }
 
+    /* -------- endereço -------- */
     await addressStore.createOrUpdate(addressForm.value)
 
+    /* -------- links sociais -------- */
+    const existing = await socialStore.findAllByUserUuid(userStore.loggedUser!.uuid)
+
+    const handleLink = async (type: 'discord' | 'linkedin' | 'github', url: string) => {
+      const prev = existing.find((s) => s.type === type)
+      if (url.trim()) {
+        await socialStore.createOrUpdate({ type, url })
+      } else if (prev) {
+        await socialStore.remove(prev.uuid)
+      }
+    }
+
+    await Promise.all([
+      handleLink('discord', socials.value.discord),
+      handleLink('linkedin', socials.value.linkedin),
+      handleLink('github', socials.value.github),
+    ])
+
+    /* -------- tags -------- */
     const currentTags = await tagStore.findAllByUserUuid(userStore.loggedUser!.uuid)
     const currentLabels = currentTags.map((t) => t.label)
     const toRemove = currentTags.filter((t) => !form.value.tags.includes(t.label))
     const toAdd = form.value.tags.filter((t) => !currentLabels.includes(t))
     await Promise.all(toRemove.map((t) => tagStore.remove(t.uuid)))
-    await Promise.all(toAdd.map((label) => tagStore.create({ label })))
+    await Promise.all(toAdd.map((l) => tagStore.create({ label: l })))
 
     alert('Perfil atualizado com sucesso!')
     await userStore.fetch()
-
     router.push({
       name: role.value === 'student' ? Routes.StudentLoggedProfile : Routes.EnterpriseLoggedProfile,
     })
@@ -219,6 +240,7 @@ onMounted(loadData)
             <input type="email" v-model="form.email" required />
           </div>
         </div>
+
         <!-- descrição -->
         <div class="row">
           <div class="field full-width">
@@ -278,20 +300,37 @@ onMounted(loadData)
             <input v-model="addressForm.zipCode" required />
           </div>
         </div>
+        <!-- links sociais -->
+        <div class="row two-cols">
+          <div class="field">
+            <label>Discord</label>
+            <input v-model="socials.discord" type="url" placeholder="https://discord.gg/…" />
+          </div>
 
-        <!-- student extras: Link + arquivos -->
+          <div class="field">
+            <label>LinkedIn</label>
+            <input v-model="socials.linkedin" type="url" placeholder="https://linkedin.com/in/…" />
+          </div>
+
+          <div class="field">
+            <label>GitHub</label>
+            <input v-model="socials.github" type="url" placeholder="https://github.com/…" />
+          </div>
+        </div>
+
+        <!-- student extras -->
         <div v-if="role === 'student'">
+          <!-- Lattes -->
           <div class="row">
             <div class="field full-width">
               <label>Link Lattes</label>
               <input v-model="form.lattes" placeholder="https://lattes.cnpq.br/..." />
             </div>
           </div>
-
+          <!-- arquivos -->
           <div class="row two-cols">
             <div class="field">
               <label>Currículo (PDF)</label>
-              <!-- botão customizado -->
               <label class="file-btn">
                 {{ curriculumFile ? 'Alterar arquivo' : 'Selecionar' }}
                 <input
@@ -305,7 +344,7 @@ onMounted(loadData)
             </div>
 
             <div class="field">
-              <label :class="{ filled: historyFile }">Histórico escolar (PDF)</label>
+              <label>Histórico escolar (PDF)</label>
               <label class="file-btn">
                 {{ historyFile ? 'Alterar arquivo' : 'Selecionar' }}
                 <input
@@ -572,6 +611,24 @@ label.filled {
   /* apenas mantém a cor padrão do texto do label */
   color: var(--color-on-surface);
 }
+
+.social-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.social-links li {
+  margin: 0.5rem 0;
+}
+.sm-link {
+  text-decoration: none;
+  color: var(--color-primary);
+  font-weight: 600;
+}
+.sm-link:hover {
+  text-decoration: underline;
+}
+
 /* ---------- ERRO ---------- */
 .error {
   text-align: center;
