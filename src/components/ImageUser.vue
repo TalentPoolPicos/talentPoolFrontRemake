@@ -131,7 +131,7 @@ watch(() => displayUser.value?.bannerPicture, calcBounds)
       />
 
       <div v-if="canEdit && hoverBanner && !dragging" class="overlay-banner">
-        Arraste para ajustar<br />ou dê duplo clique para trocar
+        Duplo clique para trocar
       </div>
     </div>
 

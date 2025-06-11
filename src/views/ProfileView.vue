@@ -298,8 +298,14 @@ watch(() => props.uuid, refresh)
 /* ---------------------------------------------------- */
 /* BLOCO PRINCIPAL                                      */
 /* ---------------------------------------------------- */
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
 .main h1 {
-  margin-top: 2.5rem;
+  margin: 0.25rem 0 0.25rem; /* menor distância do banner */
   font-size: 2.1rem;
   font-weight: 700;
   color: var(--color-on-surface);
@@ -310,11 +316,12 @@ watch(() => props.uuid, refresh)
   font-size: 1rem;
   font-weight: 600;
   color: var(--color-on-surface-variant);
-  margin-bottom: 0.25rem;
+  margin: 0.25rem 0 0.25rem;
 }
 
 .course {
   font-weight: 500;
+  color: var(--color-on-surface-variant);
 }
 
 /* Tags com mais contraste */
@@ -340,7 +347,7 @@ watch(() => props.uuid, refresh)
 .docs-links {
   display: flex;
   gap: 0.75rem;
-  margin-bottom: 1.25rem;
+  margin: 0.25rem 0 0.25rem;
 }
 
 .doc-btn {
@@ -367,7 +374,7 @@ watch(() => props.uuid, refresh)
   max-width: 60ch;
   line-height: 1.6;
   color: var(--color-on-surface);
-  margin-bottom: 1.5rem;
+  margin: 0.25rem 0 0.25rem;
   text-align: justify;
 }
 
@@ -375,11 +382,11 @@ watch(() => props.uuid, refresh)
 .address {
   font-size: 0.95rem;
   color: var(--color-on-surface-variant);
-  margin-bottom: 1.8rem;
+  margin: 0.25rem 0 0.25rem;
 }
 
 .address p {
-  margin: 0.15rem 0;
+  margin: 0.25rem 0 0.25rem;
 }
 
 /* Ação principal */
