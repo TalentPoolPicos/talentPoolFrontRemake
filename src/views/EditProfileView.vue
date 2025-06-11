@@ -219,8 +219,9 @@ onMounted(loadData)
 
 <template>
   <LoadingBrand :loading="loading">
-    <div class="image-user-container">
-      <ImageUser :user="userStore.loggedUser" editable class="image-user-componente" />
+    <!-- BANNER + AVATAR — largura igual à página pública -->
+    <div class="banner-edit-wrapper">
+      <ImageUser :user="userStore.loggedUser" editable />
     </div>
 
     <div class="edit-profile">
@@ -379,17 +380,11 @@ onMounted(loadData)
 
 <style scoped>
 /* ---------- CONTAINERS ---------- */
-.image-user-container {
-  display: flex;
-  justify-content: center;
-  width: 100%;
+.banner-edit-wrapper {
+  max-width: 1100px;
+  margin: 0 auto 3.5rem;
+  padding: 0 1rem;
 }
-
-.image-user-componente {
-  max-width: 1000px;
-  padding: 1rem;
-}
-
 .edit-profile {
   max-width: 650px;
   margin: 2rem auto;
