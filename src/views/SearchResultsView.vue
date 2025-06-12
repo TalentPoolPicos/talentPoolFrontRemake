@@ -14,10 +14,10 @@ import { useAuthStore } from '@/stores/auth'
 type SearchResultDto = components['schemas']['SearchResultDto']
 
 const route = useRoute()
-const query = ref(route.query.q as string || '')
+const query = ref((route.query.q as string) || '')
 const results = ref<SearchResultDto>({
   users: [],
-  total: 0
+  total: 0,
 })
 const loading = ref(false)
 const router = useRouter()
@@ -28,8 +28,8 @@ const pageSize = 10
 const authStore = useAuthStore()
 
 const getRobotAvatar = (username: string) => {
-  return `https://robohash.org/${username}?set=set2&size=72x72`;
-};
+  return `https://robohash.org/${username}?set=set2&size=72x72`
+}
 
 const fetchResults = async (q: string, page = 1) => {
   if (!q) return
@@ -40,14 +40,14 @@ const fetchResults = async (q: string, page = 1) => {
     const response = await http.get<SearchResultDto>(`/search/${q}`, {
       params: {
         page,
-        limit: pageSize
-      }
+        limit: pageSize,
+      },
     })
     results.value = response.data
-  } catch (err) {
+  } catch {
     results.value = {
       users: [],
-      total: 0
+      total: 0,
     }
   } finally {
     loading.value = false
@@ -102,7 +102,12 @@ watch(
       </div>
 
       <ul class="results-grid">
-        <li v-for="user in results?.users" :key="user.uuid" class="result-card" @click="handleSearch(user)">
+        <li
+          v-for="user in results?.users"
+          :key="user.uuid"
+          class="result-card"
+          @click="handleSearch(user)"
+        >
           <div class="card-content">
             <CircleAvatar
               :src="user.profilePicture || getRobotAvatar(user.username ?? 'default')"
@@ -111,7 +116,9 @@ watch(
               class="card-circle-avatar"
             />
             <div class="info">
-              <p><strong>{{ user.username }}</strong></p>
+              <p>
+                <strong>{{ user.username }}</strong>
+              </p>
               <p class="location">Picos, PI</p>
               <div class="tags">
                 <span class="tag" v-for="tag in user.tags" :key="tag.uuid">{{ tag.label }}</span>
@@ -147,7 +154,7 @@ watch(
 }
 
 h2 {
-  color: var(--color-heading); 
+  color: var(--color-heading);
 }
 
 .search-query {
@@ -164,12 +171,15 @@ h2 {
 }
 
 .result-card {
-  background-color: var(--color-surface); 
+  background-color: var(--color-surface);
   border-radius: 10px;
   padding: 1.2rem;
-  border: 1px solid var(--color-outline-variant); 
-  box-shadow: 0 2px 8px var(--color-shadow); 
-  transition: box-shadow 0.2s ease, background-color 0.3s ease, border-color 0.3s ease;
+  border: 1px solid var(--color-outline-variant);
+  box-shadow: 0 2px 8px var(--color-shadow);
+  transition:
+    box-shadow 0.2s ease,
+    background-color 0.3s ease,
+    border-color 0.3s ease;
   cursor: pointer;
   min-height: 220px;
   max-width: 400px;
@@ -210,9 +220,9 @@ h2 {
 }
 
 .card-circle-avatar {
-  border: 3px solid var(--color-primary); 
-  background-color: var(--color-surface-variant); 
-  box-shadow: 0 2px 6px var(--color-shadow); 
+  border: 3px solid var(--color-primary);
+  background-color: var(--color-surface-variant);
+  box-shadow: 0 2px 6px var(--color-shadow);
   margin-bottom: 0.5rem;
 }
 
@@ -228,7 +238,7 @@ h2 {
 
 .info strong {
   font-size: 1.1em;
-  color: var(--color-on-surface); 
+  color: var(--color-on-surface);
 }
 
 .location {
@@ -253,7 +263,10 @@ h2 {
   font-weight: 600;
   line-height: 1;
   box-shadow: 0 1px 3px var(--color-shadow);
-  transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .match-indicator {
@@ -263,8 +276,8 @@ h2 {
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  background-color: var(--color-secondary); 
-  color: var(--color-on-secondary); 
+  background-color: var(--color-secondary);
+  color: var(--color-on-secondary);
   font-size: 0.8rem;
   padding: 0.4rem 0.8rem;
   border-radius: 20px;
@@ -274,8 +287,8 @@ h2 {
 }
 
 .match-indicator:hover {
-  background-color: var(--color-secondary-container); 
-  color: var(--color-on-secondary-container); 
+  background-color: var(--color-secondary-container);
+  color: var(--color-on-secondary-container);
 }
 
 .pagination {
@@ -286,14 +299,17 @@ h2 {
 }
 
 .pagination button {
-  background: var(--color-surface-variant); 
-  border: 1px solid var(--color-border); 
+  background: var(--color-surface-variant);
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   padding: 0.4rem 0.9rem;
   cursor: pointer;
   font-weight: 500;
   color: var(--color-on-surface-variant);
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    border-color 0.2s;
 }
 .pagination button.active,
 .pagination button:hover {
@@ -306,7 +322,7 @@ h2 {
 /* Estes seletores só aplicam quando html.theme-dark está ativo */
 
 :global(html.theme-dark) .result-card {
-  background-color: var(--md-sys-color-surface); 
+  background-color: var(--md-sys-color-surface);
   border-color: var(--md-sys-color-outline);
   box-shadow: 0 2px 8px var(--md-sys-color-shadow);
 }
@@ -326,7 +342,7 @@ h2 {
 
 :global(html.theme-dark) .card-circle-avatar {
   border-color: var(--md-sys-color-primary);
-  background-color: var(--md-sys-color-surface-variant); 
+  background-color: var(--md-sys-color-surface-variant);
 }
 
 :global(html.theme-dark) .tag {
@@ -361,7 +377,7 @@ h2 {
 
 :global(html.theme-dark) h2,
 :global(html.theme-dark) .search-query {
-  color: var(--color-heading); 
+  color: var(--color-heading);
 }
 
 :global(html.theme-dark) .search-page {
