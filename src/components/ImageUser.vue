@@ -62,7 +62,7 @@ const uploadProfilePicture = () => {
         <CircleAvatar
           :src="
             displayUser?.profilePicture ??
-            `https://robohash.org/${displayUser?.username ?? 'default'}`
+            `https://robohash.org/${displayUser?.username ?? 'default'}?set=set2&size=150x150`
           "
           :width="150"
           :height="150"
