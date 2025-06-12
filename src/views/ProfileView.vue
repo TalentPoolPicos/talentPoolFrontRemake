@@ -4,6 +4,8 @@ import { useRouter } from 'vue-router'
 import { useUserStore, type UserDto } from '@/stores/user'
 import { useAuthStore } from '@/stores/auth'
 import { useTagStore } from '@/stores/tag'
+import { useLikeStore } from '@/stores/like'
+
 import { Routes } from '@/router'
 import LoadingBrand from '@/components/LoadingBrand.vue'
 import ImageUser from '@/components/ImageUser.vue'
@@ -14,16 +16,19 @@ const props = defineProps<{ uuid?: string }>()
 const userStore = useUserStore()
 const authStore = useAuthStore()
 const tagStore = useTagStore()
+const likeStore = useLikeStore()
 
 const loading = ref(true)
 const error = ref<string | null>(null)
 const user = ref<UserDto | null>(null)
-const tags = ref<string[]>([]) // tags para exibir
+const tags = ref<string[]>([])
+const isLiked = ref(false)
 
 const refresh = async () => {
   loading.value = true
   error.value = null
   try {
+    // carrega o perfil (por uuid ou logado)
     if (props.uuid) {
       user.value = await userStore.findByUuid(props.uuid)
     } else if (!authStore.isLoggedIn) {
@@ -34,9 +39,18 @@ const refresh = async () => {
     }
 
     if (user.value) {
-      // Busca as tags pelo UUID do usuário
-      const tagDtos = await tagStore.findAllByUserUuid(user.value.uuid)
-      tags.value = tagDtos.map((t) => t.label)
+      // guardamos em variável local para TS saber que não é null
+      const userUuid = user.value.uuid
+
+      // busca tags
+      const tagDtos = await tagStore.findAllByUserUuid(userUuid)
+      tags.value = tagDtos.map(t => t.label)
+
+      // verifica se já curtimos
+      const loggedUuid = authStore.loggedUser?.uuid
+      if (loggedUuid && loggedUuid !== userUuid) {
+        isLiked.value = await likeStore.hasLiked(userUuid)
+      }
     }
   } catch (err) {
     console.error(err)
@@ -45,6 +59,8 @@ const refresh = async () => {
     loading.value = false
   }
 }
+
+
 
 const LogoutHandler = async () => {
   try {
@@ -80,12 +96,10 @@ const goToEdit = () => {
   }
 }
 
-onMounted(() => {
-  refresh()
-})
-
+onMounted(refresh)
 watch(() => props.uuid, refresh)
 </script>
+
 
 <template>
   <LoadingBrand :loading="loading">
@@ -123,7 +137,7 @@ watch(() => props.uuid, refresh)
         </p>
 
         <div class="action-buttons">
-          <button
+          <!-- <button
             v-if="
               user &&
               authStore.loggedUser?.uuid !== user.uuid &&
@@ -133,6 +147,9 @@ watch(() => props.uuid, refresh)
             class="btn"
           >
             Match
+          </button> -->
+           <!-- Botão Curtir / Descurtir -->
+          
           </button>
           <button
             v-if="user && authStore.loggedUser?.uuid === user.uuid"
