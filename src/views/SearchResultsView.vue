@@ -237,13 +237,14 @@ not-found-img {
 }
 
 .tag {
-  background-color: var(--color-primary-container, #e3f2fd);
-  color: var(--color-on-primary-container, #1a237e);
-  padding: 0.3rem 0.7rem;
+  background: var(--color-primary-container); /* Usando background ao invés de background-color para consistência */
+  color: var(--color-on-primary-container);
+  padding: 6px 12px; /* Ajustado para ser igual ao do perfil */
   border-radius: 999px;
-  font-size: 0.8rem;
+  font-size: 0.875rem; /* Ajustado para ser igual ao do perfil */
   font-weight: 600;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  line-height: 1; /* Adicionado para consistência */
+  box-shadow: 0 1px 3px rgb(0 0 0 / 12%); /* Ajustado para 0.12, igual ao do perfil */
 }
 
 .match-indicator {
