@@ -233,7 +233,7 @@ h2 {
 
 .location {
   font-size: 0.85rem;
-  color: var(--color-on-surface-variant, #666);
+  color: var(--color-on-surface-variant); /* Texto secundário para localização */
   margin-top: 0.2em;
 }
 
@@ -245,14 +245,15 @@ h2 {
 }
 
 .tag {
-  background: var(--color-primary-container); 
+  background: var(--color-primary-container);
   color: var(--color-on-primary-container);
-  padding: 6px 12px; 
+  padding: 6px 12px;
   border-radius: 999px;
-  font-size: 0.875rem; 
+  font-size: 0.875rem;
   font-weight: 600;
-  line-height: 1; 
-  box-shadow: 0 1px 3px rgb(0 0 0 / 12%); 
+  line-height: 1;
+  box-shadow: 0 1px 3px var(--color-shadow);
+  transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .match-indicator {
@@ -262,23 +263,19 @@ h2 {
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  background-color: var(--color-secondary, #673ab7);
-  color: var(--color-on-secondary, #fff);
+  background-color: var(--color-secondary); 
+  color: var(--color-on-secondary); 
   font-size: 0.8rem;
   padding: 0.4rem 0.8rem;
   border-radius: 20px;
   font-weight: 600;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 4px var(--color-shadow);
   transition: background-color 0.2s ease;
 }
 
 .match-indicator:hover {
-  background-color: var(--color-secondary-container, #ede7f6);
-  color: var(--color-on-secondary-container, #4527a0);
-}
-
-.match-icon {
-  font-size: 0.9em;
+  background-color: var(--color-secondary-container); 
+  color: var(--color-on-secondary-container); 
 }
 
 .pagination {
