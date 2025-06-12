@@ -25,11 +25,10 @@ const router = useRouter()
 const currentPage = ref(1)
 const pageSize = 10
 
-const authStore = useAuthStore() // Inicialize o authStore
+const authStore = useAuthStore()
 
-// Função para gerar a URL do RoboHash, mantida aqui para o card de busca
 const getRobotAvatar = (username: string) => {
-  return `https://robohash.org/${username}?set=set2&size=72x72`; // Tamanho ajustado para o card
+  return `https://robohash.org/${username}?set=set2&size=72x72`;
 };
 
 const fetchResults = async (q: string, page = 1) => {
