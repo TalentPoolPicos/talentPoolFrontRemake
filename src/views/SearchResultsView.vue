@@ -194,7 +194,7 @@ h2 {
   margin: 2rem 0;
 }
 
-not-found-img {
+.not-found-img {
   max-width: 400px;
   width: 100%;
   margin-bottom: 1rem;
@@ -210,9 +210,9 @@ not-found-img {
 }
 
 .card-circle-avatar {
-  border: 3px solid var(--color-primary, #2196f3);
-  background-color: var(--color-surface-variant, #eee);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  border: 3px solid var(--color-primary); 
+  background-color: var(--color-surface-variant); 
+  box-shadow: 0 2px 6px var(--color-shadow); 
   margin-bottom: 0.5rem;
 }
 
@@ -223,12 +223,12 @@ not-found-img {
 .info p {
   margin: 0;
   line-height: 1.3;
-  color: var(--color-on-surface, #333);
+  color: var(--color-on-surface);
 }
 
 .info strong {
   font-size: 1.1em;
-  color: var(--color-on-surface, #333);
+  color: var(--color-on-surface); 
 }
 
 .location {
