@@ -237,14 +237,14 @@ not-found-img {
 }
 
 .tag {
-  background: var(--color-primary-container); /* Usando background ao invés de background-color para consistência */
+  background: var(--color-primary-container); 
   color: var(--color-on-primary-container);
-  padding: 6px 12px; /* Ajustado para ser igual ao do perfil */
+  padding: 6px 12px; 
   border-radius: 999px;
-  font-size: 0.875rem; /* Ajustado para ser igual ao do perfil */
+  font-size: 0.875rem; 
   font-weight: 600;
-  line-height: 1; /* Adicionado para consistência */
-  box-shadow: 0 1px 3px rgb(0 0 0 / 12%); /* Ajustado para 0.12, igual ao do perfil */
+  line-height: 1; 
+  box-shadow: 0 1px 3px rgb(0 0 0 / 12%); 
 }
 
 .match-indicator {
