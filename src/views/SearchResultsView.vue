@@ -286,19 +286,19 @@ h2 {
 }
 
 .pagination button {
-  background: var(--color-surface, #f0f0f0);
-  border: 1px solid var(--color-border, #ccc);
+  background: var(--color-surface-variant); 
+  border: 1px solid var(--color-border); 
   border-radius: 4px;
   padding: 0.4rem 0.9rem;
   cursor: pointer;
   font-weight: 500;
-  color: var(--color-on-surface, #333);
-  transition: background 0.2s;
+  color: var(--color-on-surface-variant);
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
 .pagination button.active,
 .pagination button:hover {
-  background: var(--color-primary, #1976d2);
-  color: #fff;
-  border-color: var(--color-primary, #1976d2);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border-color: var(--color-primary);
 }
 </style>
