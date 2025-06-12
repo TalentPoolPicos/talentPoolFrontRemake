@@ -60,7 +60,23 @@ const refresh = async () => {
   }
 }
 
+const toggleLike = async () => {
+  // obtém uuid com optional chaining e faz early return se null
+  const userUuid = user.value?.uuid
+  if (!userUuid) return
 
+  try {
+    if (isLiked.value) {
+      await likeStore.unlikeUser(userUuid)
+      isLiked.value = false
+    } else {
+      await likeStore.likeUser(userUuid)
+      isLiked.value = true
+    }
+  } catch (err) {
+    console.error(err)
+  }
+}
 
 const LogoutHandler = async () => {
   try {
@@ -137,7 +153,7 @@ watch(() => props.uuid, refresh)
         </p>
 
         <div class="action-buttons">
-          <!-- <button
+          <button
             v-if="
               user &&
               authStore.loggedUser?.uuid !== user.uuid &&
@@ -147,9 +163,14 @@ watch(() => props.uuid, refresh)
             class="btn"
           >
             Match
-          </button> -->
+          </button>
            <!-- Botão Curtir / Descurtir -->
-          
+          <button
+            v-if="user && authStore.loggedUser?.uuid !== user.uuid"
+            class="match-btn"
+            @click="toggleLike"
+          >
+            {{ isLiked ? 'Descurtir' : 'Curtir' }}
           </button>
           <button
             v-if="user && authStore.loggedUser?.uuid === user.uuid"
