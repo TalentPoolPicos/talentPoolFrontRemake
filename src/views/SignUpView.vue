@@ -1,8 +1,6 @@
 <!-- src/views/Registration.vue -->
 <template>
   <div class="page registration">
-  
-
     <!-- barra de título -->
     <div class="page-header registration">
       <span>Cadastro</span>
@@ -21,20 +19,10 @@
 
         <form @submit.prevent="onRegister" class="auth-form">
           <!-- nome do usuário ou organização -->
-          <input
-            type="text"
-            placeholder="Nome"
-            v-model="username"
-            required
-          />
+          <input type="text" placeholder="Nome" v-model="username" required />
 
           <!-- email -->
-          <input
-            type="email"
-            placeholder="Email"
-            v-model="email"
-            required
-          />
+          <input type="email" placeholder="Email" v-model="email" required />
 
           <!-- senha -->
           <div class="pwd-wrapper">
@@ -73,8 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import NavBar from '@/components/NavigatorBar.vue'
-import { ref, defineProps } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { Routes } from '@/router'
@@ -86,7 +73,7 @@ type SignUpDto = components['schemas']['SignUpDto']
 
 // Define prop role recebida da rota
 const props = defineProps<{ role: 'student' | 'enterprise' }>()
-const role = props.role ?? 'student'  // fallback
+const role = props.role ?? 'student' // fallback
 
 console.log('Role recebido:', role)
 
@@ -114,7 +101,8 @@ const onRegister = async () => {
   passwordError.value = ''
 
   if (!isStrongPassword(password.value)) {
-    passwordError.value = 'Senha fraca: use maiúsculas, minúsculas, números e símbolos, mínimo 8 caracteres.'
+    passwordError.value =
+      'Senha fraca: use maiúsculas, minúsculas, números e símbolos, mínimo 8 caracteres.'
     return
   }
 
@@ -141,8 +129,7 @@ const onRegister = async () => {
     // Passa o role recebido para a função de signUp
     await auth.signUp(payload, role)
     router.push({ name: Routes.Home })
-  } catch (err: any) {
-    console.error(err)
+  } catch {
     alert(err.response?.data?.message || 'Erro ao cadastrar.')
   } finally {
     loading.value = false
@@ -150,70 +137,121 @@ const onRegister = async () => {
 }
 </script>
 
-
 <style scoped>
 /* estilos adaptados com novos nomes */
 
-.nav-bar { position: relative; z-index: 10; }
+.nav-bar {
+  position: relative;
+  z-index: 10;
+}
 
 .page-header.registration {
-  width: 100%; height: 3rem;
+  width: 100%;
+  height: 3rem;
   background: var(--color-secondary-container);
-  display: flex; align-items: center;
+  display: flex;
+  align-items: center;
   padding-inline: 2rem;
   border-radius: 0 0 0.5rem 0.5rem;
   color: var(--color-on-secondary-container);
-  font-size: 1.1rem; font-weight: 500;
+  font-size: 1.1rem;
+  font-weight: 500;
 }
 
 .registration-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 2rem; align-items: center;
-  padding: 2rem 4rem; background: var(--color-surface);
+  gap: 2rem;
+  align-items: center;
+  padding: 2rem 4rem;
+  background: var(--color-surface);
   min-height: calc(100vh - 64px - 3rem);
 }
 
-.illustration { position: relative; }
-.shape {
-  position: absolute; width: 100%; height: 100%;
-  background: var(--color-background-mute);
-  border-radius: 1.5rem; top: -1rem; left: -1rem; z-index: 0;
+.illustration {
+  position: relative;
 }
-.illustration img { position: relative; width: 100%; height: auto; z-index: 1; }
+.shape {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: var(--color-background-mute);
+  border-radius: 1.5rem;
+  top: -1rem;
+  left: -1rem;
+  z-index: 0;
+}
+.illustration img {
+  position: relative;
+  width: 100%;
+  height: auto;
+  z-index: 1;
+}
 
 .registration-card {
-  background: var(--color-secondary-container); padding: 2.5rem;
-  border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  background: var(--color-secondary-container);
+  padding: 2.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 .registration-card h2 {
-  margin-bottom: 1.5rem; color: var(--color-text);
-  font-size: 1.75rem; line-height: 1.2;
+  margin-bottom: 1.5rem;
+  color: var(--color-text);
+  font-size: 1.75rem;
+  line-height: 1.2;
 }
 
-.auth-form { display: flex; flex-direction: column; gap: 1rem; }
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
 .auth-form input {
-  height: 2.5rem; border-radius: 0.75rem; border: none;
-  padding: 0 1rem 0 1rem; padding-right: 3rem;
-  font-size: 0.95rem; background: var(--color-always-white);
-  width: 100%; box-sizing: border-box;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  border: none;
+  padding: 0 1rem 0 1rem;
+  padding-right: 3rem;
+  font-size: 0.95rem;
+  background: var(--color-always-white);
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.pwd-wrapper { position: relative; width: 100%; }
-.pwd-wrapper .eye {
-  position: absolute; top: 50%; right: 1rem; transform: translateY(-50%);
-  width: 1.25rem; height: 1.25rem; cursor: pointer;
+.pwd-wrapper {
+  position: relative;
+  width: 100%;
 }
-.pwd-wrapper .eye img { width: 100%; height: 100%; display: block; }
+.pwd-wrapper .eye {
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  transform: translateY(-50%);
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: pointer;
+}
+.pwd-wrapper .eye img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
 
 .btn-primary {
-  width: 100%; margin-top: 1rem;
-  background: var(--color-primary); color: var(--color-on-primary);
-  height: 3.5rem; border-radius: 0.75rem;
-  font-size: 1.1rem; font-weight: 600; cursor: pointer;
+  width: 100%;
+  margin-top: 1rem;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  height: 3.5rem;
+  border-radius: 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
 }
-.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
 .btn-primary:hover:not(:disabled) {
   opacity: 0.85;
@@ -243,11 +281,11 @@ const onRegister = async () => {
 /* =================== móveis (≤ 768 px) =================== */
 @media (max-width: 768px) {
   .registration-grid {
-    grid-template-columns: 1fr;           /* quebra em 1 coluna */
+    grid-template-columns: 1fr; /* quebra em 1 coluna */
     padding: 1.5rem;
   }
   .illustration {
-    display: none;                        /* oculta imagem */
+    display: none; /* oculta imagem */
   }
   .registration-card {
     width: 100%;
@@ -276,4 +314,3 @@ const onRegister = async () => {
   }
 }
 </style>
-
