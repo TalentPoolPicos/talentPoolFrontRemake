@@ -4,10 +4,12 @@ import { ref, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import LoadingBrand from '@/components/LoadingBrand.vue'
 import notFoundIcon from '@/assets/undraw_back-home_3dun.svg'
+import CircleAvatar from '@/components/CircleAvatar.vue'
 import type { components } from '@/types/api'
 import type { UserDto } from '@/stores/user'
 import { useRouter } from 'vue-router'
 import { RoutePaths, Routes } from '@/router/index'
+import { useAuthStore } from '@/stores/auth'
 
 type SearchResultDto = components['schemas']['SearchResultDto']
 
@@ -22,6 +24,13 @@ const router = useRouter()
 
 const currentPage = ref(1)
 const pageSize = 10
+
+const authStore = useAuthStore() // Inicialize o authStore
+
+// Função para gerar a URL do RoboHash, mantida aqui para o card de busca
+const getRobotAvatar = (username: string) => {
+  return `https://robohash.org/${username}?set=set2&size=72x72`; // Tamanho ajustado para o card
+};
 
 const fetchResults = async (q: string, page = 1) => {
   if (!q) return
@@ -96,19 +105,23 @@ watch(
       <ul class="results-grid">
         <li v-for="user in results?.users" :key="user.uuid" class="result-card" @click="handleSearch(user)">
           <div class="card-content">
-            <img
-              :src="user.profilePicture || 'https://via.placeholder.com/80'"
-              alt="Avatar"
-              class="avatar"
+            <CircleAvatar
+              :src="user.profilePicture || getRobotAvatar(user.username ?? 'default')"
+              :width="72"
+              :height="72"
+              class="card-circle-avatar"
             />
             <div class="info">
               <p><strong>{{ user.username }}</strong></p>
-              <p>Picos, PI</p>
+              <p class="location">Picos, PI</p>
               <div class="tags">
                 <span class="tag" v-for="tag in user.tags" :key="tag.uuid">{{ tag.label }}</span>
               </div>
             </div>
-            <span class="match">👁 Match</span>
+            <div v-if="authStore.isLoggedIn" class="match-indicator">
+              <i class="fas fa-handshake match-icon"></i>
+              <span class="match-text">Match</span>
+            </div>
           </div>
         </li>
       </ul>
@@ -152,11 +165,12 @@ watch(
   transition: box-shadow 0.2s ease;
   cursor: pointer;
   min-height: 220px;
-  max-width: 400px;      /* Limita a largura máxima do card */
-  width: 100%;           /* Faz o card ocupar toda a coluna da grid */
+  max-width: 400px;         
+  width: 100%;             
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  position: relative;
 }
 
 .result-card:hover {
@@ -185,16 +199,13 @@ watch(
   flex-direction: column;
   align-items: flex-start;
   gap: 0.8rem;
-  position: relative;
+  flex-grow: 1;
 }
 
-.avatar {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #2196f3;
-  background-color: #eee;
+.card-circle-avatar {
+  border: 3px solid var(--color-primary, #2196f3);
+  background-color: var(--color-surface-variant, #eee);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   margin-bottom: 0.5rem;
 }
 
@@ -205,33 +216,61 @@ watch(
 .info p {
   margin: 0;
   line-height: 1.3;
+  color: var(--color-on-surface, #333);
+}
+
+.info strong {
+  font-size: 1.1em;
+  color: var(--color-on-surface, #333);
+}
+
+.location {
+  font-size: 0.85rem;
+  color: var(--color-on-surface-variant, #666);
+  margin-top: 0.2em;
 }
 
 .tags {
-  margin-top: 0.5rem;
+  margin-top: 0.8rem;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 0.5rem;
 }
 
 .tag {
-  background-color: #2196f3;
-  color: #fff;
-  padding: 0.2rem 0.6rem;
+  background-color: var(--color-primary-container, #e3f2fd);
+  color: var(--color-on-primary-container, #1a237e);
+  padding: 0.3rem 0.7rem;
   border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: 0.8rem;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.match {
+.match-indicator {
   position: absolute;
-  top: 0.4rem;
-  right: 0.4rem;
-  background-color: #333;
-  color: #fff;
-  font-size: 0.7rem;
-  padding: 0.3rem 0.5rem;
-  border-radius: 4px;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  background-color: var(--color-secondary, #673ab7);
+  color: var(--color-on-secondary, #fff);
+  font-size: 0.8rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  transition: background-color 0.2s ease;
+}
+
+.match-indicator:hover {
+  background-color: var(--color-secondary-container, #ede7f6);
+  color: var(--color-on-secondary-container, #4527a0);
+}
+
+.match-icon {
+  font-size: 0.9em;
 }
 
 .pagination {
