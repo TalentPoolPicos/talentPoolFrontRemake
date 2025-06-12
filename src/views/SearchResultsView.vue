@@ -186,7 +186,7 @@ watch(
   margin: 2rem 0;
 }
 
-.not-found-img {
+not-found-img {
   max-width: 400px;
   width: 100%;
   margin-bottom: 1rem;
