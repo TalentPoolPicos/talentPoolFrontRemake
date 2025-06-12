@@ -88,7 +88,7 @@ const handleAvatarClick = () => {
       <CircleAvatar
         :src="
           userStore.loggedUser?.profilePicture ??
-          `https://robohash.org/${userStore.loggedUser?.username ?? 'default'}`
+          `https://robohash.org/${userStore.loggedUser?.username ?? 'default'}?set=set2&size=72x72`
         "
         @click="handleAvatarClick"
         v-if="authStore.isLoggedIn"
@@ -126,7 +126,7 @@ const handleAvatarClick = () => {
       <CircleAvatar
         :src="
           userStore.loggedUser?.profilePicture ??
-          `https://robohash.org/${userStore.loggedUser?.username ?? 'default'}`
+          `https://robohash.org/${userStore.loggedUser?.username ?? 'default'}?set=set2&size=72x72`
         "
         @click="handleAvatarClick"
         v-if="authStore.isLoggedIn"
