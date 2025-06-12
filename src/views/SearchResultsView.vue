@@ -301,4 +301,70 @@ h2 {
   color: var(--color-on-primary);
   border-color: var(--color-primary);
 }
+
+/* --- ESTILOS PARA O MODO ESCURO (ativados pela classe 'theme-dark') --- */
+/* Estes seletores só aplicam quando html.theme-dark está ativo */
+
+:global(html.theme-dark) .result-card {
+  background-color: var(--md-sys-color-surface); 
+  border-color: var(--md-sys-color-outline);
+  box-shadow: 0 2px 8px var(--md-sys-color-shadow);
+}
+
+:global(html.theme-dark) .result-card:hover {
+  box-shadow: 0 4px 12px var(--md-sys-color-shadow);
+}
+
+:global(html.theme-dark) .info p,
+:global(html.theme-dark) .info strong {
+  color: var(--md-sys-color-on-surface);
+}
+
+:global(html.theme-dark) .location {
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+:global(html.theme-dark) .card-circle-avatar {
+  border-color: var(--md-sys-color-primary);
+  background-color: var(--md-sys-color-surface-variant); 
+}
+
+:global(html.theme-dark) .tag {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  box-shadow: 0 1px 3px var(--md-sys-color-shadow);
+}
+
+:global(html.theme-dark) .match-indicator {
+  background-color: var(--md-sys-color-secondary);
+  color: var(--md-sys-color-on-secondary);
+  box-shadow: 0 2px 4px var(--md-sys-color-shadow);
+}
+
+:global(html.theme-dark) .match-indicator:hover {
+  background-color: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+
+:global(html.theme-dark) .pagination button {
+  background: var(--md-sys-color-surface-variant);
+  border-color: var(--md-sys-color-outline-variant);
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+:global(html.theme-dark) .pagination button.active,
+:global(html.theme-dark) .pagination button:hover {
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  border-color: var(--md-sys-color-primary);
+}
+
+:global(html.theme-dark) h2,
+:global(html.theme-dark) .search-query {
+  color: var(--color-heading); 
+}
+
+:global(html.theme-dark) .search-page {
+  background-color: var(--md-sys-color-background);
+}
 </style>
