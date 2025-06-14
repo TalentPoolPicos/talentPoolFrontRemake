@@ -10,6 +10,7 @@ import type { UserDto } from '@/stores/user'
 import { useRouter } from 'vue-router'
 import { RoutePaths, Routes } from '@/router/index'
 import { useAuthStore } from '@/stores/auth'
+import defaultBanner from '@/assets/banner.png'
 
 type SearchResultDto = components['schemas']['SearchResultDto']
 
@@ -100,37 +101,46 @@ watch(
           Tente ajustar sua busca ou <router-link to="/">voltar para a página inicial</router-link>.
         </p>
       </div>
-
-      <ul class="results-grid">
-        <li
-          v-for="user in results?.users"
-          :key="user.uuid"
-          class="result-card"
-          @click="handleSearch(user)"
-        >
-          <div class="card-content">
-            <CircleAvatar
-              :src="user.profilePicture || getRobotAvatar(user.username ?? 'default')"
-              :width="72"
-              :height="72"
-              class="card-circle-avatar"
-            />
-            <div class="info">
-              <p>
-                <strong>{{ user.username }}</strong>
-              </p>
-              <p class="location">Picos, PI</p>
-              <div class="tags">
-                <span class="tag" v-for="tag in user.tags" :key="tag.uuid">{{ tag.label }}</span>
+      <div class="grid-container">
+        <ul class="results-grid">
+          <li
+            v-for="user in results?.users"
+            :key="user.uuid"
+            class="result-card"
+            @click="handleSearch(user)"
+          >
+            <div class="card-content">
+              <div class="image-user-container">
+                <div class="card-circle-avatar">
+                  <CircleAvatar
+                    :src="user.profilePicture || getRobotAvatar(user.username ?? 'default')"
+                    :width="72"
+                    :height="72"
+                    class="card-circle-avatar"
+                  />
+                </div>
+                <img v-if="user.bannerPicture" :src="user.bannerPicture" alt="Banner do usuário" />
+                <img v-else :src="defaultBanner" alt="Banner padrão" />
+              </div>
+              <div class="info">
+                <p>
+                  <strong>{{ user.student?.name || user.enterprise?.name }}</strong>
+                </p>
+                <p class="location">Picos, PI</p>
+                <div class="tags">
+                  <span class="tag" v-for="tag in user.tags" :key="tag.uuid">{{
+                    tag.label.replace(' ', '_')
+                  }}</span>
+                </div>
+              </div>
+              <div v-if="authStore.isLoggedIn" class="match-indicator">
+                <i class="fas fa-handshake match-icon"></i>
+                <span class="match-text">Match</span>
               </div>
             </div>
-            <div v-if="authStore.isLoggedIn" class="match-indicator">
-              <i class="fas fa-handshake match-icon"></i>
-              <span class="match-text">Match</span>
-            </div>
-          </div>
-        </li>
-      </ul>
+          </li>
+        </ul>
+      </div>
 
       <div v-if="totalPages > 1" class="pagination">
         <button
@@ -147,6 +157,81 @@ watch(
 </template>
 
 <style scoped>
+.image-user-container {
+  position: relative;
+  width: 100%;
+  height: 80px;
+  overflow: hidden;
+  justify-content: center;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 6px var(--color-shadow);
+}
+
+.image-user-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.card-circle-avatar {
+  position: absolute;
+}
+
+.tags {
+  margin-top: 0.8rem;
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  width: 100%;
+  gap: 0.5rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: 4px;
+  -ms-overflow-style: none;
+}
+
+.tags::-webkit-scrollbar {
+  height: 4px;
+}
+
+.tags::-webkit-scrollbar-thumb {
+  background-color: var(--color-on-surface-variant);
+  border-radius: 3px;
+}
+
+.tag {
+  background: var(--color-primary-container);
+  color: var(--color-on-primary-container);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  line-break: none;
+  width: 100%;
+  margin-bottom: 5px;
+  box-shadow: 0 1px 3px var(--color-shadow);
+  transition:
+    background 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  overflow: hidden;
+  width: 100%;
+  flex-grow: 1;
+}
+
 .search-page {
   padding: 2rem 4vw;
   max-width: 1200px;
@@ -161,13 +246,23 @@ h2 {
   color: var(--color-heading);
 }
 
+.grid-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
 .results-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1.5rem;
   padding: 0;
-  margin: 2rem 0;
+  margin: 2rem auto;
   list-style: none;
+  max-width: 1080px;
+  width: 100%;
+  justify-content: center;
 }
 
 .result-card {
@@ -181,11 +276,11 @@ h2 {
     background-color 0.3s ease,
     border-color 0.3s ease;
   cursor: pointer;
-  min-height: 220px;
+  margin: 0 auto;
+  height: 220px;
   max-width: 400px;
   width: 100%;
-  display: flex;
-  flex-direction: column;
+  display: inline;
   justify-content: space-between;
   position: relative;
 }
@@ -243,30 +338,8 @@ h2 {
 
 .location {
   font-size: 0.85rem;
-  color: var(--color-on-surface-variant); /* Texto secundário para localização */
+  color: var(--color-on-surface-variant);
   margin-top: 0.2em;
-}
-
-.tags {
-  margin-top: 0.8rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.tag {
-  background: var(--color-primary-container);
-  color: var(--color-on-primary-container);
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  line-height: 1;
-  box-shadow: 0 1px 3px var(--color-shadow);
-  transition:
-    background 0.3s ease,
-    color 0.3s ease,
-    box-shadow 0.3s ease;
 }
 
 .match-indicator {
@@ -317,9 +390,6 @@ h2 {
   color: var(--color-on-primary);
   border-color: var(--color-primary);
 }
-
-/* --- ESTILOS PARA O MODO ESCURO (ativados pela classe 'theme-dark') --- */
-/* Estes seletores só aplicam quando html.theme-dark está ativo */
 
 :global(html.theme-dark) .result-card {
   background-color: var(--md-sys-color-surface);
