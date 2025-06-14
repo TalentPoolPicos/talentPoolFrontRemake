@@ -1,29 +1,53 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore, type UserDto } from '@/stores/user'
 import { useAuthStore } from '@/stores/auth'
 import { useTagStore } from '@/stores/tag'
+import { useAddressStore } from '@/stores/address'
+import { userSocialMediaStore } from '@/stores/socialmedia'
+import type { components } from '@/types/api'
 import { Routes } from '@/router'
+
 import LoadingBrand from '@/components/LoadingBrand.vue'
 import ImageUser from '@/components/ImageUser.vue'
 
-const router = useRouter()
-const props = defineProps<{ uuid?: string }>()
+/* ---------- tipos ---------- */
+type AddressDto = components['schemas']['AddressDto']
+type SocialLink = { type: 'discord' | 'linkedin' | 'github'; url: string }
 
+/* ---------- stores / router ---------- */
+const router = useRouter()
 const userStore = useUserStore()
 const authStore = useAuthStore()
 const tagStore = useTagStore()
+const addressStore = useAddressStore()
+const socialStore = userSocialMediaStore()
 
+/* ---------- props / state ---------- */
+const props = defineProps<{ uuid?: string }>()
 const loading = ref(true)
 const error = ref<string | null>(null)
-const user = ref<UserDto | null>(null)
-const tags = ref<string[]>([]) // tags para exibir
 
+const user = ref<UserDto | null>(null)
+const tags = ref<string[]>([])
+const address = ref<AddressDto | null>(null)
+const socials = ref<SocialLink[]>([])
+
+/* ---------- helpers ---------- */
+const iconMap: Record<SocialLink['type'], string> = {
+  discord: 'fa-brands fa-discord',
+  linkedin: 'fa-brands fa-linkedin',
+  github: 'fa-brands fa-github',
+}
+
+/* ---------- ações ---------- */
 const refresh = async () => {
   loading.value = true
   error.value = null
+
   try {
+    /* usuário */
     if (props.uuid) {
       user.value = await userStore.findByUuid(props.uuid)
     } else if (!authStore.isLoggedIn) {
@@ -34,65 +58,66 @@ const refresh = async () => {
     }
 
     if (user.value) {
-      // Busca as tags pelo UUID do usuário
+      /* tags */
       const tagDtos = await tagStore.findAllByUserUuid(user.value.uuid)
       tags.value = tagDtos.map((t) => t.label)
+
+      /* endereço */
+      address.value = await addressStore.findByUserUuid(user.value.uuid)
+
+      /* links sociais ------------------------------------ */
+      const list = await socialStore.findAllByUserUuid(user.value.uuid)
+      // mantém apenas links com URL preenchida
+      socials.value = list
+        .filter((s) => s.url.trim())
+        .map((s) => ({ type: s.type as SocialLink['type'], url: s.url }))
     }
-  } catch (err) {
-    console.error(err)
+  } catch (e) {
+    console.error(e)
     error.value = 'Falha ao carregar perfil.'
   } finally {
     loading.value = false
   }
 }
 
-const LogoutHandler = async () => {
+const logoutHandler = async () => {
   try {
     await authStore.logout()
     router.push({ name: Routes.Home })
-  } catch (err) {
-    console.error(err)
+  } catch {
     error.value = 'Falha ao fazer logout.'
   }
 }
 
 const downloadCurriculum = () => {
-  if (user.value?.student?.curriculum) {
-    window.open(user.value.student.curriculum, '_blank')
-  } else {
-    alert('Usuário não cadastrou o currículo.')
-  }
+  if (user.value?.student?.curriculum) window.open(user.value.student.curriculum, '_blank')
+  else alert('Usuário não cadastrou o currículo.')
 }
 
 const downloadHistory = () => {
-  if (user.value?.student?.history) {
-    window.open(user.value.student.history, '_blank')
-  } else {
-    alert('Usuário não cadastrou o histórico.')
-  }
+  if (user.value?.student?.history) window.open(user.value.student.history, '_blank')
+  else alert('Usuário não cadastrou o histórico.')
 }
 
 const goToEdit = () => {
-  if (user.value?.role === 'student') {
-    router.push({ name: Routes.StudentEditView })
-  } else if (user.value?.role === 'enterprise') {
-    router.push({ name: Routes.EnterpriseEditView })
-  }
+  if (user.value?.role === 'student') router.push({ name: Routes.StudentEditView })
+  else if (user.value?.role === 'enterprise') router.push({ name: Routes.EnterpriseEditView })
 }
 
-onMounted(() => {
-  refresh()
-})
-
+/* ---------- ciclo ---------- */
+onMounted(refresh)
 watch(() => props.uuid, refresh)
 </script>
 
 <template>
   <LoadingBrand :loading="loading">
     <div v-if="error" class="error">{{ error }}</div>
+
     <div v-else class="profile-page">
+      <!-- Banner + avatar -->
       <ImageUser :user="user" class="banner-container" />
 
+      <!-- MAIN -------------------------------------------------------- -->
       <section class="main">
         <h1>
           <template v-if="user?.role === 'student'">
@@ -104,25 +129,37 @@ watch(() => props.uuid, refresh)
         </h1>
 
         <p class="email" v-if="user?.role === 'student'">{{ user.student?.email }}</p>
+        <p class="course" v-if="user?.role === 'student'">{{ user.student?.course }}</p>
         <p class="email" v-else-if="user?.role === 'enterprise'">{{ user.enterprise?.email }}</p>
 
-        <!-- Tags -->
-        <div class="tags" v-if="tags.length">
+        <!-- tags -->
+        <div v-if="tags.length" class="tags">
           <span v-for="tag in tags" :key="tag" class="tag">{{ tag }}</span>
         </div>
 
-        <!-- Botões de documentos para student -->
-        <div class="docs-links" v-if="user?.role === 'student'">
-          <button @click="downloadCurriculum" class="doc-btn">↓ Currículo</button>
-          <button @click="downloadHistory" class="doc-btn">↓ Histórico</button>
+        <!-- documentos -->
+        <div v-if="user?.role === 'student'" class="docs-links">
+          <button class="doc-btn" @click="downloadCurriculum">↓ Currículo</button>
+          <button class="doc-btn" @click="downloadHistory">↓ Histórico</button>
         </div>
 
+        <!-- descrição -->
         <p class="description" v-if="user?.role === 'student'">{{ user.student?.description }}</p>
         <p class="description" v-else-if="user?.role === 'enterprise'">
           {{ user.enterprise?.description }}
         </p>
 
+        <!-- endereço -->
+        <div v-if="address" class="address">
+          <p>
+            {{ address.neighborhood }} – {{ address.city }} / {{ address.state }} • CEP
+            {{ address.zipCode }}
+          </p>
+        </div>
+
+        <!-- botões -->
         <div class="action-buttons">
+          <!-- Match (placeholder) -->
           <button
             v-if="
               user &&
@@ -134,6 +171,7 @@ watch(() => props.uuid, refresh)
           >
             Match
           </button>
+
           <button
             v-if="user && authStore.loggedUser?.uuid === user.uuid"
             class="btn"
@@ -141,23 +179,41 @@ watch(() => props.uuid, refresh)
           >
             Editar
           </button>
+
           <button
             v-if="user && authStore.loggedUser?.uuid === user.uuid"
             class="btn"
-            @click="LogoutHandler"
+            @click="logoutHandler"
           >
             Logout
           </button>
         </div>
       </section>
 
+      <!-- SIDEBAR ------------------------------------------------------ -->
       <aside class="sidebar">
+        <!-- NOVA seção “Conecte-se” -->
         <div class="card">
           <h3>Conecte-se</h3>
           <ul class="social-links">
+            <!-- Lattes (estudante) -->
             <li v-if="user?.student?.lattes && user.role === 'student'">
-              <a :href="user.student.lattes" target="_blank">
+              <a :href="user.student.lattes" target="_blank" class="sm-link">
                 <i class="fas fa-graduation-cap"></i> Lattes
+              </a>
+            </li>
+
+            <!-- Discord / LinkedIn / GitHub -->
+            <li v-for="link in socials" :key="link.type">
+              <a :href="link.url" target="_blank" class="sm-link">
+                <i :class="iconMap[link.type]"></i>
+                {{
+                  link.type === 'github'
+                    ? 'GitHub'
+                    : link.type === 'linkedin'
+                      ? 'LinkedIn'
+                      : 'Discord'
+                }}
               </a>
             </li>
           </ul>
@@ -165,19 +221,19 @@ watch(() => props.uuid, refresh)
 
         <div class="card stats">
           <div class="stat-item">
-            <span class="stat-number">{{ 0 }}</span>
+            <span class="stat-number">0</span>
             <span class="stat-label">Seus matches</span>
           </div>
           <div class="stat-item" v-if="user?.role === 'student'">
-            <span class="stat-number">{{ 0 }}</span>
+            <span class="stat-number">0</span>
             <span class="stat-label">Te contrataram</span>
           </div>
           <div class="stat-item" v-if="user?.role === 'enterprise'">
-            <span class="stat-number">{{ 0 }}</span>
+            <span class="stat-number">0</span>
             <span class="stat-label">Te curtiram</span>
           </div>
           <div class="stat-item">
-            <span class="stat-number">{{ 0 }}</span>
+            <span class="stat-number">0</span>
             <span class="stat-label">Visualizações</span>
           </div>
         </div>
@@ -187,175 +243,47 @@ watch(() => props.uuid, refresh)
 </template>
 
 <style scoped>
+/* ---------------------------------------------------- */
+/* GRID GERAL                                           */
+/* ---------------------------------------------------- */
 .profile-page {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 2rem;
-  max-width: 1000px;
-  margin: 2rem auto;
-  padding: 1rem;
+  grid-template-columns: minmax(0, 3fr) 1fr; /* coluna principal + sidebar */
+  gap: 2.5rem;
+  max-width: 1100px;
+  margin: 3rem auto 4rem;
+  padding: 0 1rem;
   font-family: Inter, sans-serif;
 }
 
-.error {
-  max-width: 600px;
-  margin: 3rem auto;
-  text-align: center;
-  font-size: 1.2rem;
-  color: var(--color-on-surface-variant);
-}
-
-/* Banner + avatar */
+/* ---------------------------------------------------- */
+/* BANNER + AVATAR                                      */
+/* ---------------------------------------------------- */
 .banner-container {
   grid-column: 1 / -1;
   position: relative;
 }
-/* Botão Match ao lado do avatar */
-.match-btn {
-  background: var(--color-primary);
-  color: var(--color-on-primary);
-  border-radius: 15px;
-  padding: 6px 12px;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-  transition: background 0.3s;
-}
-.match-btn:hover {
-  background: var(--color-primary-container);
+
+.banner-container img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 8%);
 }
 
-/* Main */
-.main h1 {
-  margin-top: 0rem;
-  font-size: 2rem;
-  color: var(--color-on-surface);
-  font-weight: 600;
+.avatar-wrapper {
+  position: absolute;
+  bottom: -50px;
+  left: 2rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 0.25rem;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--color-surface);
+  box-shadow: 0 4px 10px rgb(0 0 0 / 20%);
 }
 
-.email {
-  font-weight: 600;
-  margin-bottom: 0.25rem;
-  font-size: 1rem;
-  color: var(--color-on-surface-variant);
-}
-
-/* Tags */
-.tags {
-  margin-bottom: 1rem;
-}
-
-.tag {
-  background: var(--color-surface-variant);
-  color: var(--color-on-surface-variant);
-  padding: 5px 10px;
-  border-radius: 15px;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-weight: 600;
-  user-select: none;
-  margin-right: 0.5rem; /* espaçamento entre tags */
-  margin-bottom: 0.5rem;
-}
-
-/* Botões de documentos */
-.docs-links {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-.doc-btn {
-  background: var(--color-primary);
-  color: var(--color-on-primary);
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: none;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  margin-right: 0;
-  transition: background 0.3s;
-}
-.doc-btn:hover {
-  background: var(--color-primary-container);
-}
-
-.description {
-  margin-bottom: 1.5rem;
-  line-height: 1.5;
-  color: var(--color-on-surface);
-  font-size: 1rem;
-  font-weight: 400;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 1rem;
-}
-.btn {
-  background: var(--color-primary);
-  color: var(--color-on-primary);
-  padding: 8px 20px;
-  border-radius: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-  transition: background 0.3s;
-}
-.btn:hover {
-  background: var(--color-primary-container);
-}
-
-/* Sidebar */
-.sidebar .card {
-  background: var(--color-surface-variant);
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
-}
-.social-links {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.social-links li {
-  margin: 0.5rem 0;
-}
-.social-links a {
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--color-on-surface-variant);
-  font-weight: 600;
-}
-
-/* Estatísticas */
-.stats {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-.stat-item {
-  text-align: center;
-}
-.stat-number {
-  display: block;
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: var(--color-primary);
-}
-.stat-label {
-  font-size: 0.875rem;
-  color: var(--color-on-surface-variant);
-}
-
-/* Responsivo */
 @media (max-width: 800px) {
   .profile-page {
     grid-template-columns: 1fr;
@@ -364,13 +292,196 @@ watch(() => props.uuid, refresh)
     left: 50%;
     transform: translateX(-50%);
   }
-  .main h1 {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-  .docs-links {
-    margin-left: 0;
-  }
+}
+
+/* ---------------------------------------------------- */
+/* BLOCO PRINCIPAL                                      */
+/* ---------------------------------------------------- */
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.main h1 {
+  margin: 0.25rem 0 0.25rem;
+  font-size: 2.1rem;
+  font-weight: 700;
+  color: var(--color-on-surface);
+}
+
+.email,
+.course {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-on-surface-variant);
+  margin: 0.25rem 0 0.25rem;
+}
+
+.course {
+  font-weight: 500;
+  color: var(--color-on-surface-variant);
+}
+
+/* Tags com mais contraste */
+.tags {
+  margin: 0.75rem 0 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag {
+  background: var(--color-primary-container);
+  color: var(--color-on-primary-container);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 12%);
+}
+
+/* Botões de documentos */
+.docs-links {
+  display: flex;
+  gap: 0.75rem;
+  margin: 0.25rem 0 0.25rem;
+}
+
+.doc-btn {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  padding: 7px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 4px rgb(0 0 0 / 15%);
+  transition:
+    background 0.25s,
+    transform 0.15s;
+}
+
+.doc-btn:hover {
+  background: var(--color-primary-container);
+  transform: translateY(-1px);
+}
+
+/* Descrição*/
+.description {
+  max-width: 60ch;
+  line-height: 1.6;
+  color: var(--color-on-surface);
+  margin: 0.25rem 0 0.25rem;
+  text-align: justify;
+}
+
+/* Endereço*/
+.address {
+  font-size: 0.95rem;
+  color: var(--color-on-surface-variant);
+  margin: 0.25rem 0 0.25rem;
+}
+
+.address p {
+  margin: 0.25rem 0 0.25rem;
+}
+
+/* Ação principal */
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  padding: 8px 22px;
+  border-radius: 20px;
+  font-weight: 600;
+  border: none;
+  font-size: 0.95rem;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 12%);
+  transition:
+    background 0.25s,
+    transform 0.15s;
+}
+
+.btn:hover {
+  background: var(--color-primary-container);
+  transform: translateY(-1px);
+}
+
+/* ---------------------------------------------------- */
+/* SIDEBAR                                              */
+/* ---------------------------------------------------- */
+.sidebar .card {
+  background: var(--color-surface-variant);
+  padding: 1.25rem 1.1rem;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgb(0 0 0 / 10%);
+  margin-bottom: 1.75rem;
+}
+
+.sidebar h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-on-surface);
+}
+
+.social-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.social-links a {
+  text-decoration: none;
+  color: var(--color-on-surface-variant);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: color 0.25s;
+}
+
+.social-links a:hover {
+  color: var(--color-primary);
+}
+
+/* Stats */
+.stats {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-number {
+  display: block;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: var(--color-on-surface-variant);
+}
+
+/* ---------------------------------------------------- */
+/* ESTADO DE ERRO                                       */
+/* ---------------------------------------------------- */
+.error {
+  max-width: 600px;
+  margin: 3rem auto;
+  text-align: center;
+  font-size: 1.2rem;
+  color: var(--color-error);
 }
 </style>
