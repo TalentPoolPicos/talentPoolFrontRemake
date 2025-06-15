@@ -3,44 +3,65 @@ import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore, type UserDto } from '@/stores/user'
 import { useAuthStore } from '@/stores/auth'
-import { useTagStore } from '@/stores/tag'
-import { useAddressStore } from '@/stores/address'
-import { userSocialMediaStore } from '@/stores/socialmedia'
 import type { components } from '@/types/api'
-import { Routes } from '@/router'
-
+import { RoutePaths, Routes } from '@/router'
+import CircleAvatar from '@/components/CircleAvatar.vue'
 import LoadingBrand from '@/components/LoadingBrand.vue'
 import ImageUser from '@/components/ImageUser.vue'
+import { useLikeStore } from '@/stores/like'
 
-/* ---------- tipos ---------- */
-type AddressDto = components['schemas']['AddressDto']
-type SocialLink = { type: 'discord' | 'linkedin' | 'github'; url: string }
+type SocialMediaDto = components['schemas']['SocialMediaDto']
+type UsersPageDto = components['schemas']['UsersPageDto']
 
-/* ---------- stores / router ---------- */
 const router = useRouter()
 const userStore = useUserStore()
 const authStore = useAuthStore()
-const tagStore = useTagStore()
-const addressStore = useAddressStore()
-const socialStore = userSocialMediaStore()
+const likeStore = useLikeStore()
 
-/* ---------- props / state ---------- */
 const props = defineProps<{ uuid?: string }>()
 const loading = ref(true)
+
+const loadingLike = ref(false)
+const isLiked = ref(false)
+
 const error = ref<string | null>(null)
 
 const user = ref<UserDto | null>(null)
-const tags = ref<string[]>([])
-const address = ref<AddressDto | null>(null)
-const socials = ref<SocialLink[]>([])
 
-/* ---------- helpers ---------- */
-const iconMap: Record<SocialLink['type'], string> = {
+const initiatorLikes = ref<UsersPageDto | null>(null)
+const receiverLikes = ref<UsersPageDto | null>(null)
+const likesLoading = ref(false)
+
+const iconMap: Record<SocialMediaDto['type'], string> = {
   discord: 'fa-brands fa-discord',
   linkedin: 'fa-brands fa-linkedin',
   github: 'fa-brands fa-github',
+  facebook: 'fa-brands fa-facebook',
+  gitlab: 'fa-brands fa-gitlab',
+  instagram: 'fa-brands fa-instagram',
+  reddit: 'fa-brands fa-reddit',
+  telegram: 'fa-brands fa-telegram',
+  tiktok: 'fa-brands fa-tiktok',
+  whatsapp: 'fa-brands fa-whatsapp',
+  x: 'fa-brands fa-twitter',
+  youtube: 'fa-brands fa-youtube',
 }
 
+const getRobotAvatar = (username: string) => `https://robohash.org/${username}?set=set2&size=72x72`
+
+const initiatorLikesHandler = () => {
+  router.push({
+    name: Routes.Home,
+    params: { uuid: user.value?.uuid, type: 'initiator' },
+  })
+}
+
+const receiverLikesHandler = () => {
+  router.push({
+    name: Routes.Home,
+    params: { uuid: user.value?.uuid, type: 'receiver' },
+  })
+}
 /* ---------- ações ---------- */
 const refresh = async () => {
   loading.value = true
@@ -54,24 +75,29 @@ const refresh = async () => {
       router.push({ name: Routes.Home })
       return
     } else {
-      user.value = await userStore.loggedUser
+      user.value = userStore.loggedUser
     }
 
-    if (user.value) {
-      /* tags */
-      const tagDtos = await tagStore.findAllByUserUuid(user.value.uuid)
-      tags.value = tagDtos.map((t) => t.label)
-
-      /* endereço */
-      address.value = await addressStore.findByUserUuid(user.value.uuid)
-
-      /* links sociais ------------------------------------ */
-      const list = await socialStore.findAllByUserUuid(user.value.uuid)
-      // mantém apenas links com URL preenchida
-      socials.value = list
-        .filter((s) => s.url.trim())
-        .map((s) => ({ type: s.type as SocialLink['type'], url: s.url }))
+    if (!user.value) {
+      error.value = 'Usuário não encontrado.'
+      return
     }
+    /* likes */
+
+    likesLoading.value = true
+    initiatorLikes.value = await likeStore
+      .initiatorLikes({
+        userUuid: user.value.uuid,
+        limit: 3,
+      })
+      .catch(() => ({ total: 0, users: [] }))
+    receiverLikes.value = await likeStore
+      .receiverLikes({
+        userUuid: user.value.uuid,
+        limit: 3,
+      })
+      .catch(() => ({ total: 0, users: [] }))
+    likesLoading.value = false
   } catch (e) {
     console.error(e)
     error.value = 'Falha ao carregar perfil.'
@@ -104,6 +130,84 @@ const goToEdit = () => {
   else if (user.value?.role === 'enterprise') router.push({ name: Routes.EnterpriseEditView })
 }
 
+const checkIfLiked = (userAux: UserDto | undefined) => {
+  if (
+    authStore.isLoggedIn &&
+    userAux &&
+    authStore.loggedUser?.uuid !== userAux?.uuid &&
+    userAux?.role !== authStore.loggedUser?.role
+  ) {
+    loadingLike.value = true
+    likeStore
+      .hasLiked(userAux?.uuid)
+      .then((liked) => {
+        isLiked.value = liked.isLike
+        loadingLike.value = false
+      })
+      .catch(() => {
+        console.error('Erro ao verificar se o usuário foi curtido')
+        loadingLike.value = false
+        isLiked.value = false
+      })
+  }
+}
+
+const match = () => {
+  if (!authStore.isLoggedIn) {
+    router.push(RoutePaths[Routes.Home])
+    return
+  }
+
+  const userAux = user.value
+
+  if (!userAux) {
+    console.error('Usuário não encontrado')
+    return
+  }
+
+  if (authStore.loggedUser?.uuid === userAux.uuid) {
+    alert('Você não pode dar like em si mesmo.')
+    return
+  }
+
+  loadingLike.value = true
+  isLiked.value = !isLiked.value
+
+  if (isLiked.value) {
+    likeStore
+      .like(userAux.uuid)
+      .then(() => {
+        loadingLike.value = false
+      })
+      .catch(() => {
+        console.error('Erro ao curtir o usuário')
+        loadingLike.value = false
+        isLiked.value = false
+      })
+  } else {
+    likeStore
+      .unlike(userAux.uuid)
+      .then(() => {
+        loadingLike.value = false
+      })
+      .catch(() => {
+        console.error('Erro ao descurtir o usuário')
+        loadingLike.value = false
+        isLiked.value = true
+      })
+  }
+}
+
+onMounted(checkIfLiked)
+watch(
+  () => user.value,
+  (newUser) => {
+    if (!newUser) return
+    checkIfLiked(newUser)
+  },
+  { immediate: true },
+)
+
 /* ---------- ciclo ---------- */
 onMounted(refresh)
 watch(() => props.uuid, refresh)
@@ -119,22 +223,40 @@ watch(() => props.uuid, refresh)
 
       <!-- MAIN -------------------------------------------------------- -->
       <section class="main">
-        <h1>
-          <template v-if="user?.role === 'student'">
-            {{ user.student?.name || 'Talento' }}
-          </template>
-          <template v-else-if="user?.role === 'enterprise'">
-            {{ user.enterprise?.name || 'Empresa' }}
-          </template>
-        </h1>
+        <div class="name-container">
+          <h1>
+            <template v-if="user?.role === 'student'">
+              {{ user.student?.name || 'Talento' }}
+            </template>
+            <template v-else-if="user?.role === 'enterprise'">
+              {{ user.enterprise?.name || 'Empresa' }}
+            </template>
+          </h1>
+          <div
+            v-if="
+              authStore.isLoggedIn &&
+              authStore.loggedUser?.uuid !== user?.uuid &&
+              user?.role !== authStore.loggedUser?.role
+            "
+            class="match-indicator"
+            @click.stop="match"
+            :class="{ liked: isLiked }"
+          >
+            <span class="emoji" :class="{ animateIn: loadingLike }" v-if="loadingLike"> ⏳ </span>
+            <span class="emoji heart" :class="{ animateOut: !isLiked }" v-else-if="!isLiked"
+              >🖤</span
+            >
+            <span class="emoji flame" :class="{ animateIn: isLiked }" v-else-if="isLiked">❤️‍🔥</span>
+          </div>
+        </div>
 
         <p class="email" v-if="user?.role === 'student'">{{ user.student?.email }}</p>
         <p class="course" v-if="user?.role === 'student'">{{ user.student?.course }}</p>
         <p class="email" v-else-if="user?.role === 'enterprise'">{{ user.enterprise?.email }}</p>
 
         <!-- tags -->
-        <div v-if="tags.length" class="tags">
-          <span v-for="tag in tags" :key="tag" class="tag">{{ tag }}</span>
+        <div v-if="user?.tags.length" class="tags">
+          <span v-for="tag in user?.tags" :key="tag.uuid" class="tag">{{ tag.label }}</span>
         </div>
 
         <!-- documentos -->
@@ -150,28 +272,16 @@ watch(() => props.uuid, refresh)
         </p>
 
         <!-- endereço -->
-        <div v-if="address" class="address">
+        <div v-if="user?.address" class="address">
           <p>
-            {{ address.neighborhood }} – {{ address.city }} / {{ address.state }} • CEP
-            {{ address.zipCode }}
+            {{ user?.address.neighborhood }} – {{ user?.address.city }} /
+            {{ user?.address.state }} • CEP
+            {{ user?.address.zipCode }}
           </p>
         </div>
 
         <!-- botões -->
         <div class="action-buttons">
-          <!-- Match (placeholder) -->
-          <button
-            v-if="
-              user &&
-              authStore.loggedUser?.uuid !== user.uuid &&
-              ((authStore.loggedUser?.role === 'enterprise' && user.role === 'student') ||
-                (authStore.loggedUser?.role === 'student' && user.role === 'enterprise'))
-            "
-            class="btn"
-          >
-            Match
-          </button>
-
           <button
             v-if="user && authStore.loggedUser?.uuid === user.uuid"
             class="btn"
@@ -196,45 +306,69 @@ watch(() => props.uuid, refresh)
         <div class="card">
           <h3>Conecte-se</h3>
           <ul class="social-links">
-            <!-- Lattes (estudante) -->
-            <li v-if="user?.student?.lattes && user.role === 'student'">
-              <a :href="user.student.lattes" target="_blank" class="sm-link">
-                <i class="fas fa-graduation-cap"></i> Lattes
-              </a>
+            <li
+              v-if="user?.student?.lattes && user.role === 'student'"
+              style="display: flex; align-items: center; gap: 0.5rem"
+            >
+              <i
+                class="fas fa-file-alt"
+                style="
+                  font-size: 1.2rem;
+                  width: 2rem;
+                  text-align: center;
+                  color: var(--color-on-surface-variant);
+                "
+              >
+              </i>
+              <a :href="user.student.lattes" target="_blank" class="sm-link"> Lattes </a>
             </li>
 
-            <!-- Discord / LinkedIn / GitHub -->
-            <li v-for="link in socials" :key="link.type">
+            <li
+              v-for="link in user?.socialMedia"
+              :key="link.type"
+              style="display: flex; align-items: center; gap: 0.5rem"
+              class="social-link"
+            >
+              <i :class="iconMap[link.type]"></i>
               <a :href="link.url" target="_blank" class="sm-link">
-                <i :class="iconMap[link.type]"></i>
-                {{
-                  link.type === 'github'
-                    ? 'GitHub'
-                    : link.type === 'linkedin'
-                      ? 'LinkedIn'
-                      : 'Discord'
-                }}
+                {{ link.type.charAt(0).toUpperCase() + link.type.slice(1) }}
               </a>
             </li>
           </ul>
         </div>
 
         <div class="card stats">
-          <div class="stat-item">
-            <span class="stat-number">0</span>
-            <span class="stat-label">Seus matches</span>
+          <div class="stat-item" @click="initiatorLikesHandler">
+            <div class="likes-container">
+              <span class="stat-number">{{ initiatorLikes?.total ?? 0 }}</span>
+              <div class="avatar-stack">
+                <CircleAvatar
+                  v-for="(user, nIndex) in initiatorLikes?.users"
+                  :key="user.uuid"
+                  :src="user.profilePicture ?? getRobotAvatar(user.username)"
+                  :alt="user.student?.name || user.enterprise?.name"
+                  class="stacked-avatar"
+                  :style="{ zIndex: initiatorLikes!.users.length - nIndex }"
+                />
+              </div>
+            </div>
+            <span class="stat-label">Suas curtidas</span>
           </div>
-          <div class="stat-item" v-if="user?.role === 'student'">
-            <span class="stat-number">0</span>
-            <span class="stat-label">Te contrataram</span>
-          </div>
-          <div class="stat-item" v-if="user?.role === 'enterprise'">
-            <span class="stat-number">0</span>
-            <span class="stat-label">Te curtiram</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-number">0</span>
-            <span class="stat-label">Visualizações</span>
+          <div class="stat-item" @click="receiverLikesHandler">
+            <div class="likes-container">
+              <span class="stat-number">{{ receiverLikes?.total ?? 0 }}</span>
+              <div class="avatar-stack">
+                <CircleAvatar
+                  v-for="(user, nIndex) in receiverLikes?.users"
+                  :key="user.uuid"
+                  :src="user.profilePicture ?? getRobotAvatar(user.username)"
+                  :alt="user.student?.name || user.enterprise?.name"
+                  class="stacked-avatar"
+                  :style="{ zIndex: receiverLikes!.users.length - nIndex }"
+                />
+              </div>
+            </div>
+            <span class="stat-label">Curtidas recebidas</span>
           </div>
         </div>
       </aside>
@@ -243,12 +377,16 @@ watch(() => props.uuid, refresh)
 </template>
 
 <style scoped>
-/* ---------------------------------------------------- */
-/* GRID GERAL                                           */
-/* ---------------------------------------------------- */
+.social-link i {
+  font-size: 1.2rem;
+  width: 2rem;
+  text-align: center;
+  color: var(--color-on-surface-variant);
+}
+
 .profile-page {
   display: grid;
-  grid-template-columns: minmax(0, 3fr) 1fr; /* coluna principal + sidebar */
+  grid-template-columns: minmax(0, 3fr) 1fr;
   gap: 2.5rem;
   max-width: 1100px;
   margin: 3rem auto 4rem;
@@ -256,9 +394,6 @@ watch(() => props.uuid, refresh)
   font-family: Inter, sans-serif;
 }
 
-/* ---------------------------------------------------- */
-/* BANNER + AVATAR                                      */
-/* ---------------------------------------------------- */
 .banner-container {
   grid-column: 1 / -1;
   position: relative;
@@ -294,9 +429,6 @@ watch(() => props.uuid, refresh)
   }
 }
 
-/* ---------------------------------------------------- */
-/* BLOCO PRINCIPAL                                      */
-/* ---------------------------------------------------- */
 .main {
   display: flex;
   flex-direction: column;
@@ -342,7 +474,6 @@ watch(() => props.uuid, refresh)
   box-shadow: 0 1px 3px rgb(0 0 0 / 12%);
 }
 
-/* Botões de documentos */
 .docs-links {
   display: flex;
   gap: 0.75rem;
@@ -368,7 +499,6 @@ watch(() => props.uuid, refresh)
   transform: translateY(-1px);
 }
 
-/* Descrição*/
 .description {
   max-width: 60ch;
   line-height: 1.6;
@@ -388,7 +518,6 @@ watch(() => props.uuid, refresh)
   margin: 0.25rem 0 0.25rem;
 }
 
-/* Ação principal */
 .action-buttons {
   display: flex;
   gap: 1rem;
@@ -413,9 +542,17 @@ watch(() => props.uuid, refresh)
   transform: translateY(-1px);
 }
 
-/* ---------------------------------------------------- */
-/* SIDEBAR                                              */
-/* ---------------------------------------------------- */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 280px;
+  gap: 1.5rem;
+  background: var(--color-surface);
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 8%);
+}
+
 .sidebar .card {
   background: var(--color-surface-variant);
   padding: 1.25rem 1.1rem;
@@ -459,6 +596,14 @@ watch(() => props.uuid, refresh)
 }
 
 .stat-item {
+  background-color: var(--color-surface);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 10%);
+  transition:
+    box-shadow 0.2s ease,
+    background-color 0.3s ease;
+  padding: 1.25rem;
+  border-radius: 12px;
   text-align: center;
 }
 
@@ -474,14 +619,105 @@ watch(() => props.uuid, refresh)
   color: var(--color-on-surface-variant);
 }
 
-/* ---------------------------------------------------- */
-/* ESTADO DE ERRO                                       */
-/* ---------------------------------------------------- */
 .error {
   max-width: 600px;
   margin: 3rem auto;
   text-align: center;
   font-size: 1.2rem;
   color: var(--color-error);
+}
+
+.avatar-stack {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.stacked-avatar {
+  border: 2px solid white;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  margin-left: -12px;
+  transition: transform 0.2s ease;
+}
+
+.stacked-avatar:first-child {
+  margin-left: 0;
+}
+
+.stacked-avatar:hover {
+  transform: scale(1.1);
+  z-index: 100;
+}
+
+.likes-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  max-width: 100%;
+  overflow: hidden;
+  padding: 0.5rem;
+}
+
+.name-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.match-indicator {
+  width: 3rem;
+  height: 2rem;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  align-items: center;
+  background-color: var(--color-tertiary);
+  font-size: 0.8rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px var(--color-shadow);
+  transition: background-color 0.2s ease;
+}
+
+.match-indicator span {
+  font-size: 1.2rem;
+  display: inline-block;
+  user-select: none;
+
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease;
+}
+
+.animateIn {
+  animation: pop 0.4s ease-in-out;
+}
+
+.animateOut {
+  animation: pop 0.4s ease-in-out;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0);
+    transform: rotate(90deg);
+
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.3);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    transform: rotate(0deg);
+  }
 }
 </style>

@@ -172,10 +172,10 @@ watch(() => displayUser.value?.bannerPicture, calcBounds)
 
 .banner-img {
   height: 100%;
-  width: auto;
-  min-width: 100%;
+  width: 100%;
   user-select: none;
   pointer-events: none;
+  object-fit: cover;
 }
 
 .overlay-banner {
