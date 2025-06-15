@@ -42,7 +42,7 @@ img {
   font-size: 1.4rem;
   background: var(--color-surface-variant);
   color: var(--color-on-surface-variant);
-  border: 2px solid var(--color-border);
+  border: 2px solid var(--color-border-hover);
   border-radius: 50%;
   cursor: pointer;
   transition:
@@ -51,6 +51,6 @@ img {
 }
 .circle-avatar:hover,
 .circle-avatar:focus-visible {
-  border-color: var(--color-border-hover);
+  border-color: var(--color-primary);
 }
 </style>
