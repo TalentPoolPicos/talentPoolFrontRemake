@@ -548,9 +548,6 @@ watch(() => props.uuid, refresh)
   width: 100%;
   min-width: 280px;
   gap: 1.5rem;
-  background: var(--color-surface);
-  border-radius: 12px;
-  box-shadow: 0 4px 14px rgb(0 0 0 / 8%);
 }
 
 .sidebar .card {
@@ -558,7 +555,6 @@ watch(() => props.uuid, refresh)
   padding: 1.25rem 1.1rem;
   border-radius: 12px;
   box-shadow: 0 3px 10px rgb(0 0 0 / 10%);
-  margin-bottom: 1.75rem;
 }
 
 .sidebar h3 {
@@ -677,12 +673,11 @@ watch(() => props.uuid, refresh)
   align-items: center;
   display: flex;
   align-items: center;
-  background-color: var(--color-tertiary);
+  border: 2px solid var(--color-border);
   font-size: 0.8rem;
   padding: 0.4rem 0.8rem;
   border-radius: 20px;
   font-weight: 600;
-  box-shadow: 0 2px 4px var(--color-shadow);
   transition: background-color 0.2s ease;
 }
 
