@@ -223,6 +223,7 @@ watch(() => props.user, checkIfLiked, { immediate: true })
 
 .tags {
   margin-top: 0.8rem;
+  padding-left: 0.5rem;
   display: flex;
   align-items: center;
   flex-direction: row;
