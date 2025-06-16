@@ -674,6 +674,7 @@ watch(() => props.uuid, refresh)
   display: flex;
   align-items: center;
   border: 2px solid var(--color-border);
+  cursor: pointer;
   font-size: 0.8rem;
   padding: 0.4rem 0.8rem;
   border-radius: 20px;
@@ -689,6 +690,10 @@ watch(() => props.uuid, refresh)
   transition:
     transform 0.3s ease,
     opacity 0.3s ease;
+}
+
+.match-indicator:hover {
+  border-color: var(--color-primary);
 }
 
 .animateIn {
