@@ -70,8 +70,8 @@ const match = () => {
       .then(() => {
         loadingLike.value = false
       })
-      .catch(() => {
-        console.error('Erro ao curtir o usuário')
+      .catch((e) => {
+        console.error('Erro ao curtir o usuário', e)
         loadingLike.value = false
         isLiked.value = false
       })
@@ -81,8 +81,8 @@ const match = () => {
       .then(() => {
         loadingLike.value = false
       })
-      .catch(() => {
-        console.error('Erro ao descurtir o usuário')
+      .catch((e) => {
+        console.error('Erro ao descurtir o usuário', e)
         loadingLike.value = false
         isLiked.value = true
       })
