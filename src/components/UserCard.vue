@@ -70,8 +70,8 @@ const match = () => {
       .then(() => {
         loadingLike.value = false
       })
-      .catch(() => {
-        console.error('Erro ao curtir o usuário')
+      .catch((e) => {
+        console.error('Erro ao curtir o usuário', e)
         loadingLike.value = false
         isLiked.value = false
       })
@@ -81,8 +81,8 @@ const match = () => {
       .then(() => {
         loadingLike.value = false
       })
-      .catch(() => {
-        console.error('Erro ao descurtir o usuário')
+      .catch((e) => {
+        console.error('Erro ao descurtir o usuário', e)
         loadingLike.value = false
         isLiked.value = true
       })
@@ -223,6 +223,7 @@ watch(() => props.user, checkIfLiked, { immediate: true })
 
 .tags {
   margin-top: 0.8rem;
+  padding-left: 0.5rem;
   display: flex;
   align-items: center;
   flex-direction: row;
@@ -273,14 +274,22 @@ watch(() => props.user, checkIfLiked, { immediate: true })
   display: flex;
   align-items: center;
   backdrop-filter: blur(5px);
+  border: 1px solid var(--color-border);
   background-color: rgba(255, 255, 255, 0.2);
-
   font-size: 0.8rem;
   padding: 0.4rem 0.8rem;
   border-radius: 20px;
   font-weight: 600;
-  box-shadow: 0 2px 4px var(--color-shadow);
   transition: background-color 0.2s ease;
+}
+
+.match-indicator.liked {
+  border-color: var(--color-primary);
+}
+
+.match-indicator:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-color: var(--color-primary);
 }
 
 .match-indicator span {

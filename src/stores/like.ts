@@ -13,8 +13,8 @@ export const useLikeStore = defineStore('tag', () => {
 
 
   const recommendedUsers = async (queries: {
-    page: number
-    limit: number
+    page?: number
+    limit?: number
   }): Promise<RecommendedUsersPageDto> => {
     const { data } = await http.get<RecommendedUsersPageDto>('/like/recommendations', {
       params: {

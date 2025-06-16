@@ -12,6 +12,7 @@ import { useLikeStore } from '@/stores/like'
 
 type SocialMediaDto = components['schemas']['SocialMediaDto']
 type UsersPageDto = components['schemas']['UsersPageDto']
+type RecommendedUsersPageDto = components['schemas']['RecommendedUsersPageDto']
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -30,6 +31,7 @@ const user = ref<UserDto | null>(null)
 
 const initiatorLikes = ref<UsersPageDto | null>(null)
 const receiverLikes = ref<UsersPageDto | null>(null)
+const recommendedUsers = ref<RecommendedUsersPageDto | null>(null)
 const likesLoading = ref(false)
 
 const iconMap: Record<SocialMediaDto['type'], string> = {
@@ -62,6 +64,14 @@ const receiverLikesHandler = () => {
     params: { uuid: user.value?.uuid, type: 'receiver' },
   })
 }
+
+const recommendedUsersHandler = () => {
+  router.push({
+    name: Routes.Home,
+    params: { uuid: user.value?.uuid, type: 'recommended' },
+  })
+}
+
 /* ---------- ações ---------- */
 const refresh = async () => {
   loading.value = true
@@ -97,6 +107,13 @@ const refresh = async () => {
         limit: 3,
       })
       .catch(() => ({ total: 0, users: [] }))
+    if (authStore.isLoggedIn && user.value.uuid === authStore.loggedUser?.uuid) {
+      recommendedUsers.value = await likeStore
+        .recommendedUsers({
+          limit: 3,
+        })
+        .catch(() => ({ total: 0, users: [] }))
+    }
     likesLoading.value = false
   } catch (e) {
     console.error(e)
@@ -338,6 +355,22 @@ watch(() => props.uuid, refresh)
         </div>
 
         <div class="card stats">
+          <div class="stat-item" @click="recommendedUsersHandler" v-if="recommendedUsers">
+            <div class="likes-container">
+              <span class="stat-number">{{ recommendedUsers?.total ?? 0 }}</span>
+              <div class="avatar-stack">
+                <CircleAvatar
+                  v-for="(user, nIndex) in recommendedUsers?.users"
+                  :key="user.uuid"
+                  :src="user.profilePicture ?? getRobotAvatar(user.username)"
+                  :alt="user.student?.name || user.enterprise?.name"
+                  class="stacked-avatar"
+                  :style="{ zIndex: recommendedUsers!.users.length - nIndex }"
+                />
+              </div>
+            </div>
+            <span class="stat-label">Usuários Recomendados</span>
+          </div>
           <div class="stat-item" @click="initiatorLikesHandler">
             <div class="likes-container">
               <span class="stat-number">{{ initiatorLikes?.total ?? 0 }}</span>
@@ -548,9 +581,6 @@ watch(() => props.uuid, refresh)
   width: 100%;
   min-width: 280px;
   gap: 1.5rem;
-  background: var(--color-surface);
-  border-radius: 12px;
-  box-shadow: 0 4px 14px rgb(0 0 0 / 8%);
 }
 
 .sidebar .card {
@@ -558,7 +588,6 @@ watch(() => props.uuid, refresh)
   padding: 1.25rem 1.1rem;
   border-radius: 12px;
   box-shadow: 0 3px 10px rgb(0 0 0 / 10%);
-  margin-bottom: 1.75rem;
 }
 
 .sidebar h3 {
@@ -677,12 +706,12 @@ watch(() => props.uuid, refresh)
   align-items: center;
   display: flex;
   align-items: center;
-  background-color: var(--color-tertiary);
+  border: 2px solid var(--color-border);
+  cursor: pointer;
   font-size: 0.8rem;
   padding: 0.4rem 0.8rem;
   border-radius: 20px;
   font-weight: 600;
-  box-shadow: 0 2px 4px var(--color-shadow);
   transition: background-color 0.2s ease;
 }
 
@@ -694,6 +723,10 @@ watch(() => props.uuid, refresh)
   transition:
     transform 0.3s ease,
     opacity 0.3s ease;
+}
+
+.match-indicator:hover {
+  border-color: var(--color-primary);
 }
 
 .animateIn {
