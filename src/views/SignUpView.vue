@@ -130,7 +130,7 @@ const onRegister = async () => {
     await auth.signUp(payload, role)
     router.push({ name: Routes.Home })
   } catch {
-    alert(err.response?.data?.message || 'Erro ao cadastrar.')
+    alert('Erro ao cadastrar.')
   } finally {
     loading.value = false
   }
