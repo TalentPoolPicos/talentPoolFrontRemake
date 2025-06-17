@@ -97,9 +97,10 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const refreshAccessToken = async (): Promise<boolean> => {
-    if (!refreshToken.value || Date.now() > (accessTokenExpiresIn.value ?? 0)) return false
+    if (!refreshToken.value || Date.now() < (accessTokenExpiresIn.value ?? 0)) return false
     try {
       const { data } = await http.post('/auth/refresh', { refreshToken: refreshToken.value })
+      console.log('Access token refreshed successfully')
       populateStateFromResponse(data)
       return true
     } catch {
@@ -141,8 +142,9 @@ export const useAuthStore = defineStore('auth', () => {
         const original = err.config
         if (err.response?.status === 401 && !original._retry) {
           original._retry = true
-          console.log('Refreshing access token...')
+          console.log('Refreshing access token... (401 error)')
           const ok = await refreshAccessToken()
+          console.log('Access token refreshed:', ok)
           if (ok) {
             original.headers.Authorization = `Bearer ${accessToken.value}`
             return http(original)
