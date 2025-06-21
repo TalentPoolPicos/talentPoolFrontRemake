@@ -27,7 +27,7 @@ const fetchResults = async (q: string, page = 1) => {
 
   try {
     const response = await http.get<SearchResultDto>(`/search/${q}`, {
-      params: { page, limit: pageSize },
+      params: { page },
     })
     results.value = response.data
   } catch {
