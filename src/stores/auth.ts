@@ -3,7 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { http } from '@/services/http'
 import type { components } from '@/types/api'
 
-type UserDto = components['schemas']['UserDto']
+export type UserDto = components['schemas']['UserDto']
 type SignUpDto = components['schemas']['SignUpDto']
 type SignInDto = components['schemas']['SignInDto']
 type AccessTokenDto = components['schemas']['AccessTokenDto']
