@@ -22,13 +22,16 @@ const pageSize = 10
 
 const fetchResults = async (q: string, page = 1) => {
   if (!q) return
-
   loading.value = true
 
   try {
-    const response = await http.get<SearchResultDto>(`/search/${q}`, {
-      params: { page, limit: pageSize },
+    const encodedQ = encodeURIComponent(q)
+    const response = await http.get<SearchResultDto>(`/search/${encodedQ}`, {
+      params: { page },
     })
+
+    console.log('page', page, 'received', response.data.users.length, 'users')
+
     results.value = response.data
   } catch {
     results.value = { users: [], total: 0 }
@@ -36,6 +39,7 @@ const fetchResults = async (q: string, page = 1) => {
     loading.value = false
   }
 }
+
 
 const totalPages = computed(() => {
   return results.value ? Math.ceil((results.value.total || 0) / pageSize) : 1
@@ -77,7 +81,7 @@ watch(
       </div>
 
       <div class="grid-container">
-        <ul class="results-grid">
+        <ul class="results-grid" :key="currentPage">
           <UserCard v-for="user in results?.users" :key="user.username" :user="user" />
         </ul>
       </div>
