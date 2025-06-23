@@ -52,24 +52,15 @@ const iconMap: Record<SocialMediaDto['type'], string> = {
 const getRobotAvatar = (username: string) => `https://robohash.org/${username}?set=set2&size=72x72`
 
 const initiatorLikesHandler = () => {
-  router.push({
-    name: Routes.Home,
-    params: { uuid: user.value?.uuid, type: 'initiator' },
-  })
+  router.push(RoutePaths[Routes.InitiatorUsers].replace(':uuid', user.value?.uuid || ''))
 }
 
 const receiverLikesHandler = () => {
-  router.push({
-    name: Routes.Home,
-    params: { uuid: user.value?.uuid, type: 'receiver' },
-  })
+  router.push(RoutePaths[Routes.ReceiverUsers].replace(':uuid', user.value?.uuid || ''))
 }
 
 const recommendedUsersHandler = () => {
-  router.push({
-    name: Routes.Home,
-    params: { uuid: user.value?.uuid, type: 'recommended' },
-  })
+  router.push({ name: Routes.RecommendedUsers })
 }
 
 /* ---------- ações ---------- */
@@ -385,7 +376,7 @@ watch(() => props.uuid, refresh)
                 />
               </div>
             </div>
-            <span class="stat-label">Suas curtidas</span>
+            <span class="stat-label">Curtidas enviadas</span>
           </div>
           <div class="stat-item" @click="receiverLikesHandler">
             <div class="likes-container">
