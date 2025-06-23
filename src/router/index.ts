@@ -8,6 +8,7 @@ import SignUpView from '@/views/SignUpView.vue'
 import ProfileView from '@/views/ProfileView.vue'
 import SearchResultsView from '@/views/SearchResultsView.vue'
 import EditProfileView from '@/views/EditProfileView.vue'
+import UsersView from '@/views/UsersView.vue'
 
 export enum Routes {
   Home = 'home',
@@ -25,6 +26,9 @@ export enum Routes {
   EnterpriseProfile = 'enterpriseProfile',
   EnterpriseEditView = 'enterpriseEditView',
   EnterpriseEdit = 'enterpriseEdit',
+  RecommendedUsers = 'recommendedUsers',
+  InitiatorUsers = 'initiatorUsers',
+  ReceiverUsers = 'receiverUsers',
 }
 
 export const RoutePaths = {
@@ -43,6 +47,9 @@ export const RoutePaths = {
   [Routes.EnterpriseProfile]: '/enterprise/:uuid',
   [Routes.EnterpriseEditView]: '/enterprise/edit',
   [Routes.EnterpriseEdit]: '/enterprise/edit',
+  [Routes.RecommendedUsers]: '/recommended-users',
+  [Routes.InitiatorUsers]: '/initiator-users/:uuid',
+  [Routes.ReceiverUsers]: '/receiver-users/:uuid',
 }
 
 const routes = [
@@ -137,6 +144,30 @@ const routes = [
       role: 'enterprise',
     },
   },
+  {
+    path: RoutePaths[Routes.RecommendedUsers],
+    name: Routes.RecommendedUsers,
+    component: UsersView,
+    props: {
+      type: 'recommended',
+    },
+  },
+  {
+    path: RoutePaths[Routes.InitiatorUsers],
+    name: Routes.InitiatorUsers,
+    component: UsersView,
+    props: {
+      type: 'initiator',
+    },
+  },
+  {
+    path: RoutePaths[Routes.ReceiverUsers],
+    name: Routes.ReceiverUsers,
+    component: UsersView,
+    props: {
+      type: 'receiver',
+    },
+  }
 ]
 
 const router = createRouter({
