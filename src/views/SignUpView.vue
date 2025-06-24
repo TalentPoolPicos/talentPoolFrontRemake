@@ -72,7 +72,89 @@
           </button>
         </div>
       </Transition>
-      
+
+      <form class="signup-form" @submit.prevent="handleSubmit">
+        <div class="form-group">
+          <label class="section-label">Tipo de conta</label>
+          <div class="user-type-selector">
+            <label class="user-type-option" :class="{ selected: userType === 'student' }">
+              <input type="radio" v-model="userType" value="student" />
+              <div class="option-content">
+                <div class="option-icon">
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M22 10v6M2 10l10-5 10 5-10 5z"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M6 12v5c3 3 9 3 12 0v-5"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+                <div class="option-text">
+                  <span class="option-title">Estudante</span>
+                  <span class="option-description">Buscar oportunidades de estágio</span>
+                </div>
+              </div>
+            </label>
+            <label class="user-type-option" :class="{ selected: userType === 'enterprise' }">
+              <input type="radio" v-model="userType" value="enterprise" />
+              <div class="option-content">
+                <div class="option-icon">
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M3 21h18"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M5 21V7l8-4v18"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M19 21V11l-6-4"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+                <div class="option-text">
+                  <span class="option-title">Empresa</span>
+                  <span class="option-description">Oferecer vagas de estágio</span>
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        
+      </form>
       
     </div>
   </div>
@@ -244,9 +326,6 @@ const clearError = () => {
   error.value = ''
 }
 
-
-
-
 // Efeito de fade-in no carregamento do componente
 onMounted(() => {
   setTimeout(() => {
@@ -406,6 +485,150 @@ onMounted(() => {
   font-weight: 400;
   line-height: 1.5;
 }
+/* Error Alert */
+.error-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-error-container);
+  color: var(--color-on-error-container);
+  border-radius: 16px;
+  margin-bottom: 24px;
+  border: 1px solid color-mix(in srgb, var(--color-error) 20%, transparent);
+  position: relative;
+  overflow: hidden;
+}
 
+.error-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1;
+}
+
+.error-icon {
+  flex-shrink: 0;
+  color: var(--color-error);
+  margin-top: 2px;
+}
+
+.error-message {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.error-close {
+  background: none;
+  border: none;
+  color: var(--color-on-error-container);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.error-close:hover {
+  background: color-mix(in srgb, var(--color-on-error-container) 10%, transparent);
+}
+
+/* Form */
+.signup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-on-surface);
+  margin-bottom: 12px;
+}
+
+/* User Type Selector */
+.user-type-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.user-type-option {
+  position: relative;
+  cursor: pointer;
+  border: 2px solid var(--color-outline-variant);
+  border-radius: 16px;
+  padding: 16px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  background: var(--color-surface);
+}
+
+.user-type-option:hover {
+  border-color: var(--color-outline);
+  background: var(--color-surface-variant);
+}
+
+.user-type-option.selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-container);
+  color: var(--color-on-primary-container);
+}
+
+.user-type-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.option-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+}
+
+.option-icon {
+  color: var(--color-on-surface-variant);
+  transition: color 0.3s ease;
+}
+
+.user-type-option.selected .option-icon {
+  color: var(--color-on-primary-container);
+}
+
+.option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.option-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--color-on-surface);
+}
+
+.user-type-option.selected .option-title {
+  color: var(--color-on-primary-container);
+}
+
+.option-description {
+  font-size: 12px;
+  color: var(--color-on-surface-variant);
+  line-height: 1.3;
+}
+
+.user-type-option.selected .option-description {
+  color: var(--color-on-primary-container);
+  opacity: 0.8;
+}
 
 </style>
