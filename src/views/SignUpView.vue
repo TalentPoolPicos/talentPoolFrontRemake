@@ -40,6 +40,39 @@
         <p class="signup-subtitle">Preencha os dados abaixo para começar</p>
       </div>
 
+      <Transition name="error-slide">
+        <div v-if="error" class="error-alert">
+          <div class="error-content">
+            <div class="error-icon">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" stroke-width="2" />
+                <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" stroke-width="2" />
+              </svg>
+            </div>
+            <span class="error-message">{{ error }}</span>
+          </div>
+          <button type="button" class="error-close" @click="clearError" aria-label="Fechar erro">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" />
+              <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" />
+            </svg>
+          </button>
+        </div>
+      </Transition>
+      
       
     </div>
   </div>
@@ -97,6 +130,120 @@ const isFormValid = computed(() => {
     // && !termsError.value
   )
 })
+
+// Funções de validação
+const validateEmail = () => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!email.value) {
+    emailError.value = 'E-mail é obrigatório.'
+  } else if (!emailRegex.test(email.value)) {
+    emailError.value = 'E-mail deve ter um formato válido.'
+  } else {
+    emailError.value = ''
+  }
+}
+
+const validateUsername = () => {
+  if (!username.value) {
+    usernameError.value = 'Usuário é obrigatório.'
+  } else if (username.value.length < 3) {
+    usernameError.value = 'Usuário deve ter pelo menos 3 caracteres.'
+  } else if (!/^[a-zA-Z0-9_]+$/.test(username.value)) {
+    usernameError.value = 'Usuário pode conter apenas letras, números e underscore.'
+  } else {
+    usernameError.value = ''
+  }
+}
+
+const validatePassword = () => {
+  if (!password.value) {
+    passwordError.value = 'Senha é obrigatória.'
+  } else if (password.value.length < 8) {
+    passwordError.value = 'Senha deve ter pelo menos 8 caracteres.'
+  } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_])/.test(password.value)) {
+    passwordError.value =
+      'Senha deve conter ao menos uma letra maiúscula, minúscula, um número e um símbolo.'
+  } else {
+    passwordError.value = ''
+    if (confirmPassword.value) validateConfirmPassword() // Revalida a confirmação se a senha mudar
+  }
+}
+
+const validateConfirmPassword = () => {
+  if (!confirmPassword.value) {
+    confirmPasswordError.value = 'Confirmação de senha é obrigatória.'
+  } else if (password.value !== confirmPassword.value) {
+    confirmPasswordError.value = 'Senhas não coincidem.'
+  } else {
+    confirmPasswordError.value = ''
+  }
+}
+
+const validateTerms = () => {
+  if (!acceptTerms.value) {
+    termsError.value = 'Você deve aceitar os termos de uso.'
+  } else {
+    termsError.value = ''
+  }
+}
+
+// Função para lidar com o envio do formulário
+const handleSubmit = async () => {
+  // Executa todas as validações antes de tentar enviar
+  validateEmail()
+  validateUsername()
+  validatePassword()
+  validateConfirmPassword()
+  validateTerms()
+
+  // Se o formulário não for válido, para a execução
+  if (!isFormValid.value) {
+    return
+  }
+
+  loading.value = true
+  error.value = '' // Limpa qualquer erro anterior
+
+  try {
+    const payload: SignUpDto = {
+      username: username.value,
+      email: email.value,
+      password: password.value,
+    }
+
+    const result = await auth.signUp(payload, userType.value) // Passa o userType selecionado
+    const user = result.user // Assumindo que a resposta de signUp tem um objeto 'user'
+
+    // Redireciona com base no tipo de usuário após o cadastro bem-sucedido
+    if (user.role === 'student') {
+      router.push({ name: Routes.StudentLoggedProfile })
+    } else if (user.role === 'enterprise') {
+      router.push({ name: Routes.EnterpriseLoggedProfile })
+    } else {
+      error.value = 'Tipo de usuário inválido retornado pela API.'
+    }
+  } catch (err: any) {
+    // Trata erros da API
+    error.value = err.message || 'Erro ao criar conta. Tente novamente.'
+  } finally {
+    loading.value = false
+  }
+}
+
+// Funções para alternar a visibilidade da senha
+const togglePasswordVisibility = () => {
+  showPassword.value = !showPassword.value
+}
+
+const toggleConfirmPasswordVisibility = () => {
+  showConfirmPassword.value = !showConfirmPassword.value
+}
+
+// Limpa a mensagem de erro da API
+const clearError = () => {
+  error.value = ''
+}
+
 
 
 
