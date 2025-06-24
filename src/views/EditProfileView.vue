@@ -113,15 +113,14 @@ const loadData = async () => {
     }
 
     /* tags */
-    const tagDtos = await tagStore.findAllByUserUuid(userStore.loggedUser.uuid)
+    const tagDtos = userStore.loggedUser.tags || []
     form.value.tags = tagDtos.map((t) => t.label)
 
-    /* endereço */
-    const addr = await addressStore.findByUserUuid(userStore.loggedUser.uuid)
+    const addr = userStore.loggedUser.address
     if (addr) Object.assign(addressForm.value, addr)
 
     /* links sociais */
-    const list = await socialStore.findAllByUserUuid(userStore.loggedUser.uuid)
+    const list = userStore.loggedUser.socialMedia || []
     list.forEach((s) => {
       if (s.type in socials.value) (socials.value as Record<string, string>)[s.type] = s.url
     })
@@ -219,7 +218,6 @@ onMounted(loadData)
 
 <template>
   <LoadingBrand :loading="loading">
-    <!-- BANNER + AVATAR — largura igual à página pública -->
     <div class="banner-edit-wrapper">
       <ImageUser :user="userStore.loggedUser" editable />
     </div>
