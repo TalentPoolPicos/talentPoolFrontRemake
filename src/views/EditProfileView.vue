@@ -26,7 +26,6 @@ const role = ref<'student' | 'enterprise'>('student')
 const loading = ref(true)
 const savingUser = ref(false)
 const savingAddress = ref(false)
-
 const savingCurriculum = ref(false)
 const savingHistory = ref(false)
 
@@ -79,7 +78,6 @@ const removeTag = async (uuid: string) => {
 const handleCurriculumChange = async (e: Event) => {
   curriculumFile.value = (e.target as HTMLInputElement).files?.[0] ?? null
   if (!curriculumFile.value) return
-  savingCurriculum.value = true
   error.value = null
   await studentStore
     .uploadCurriculum(curriculumFile.value)
@@ -89,12 +87,10 @@ const handleCurriculumChange = async (e: Event) => {
     .catch(() => {
       error.value = 'Erro ao atualizar o currículo.'
     })
-  savingCurriculum.value = false
 }
 const handleHistoryChange = async (e: Event) => {
   historyFile.value = (e.target as HTMLInputElement).files?.[0] ?? null
   if (!historyFile.value) return
-  savingHistory.value = true
   error.value = null
   await studentStore
     .uploadHistory(historyFile.value)
@@ -104,7 +100,6 @@ const handleHistoryChange = async (e: Event) => {
     .catch(() => {
       error.value = 'Erro ao atualizar o histórico.'
     })
-  savingHistory.value = false
 }
 
 const addTag = async () => {
@@ -224,6 +219,41 @@ const saveAddress = async () => {
   }
 }
 
+const saveSocials = async () => {
+  savingSocials.value = true
+  error.value = null
+
+  try {
+    if (!socials.value.discord && !socials.value.linkedin && !socials.value.github) {
+      error.value = 'Pelo menos um link social deve ser preenchido.'
+      return
+    }
+    if (socials.value.discord) {
+      await socialStore.createOrUpdate({
+        type: 'discord',
+        url: socials.value.discord,
+      })
+    }
+    if (socials.value.linkedin) {
+      await socialStore.createOrUpdate({
+        type: 'linkedin',
+        url: socials.value.linkedin,
+      })
+    }
+    if (socials.value.github) {
+      await socialStore.createOrUpdate({
+        type: 'github',
+        url: socials.value.github,
+      })
+    }
+    alert('Links sociais atualizados com sucesso!')
+  } catch {
+    error.value = 'Erro ao salvar os links sociais.'
+  } finally {
+    savingSocials.value = false
+  }
+}
+
 onMounted(loadData)
 </script>
 
@@ -320,23 +350,27 @@ onMounted(loadData)
         </button>
       </form>
       <!-- links sociais -->
-      <div class="row" style="flex-direction: column">
-        <div class="field">
-          <label>Discord</label>
-          <input v-model="socials.discord" type="url" placeholder="https://discord.gg/…" />
-        </div>
+      <form @submit.prevent="saveSocials">
+        <div class="row" style="flex-direction: column">
+          <div class="field">
+            <label>Discord</label>
+            <input v-model="socials.discord" type="url" placeholder="https://discord.gg/…" />
+          </div>
 
-        <div class="field">
-          <label>LinkedIn</label>
-          <input v-model="socials.linkedin" type="url" placeholder="https://linkedin.com/in/…" />
-        </div>
+          <div class="field">
+            <label>LinkedIn</label>
+            <input v-model="socials.linkedin" type="url" placeholder="https://linkedin.com/in/…" />
+          </div>
 
-        <div class="field">
-          <label>GitHub</label>
-          <input v-model="socials.github" type="url" placeholder="https://github.com/…" />
+          <div class="field">
+            <label>GitHub</label>
+            <input v-model="socials.github" type="url" placeholder="https://github.com/…" />
+          </div>
         </div>
-      </div>
-
+        <button type="submit" class="btn-submit" :disabled="savingSocials">
+          {{ savingSocials ? 'Salvando...' : 'Salvar links sociais' }}
+        </button>
+      </form>
       <!-- student extras -->
       <div v-if="role === 'student'">
         <!-- Lattes -->
