@@ -7,12 +7,5 @@ import Footer from './components/Footer.vue'
 <template>
   <NavigatorBar />
   <RouterView />
-  <div class="size"></div>
   <Footer />
 </template>
-
-<style scoped>
-.size {
-  height: calc(100vh + 200px);
-}
-</style>

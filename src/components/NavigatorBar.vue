@@ -1,10 +1,51 @@
 <script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import ThemeToggle from './ThemeToggle.vue'
-import { RouterLink, useRoute } from 'vue-router'
-import { computed } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { RoutePaths, Routes } from '@/router/index'
+import { useAuthStore } from '@/stores/auth'
+import { useUserStore } from '@/stores/user'
+import CircleAvatar from '@/components/CircleAvatar.vue'
 
+const authStore = useAuthStore()
+const userStore = useUserStore()
+const router = useRouter()
 const route = useRoute()
+
 const currentPath = computed(() => route.path)
+const isMenuOpen = ref(false)
+const windowWidth = ref(0)
+
+const searchTerm = ref('')
+function search() {
+  const term = searchTerm.value.trim()
+  if (term) {
+    if (route.name === 'search') {
+      router.replace({ name: 'search', query: { q: term } })
+    } else {
+      router.push({ name: 'search', query: { q: term } })
+    }
+    searchTerm.value = ''
+    isMenuOpen.value = false
+  }
+}
+
+const updateWindowWidth = () => {
+  windowWidth.value = window.innerWidth
+}
+
+onMounted(() => {
+  updateWindowWidth()
+  window.addEventListener('resize', updateWindowWidth)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateWindowWidth)
+})
+
+const handleAvatarClick = () => {
+  router.push({ name: Routes.StudentLoggedProfile })
+}
 </script>
 
 <template>
@@ -14,22 +55,82 @@ const currentPath = computed(() => route.path)
       <span class="strong">Talentos</span>
     </div>
 
-    <nav class="links">
-      <RouterLink to="/" :class="{ active: currentPath === '/' }">Início</RouterLink>
-      <RouterLink to="/sobre" :class="{ active: currentPath.startsWith('/sobre') }"
+    <div class="hamburger" v-if="windowWidth <= 800" @click="isMenuOpen = !isMenuOpen">&#9776;</div>
+
+    <div class="menu-dialog" v-if="isMenuOpen" @click="isMenuOpen = false">
+      <RouterLink
+        :to="RoutePaths[Routes.Home]"
+        :class="{ active: currentPath === RoutePaths[Routes.Home] }"
+        @click="isMenuOpen = false"
+        >Início</RouterLink
+      >
+      <RouterLink
+        :to="RoutePaths[Routes.About]"
+        :class="{ active: currentPath.startsWith(RoutePaths[Routes.About]) }"
+        @click="isMenuOpen = false"
         >Sobre</RouterLink
       >
-      <RouterLink to="/noticias" :class="{ active: currentPath.startsWith('/noticias') }"
+      <RouterLink
+        :to="RoutePaths[Routes.News]"
+        :class="{ active: currentPath.startsWith(RoutePaths[Routes.News]) }"
+        @click="isMenuOpen = false"
+        >Notícias</RouterLink
+      >
+
+      <label class="search-wrapper">
+        <span class="icon">🔍</span>
+        <input type="search" placeholder="Pesquisar" v-model="searchTerm" @keyup.enter="search" />
+      </label>
+      <RouterLink :to="RoutePaths[Routes.SignIn]" class="btn-outline" v-if="!authStore.isLoggedIn"
+        >Entrar</RouterLink
+      >
+
+      <CircleAvatar
+        :src="
+          userStore.loggedUser?.profilePicture ??
+          `https://robohash.org/${userStore.loggedUser?.username ?? 'default'}?set=set2&size=72x72`
+        "
+        @click="handleAvatarClick"
+        v-if="authStore.isLoggedIn"
+      />
+
+      <ThemeToggle />
+    </div>
+
+    <nav class="links" v-show="windowWidth > 800">
+      <RouterLink
+        :to="RoutePaths[Routes.Home]"
+        :class="{ active: currentPath === RoutePaths[Routes.Home] }"
+        >Início</RouterLink
+      >
+      <RouterLink
+        :to="RoutePaths[Routes.About]"
+        :class="{ active: currentPath.startsWith(RoutePaths[Routes.About]) }"
+        >Sobre</RouterLink
+      >
+      <RouterLink
+        :to="RoutePaths[Routes.News]"
+        :class="{ active: currentPath.startsWith(RoutePaths[Routes.News]) }"
         >Notícias</RouterLink
       >
     </nav>
 
-    <div class="right-tools">
+    <div class="right-tools" v-show="windowWidth > 800">
       <label class="search-wrapper">
         <span class="icon">🔍</span>
-        <input type="search" placeholder="Search" />
+        <input type="search" placeholder="Pesquisar" v-model="searchTerm" @keyup.enter="search" />
       </label>
-      <RouterLink to="/login" class="btn-outline">Entrar</RouterLink>
+      <RouterLink :to="RoutePaths[Routes.SignIn]" class="btn-outline" v-if="!authStore.isLoggedIn"
+        >Entrar</RouterLink
+      >
+      <CircleAvatar
+        :src="
+          userStore.loggedUser?.profilePicture ??
+          `https://robohash.org/${userStore.loggedUser?.username ?? 'default'}?set=set2&size=72x72`
+        "
+        @click="handleAvatarClick"
+        v-if="authStore.isLoggedIn"
+      />
       <ThemeToggle />
     </div>
   </header>
@@ -42,8 +143,9 @@ const currentPath = computed(() => route.path)
   justify-content: space-between;
   padding-inline: 2rem;
   height: 64px;
-  color: var(--color-on-primary-container, #fff);
+  color: var(--color-on-primary-container);
   gap: 2rem;
+  position: relative;
 }
 
 .brand {
@@ -53,10 +155,12 @@ const currentPath = computed(() => route.path)
   text-align: left;
   user-select: none;
 }
+
 .brand .small {
   font-size: 0.75rem;
   opacity: 0.9;
 }
+
 .brand .strong {
   font-weight: 700;
   font-size: 1.1rem;
@@ -66,14 +170,16 @@ const currentPath = computed(() => route.path)
   display: flex;
   gap: 2.5rem;
 }
+
 .links a {
   position: relative;
   padding-block: 4px;
   font-weight: 500;
-  color: var(--color-on-primary-container, #fff);
+  color: var(--color-on-primary-container);
   text-decoration: none;
   transition: color 0.25s;
 }
+
 .links a:hover {
   opacity: 0.8;
 }
@@ -88,7 +194,7 @@ const currentPath = computed(() => route.path)
   margin-inline: auto;
   width: 70%;
   border-radius: 999px;
-  background: var(--color-on-primary-container, #fff);
+  background: var(--color-on-primary-container);
 }
 
 .right-tools {
@@ -100,24 +206,31 @@ const currentPath = computed(() => route.path)
 .search-wrapper {
   display: inline-flex;
   align-items: center;
-  background: var(--color-surface, #ffffff);
-  border: 2px solid var(--color-border, #d0d0d0);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
   border-radius: 6px;
   padding-inline: 0.75rem 0.5rem;
   height: 34px;
-  color: var(--color-on-surface, #000);
+  color: var(--color-on-surface);
+  border-color: var(--color-on-primary-container);
 }
+
 .search-wrapper .icon {
   margin-right: 0.4rem;
   font-size: 1rem;
 }
+
 .search-wrapper input {
   border: 0;
   outline: 0;
   background: transparent;
-  width: 120px;
+  width: 180px;
   color: inherit;
   font-size: 0.9rem;
+}
+
+.search-wrapper input::placeholder {
+  color: var(--color-on-primary-container);
 }
 
 .btn-outline {
@@ -126,8 +239,8 @@ const currentPath = computed(() => route.path)
   justify-content: center;
   padding: 0 1.2rem;
   height: 36px;
-  border: 2px solid var(--color-on-primary-container, #fff);
-  color: var(--color-on-primary-container, #fff);
+  border: 2px solid var(--color-on-primary-container);
+  color: var(--color-on-primary-container);
   border-radius: 6px;
   text-decoration: none;
   font-weight: 600;
@@ -135,8 +248,52 @@ const currentPath = computed(() => route.path)
     background-color 0.25s,
     color 0.25s;
 }
+
 .btn-outline:hover {
-  background: var(--color-on-primary-container, #fff);
-  color: var(--color-primary-container, #4f768b);
+  background: var(--color-on-primary-container);
+  color: var(--color-primary-container);
+}
+
+.hamburger {
+  display: none;
+  font-size: 2rem;
+  cursor: pointer;
+  z-index: 1001;
+}
+
+.menu-dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--color-surface);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  z-index: 1000;
+}
+
+.menu-dialog a {
+  margin: 0.6rem 0;
+  font-size: 1.2rem;
+  color: var(--color-on-primary-container);
+  text-decoration: none;
+  transition: color 0.25s;
+}
+
+@media (max-width: 800px) {
+  .links {
+    display: none;
+  }
+
+  .hamburger {
+    display: block;
+  }
+
+  .right-tools {
+    display: none;
+  }
 }
 </style>
