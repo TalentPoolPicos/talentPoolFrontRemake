@@ -1380,5 +1380,100 @@ onMounted(() => {
   transform: scale(0.9);
 }
 
+/* Responsive Design */
+@media (max-width: 768px) {
+  .signup-wrapper {
+    padding: 16px;
+  }
+  
+  .signup-container {
+    padding: 32px 24px;
+    border-radius: 24px;
+    max-width: 100%;
+  }
+  
+  .signup-title {
+    font-size: 24px;
+  }
+  
+  .logo-icon {
+    width: 64px;
+    height: 64px;
+  }
+  
+  .user-type-selector {
+    grid-template-columns: 1fr;
+  }
+  
+  .decoration-circle-1,
+  .decoration-circle-2,
+  .decoration-circle-3,
+  .decoration-circle-4 {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .signup-wrapper {
+    padding: 8px;
+  }
+  
+  .signup-container {
+    padding: 24px 20px;
+    border-radius: 20px;
+  }
+  
+  .signup-title {
+    font-size: 22px;
+  }
+  
+  .form-input {
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus management */
+.form-input:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.signup-button:focus-visible {
+  outline: 2px solid var(--color-on-primary);
+  outline-offset: 2px;
+}
+
+.checkbox-container:focus-within .checkbox-custom {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .signup-container {
+    border-width: 2px;
+  }
+  
+  .form-input {
+    border-width: 2px;
+  }
+  
+  .signup-button {
+    border: 2px solid var(--color-primary);
+  }
+  
+  .user-type-option {
+    border-width: 2px;
+  }
+}
 
 </style>
