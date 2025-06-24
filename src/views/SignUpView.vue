@@ -200,7 +200,7 @@
             </div>
           </Transition>
         </div>
-        
+
         <div class="form-group" :class="{ 'has-error': emailError, 'has-focus': email }">
           <div class="input-container">
             <div class="input-icon">
@@ -253,8 +253,308 @@
             </div>
           </Transition>
         </div>
+
+        <div class="form-group" :class="{ 'has-error': passwordError, 'has-focus': password }">
+          <div class="input-container">
+            <div class="input-icon">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" stroke-width="2" />
+                <circle cx="12" cy="16" r="1" fill="currentColor" />
+                <path
+                  d="M7 11V7a5 5 0 0 1 10 0v4"
+                  stroke="currentColor"
+                  stroke-width="2"
+                />
+              </svg>
+            </div>
+            <input
+              id="password"
+              v-model="password"
+              :type="showPassword ? 'text' : 'password'"
+              class="form-input"
+              placeholder=" "
+              autocomplete="new-password"
+              @blur="validatePassword"
+              @input="passwordError && validatePassword()"
+            />
+            <label for="password" class="form-label">Senha</label>
+            <button
+              type="button"
+              class="password-toggle"
+              @click="togglePasswordVisibility"
+              :aria-label="showPassword ? 'Ocultar senha' : 'Mostrar senha'"
+            >
+              <svg
+                v-if="showPassword"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22M12 9a3 3 0 1 1 0 6"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <svg
+                v-else
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                  stroke="currentColor"
+                  stroke-width="2"
+                />
+                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" />
+              </svg>
+            </button>
+            <div class="input-border"></div>
+          </div>
+          <Transition name="error-text">
+            <div v-if="passwordError" class="error-text">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" stroke-width="2" />
+                <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" stroke-width="2" />
+              </svg>
+              <span>{{ passwordError }}</span>
+            </div>
+          </Transition>
+        </div>
+
+        <div
+          class="form-group"
+          :class="{ 'has-error': confirmPasswordError, 'has-focus': confirmPassword }"
+        >
+          <div class="input-container">
+            <div class="input-icon">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" stroke-width="2" />
+                <path
+                  d="M7 11V7a5 5 0 0 1 10 0v4"
+                  stroke="currentColor"
+                  stroke-width="2"
+                />
+                <path
+                  d="M9 16l2 2 4-4"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+            <input
+              id="confirmPassword"
+              v-model="confirmPassword"
+              :type="showConfirmPassword ? 'text' : 'password'"
+              class="form-input"
+              placeholder=" "
+              autocomplete="new-password"
+              @blur="validateConfirmPassword"
+              @input="confirmPasswordError && validateConfirmPassword()"
+            />
+            <label for="confirmPassword" class="form-label">Confirmar senha</label>
+            <button
+              type="button"
+              class="password-toggle"
+              @click="toggleConfirmPasswordVisibility"
+              :aria-label="showConfirmPassword ? 'Ocultar senha' : 'Mostrar senha'"
+            >
+              <svg
+                v-if="showConfirmPassword"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22M12 9a3 3 0 1 1 0 6"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <svg
+                v-else
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                  stroke="currentColor"
+                  stroke-width="2"
+                />
+                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" />
+              </svg>
+            </button>
+            <div class="input-border"></div>
+          </div>
+          <Transition name="error-text">
+            <div v-if="confirmPasswordError" class="error-text">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" stroke-width="2" />
+                <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" stroke-width="2" />
+              </svg>
+              <span>{{ confirmPasswordError }}</span>
+            </div>
+          </Transition>
+        </div>
+
+        <!-- <div class="form-group" :class="{ 'has-error': termsError }">
+          <label class="checkbox-container">
+            <input
+              type="checkbox"
+              v-model="acceptTerms"
+              class="checkbox-input"
+              @change="validateTerms"
+            />
+            <div class="checkbox-custom">
+              <svg
+                v-if="acceptTerms"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <polyline
+                  points="20,6 9,17 4,12"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+            <span class="checkbox-text">
+              Eu aceito os
+              <a href="#" class="terms-link">termos de uso</a>
+              e
+              <a href="#" class="terms-link">política de privacidade</a>
+            </span>
+          </label>
+          <Transition name="error-text">
+            <div v-if="termsError" class="error-text">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" stroke-width="2" />
+                <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" stroke-width="2" />
+              </svg>
+              <span>{{ termsError }}</span>
+            </div>
+          </Transition>
+        </div> -->
+
+        <button
+          type="submit"
+          class="signup-button"
+          :class="{ loading: loading, disabled: !isFormValid }"
+          :disabled="loading || !isFormValid"
+        >
+          <div class="button-content">
+            <Transition name="button-content" mode="out-in">
+              <div v-if="!loading" key="normal" class="button-normal">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2" />
+                  <path
+                    d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <span>Criar conta</span>
+              </div>
+              <div v-else key="loading" class="button-loading">
+                <div class="loading-spinner"></div>
+                <span>Criando conta...</span>
+              </div>
+            </Transition>
+          </div>
+          <div class="button-ripple"></div>
+        </button>
+
+        <div class="form-footer">
+          <span class="footer-text">Já tem uma conta?</span>
+          <a href="#" class="link-primary">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            Fazer login
+          </a>
+        </div>
       </form>
-      
     </div>
   </div>
 </template>
@@ -584,6 +884,7 @@ onMounted(() => {
   font-weight: 400;
   line-height: 1.5;
 }
+
 /* Error Alert */
 .error-alert {
   display: flex;
@@ -808,5 +1109,276 @@ onMounted(() => {
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   border-radius: 1px;
 }
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--color-on-surface-variant);
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+
+.password-toggle:hover {
+  background: var(--color-surface-variant);
+  color: var(--color-on-surface);
+  transform: scale(1.05);
+}
+
+/* Error States */
+.has-error .form-input {
+  border-color: var(--color-error);
+}
+
+.has-error .form-input:focus {
+  border-color: var(--color-error);
+}
+
+.has-error .input-icon {
+  color: var(--color-error);
+}
+
+.has-error .form-label {
+  color: var(--color-error);
+}
+
+.has-error .input-border {
+  background: var(--color-error);
+}
+
+.error-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-error);
+  font-size: 14px;
+  margin-left: 16px;
+  line-height: 1.4;
+}
+
+/* Checkbox */
+.checkbox-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  padding: 8px 0;
+}
+
+.checkbox-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.checkbox-custom {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-outline-variant);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+  background: var(--color-surface);
+  margin-top: 2px;
+}
+
+.checkbox-input:checked + .checkbox-custom {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.checkbox-text {
+  font-size: 14px;
+  color: var(--color-on-surface);
+  line-height: 1.5;
+}
+
+.terms-link {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.terms-link:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.has-error .checkbox-custom {
+  border-color: var(--color-error);
+}
+
+/* Submit Button */
+.signup-button {
+  width: 100%;
+  padding: 16px 24px;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border: none;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+  margin-top: 8px;
+  min-height: 56px;
+}
+
+.signup-button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-primary) 90%, var(--color-on-primary));
+  transform: translateY(-2px);
+  box-shadow: 
+    0 4px 8px 0 color-mix(in srgb, var(--color-primary) 30%, transparent),
+    0 8px 16px 4px color-mix(in srgb, var(--color-primary) 15%, transparent);
+}
+
+.signup-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.signup-button.disabled {
+  background: var(--color-surface-variant);
+  color: var(--color-on-surface-variant);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.button-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+}
+
+.button-normal,
+.button-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.button-ripple {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+  transform: scale(0);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.signup-button:active .button-ripple {
+  animation: ripple 0.6s ease-out;
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Footer Links */
+.form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-outline-variant);
+}
+
+.footer-text {
+  color: var(--color-on-surface-variant);
+  font-size: 14px;
+}
+
+.link-primary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  color: var(--color-primary);
+}
+
+.link-primary:hover {
+  background: var(--color-primary-container);
+  color: var(--color-on-primary-container);
+}
+
+/* Transitions */
+.error-slide-enter-active,
+.error-slide-leave-active {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.error-slide-enter-from {
+  opacity: 0;
+  transform: translateY(-16px) scale(0.95);
+}
+
+.error-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-16px) scale(0.95);
+}
+
+.error-text-enter-active,
+.error-text-leave-active {
+  transition: all 0.3s ease;
+}
+
+.error-text-enter-from,
+.error-text-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.button-content-enter-active,
+.button-content-leave-active {
+  transition: all 0.2s ease;
+}
+
+.button-content-enter-from,
+.button-content-leave-to {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
 
 </style>
