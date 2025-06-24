@@ -21,6 +21,7 @@ export const useTagStore = defineStore('tag', () => {
 
   const create = async (tag: CreateTagDto): Promise<TagDto> => {
     const { data } = await http.post<TagDto>(`/tag`, tag)
+    console.log('Tag created:', data)
     userStore.fetch()
     return data
   }

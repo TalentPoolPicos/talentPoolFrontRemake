@@ -24,7 +24,13 @@ const socialStore = userSocialMediaStore()
 /* state */
 const role = ref<'student' | 'enterprise'>('student')
 const loading = ref(true)
-const saving = ref(false)
+const savingUser = ref(false)
+const savingAddress = ref(false)
+
+const savingCurriculum = ref(false)
+const savingHistory = ref(false)
+
+const savingSocials = ref(false)
 const error = ref<string | null>(null)
 
 const curriculumFile = ref<File | null>(null)
@@ -63,17 +69,50 @@ const addressForm = ref<CreateOrUpdateAddressDto>({
 })
 
 /* helpers */
-const removeTag = (t: string) => (form.value.tags = form.value.tags.filter((x) => x !== t))
-const handleCurriculumChange = (e: Event) =>
-  (curriculumFile.value = (e.target as HTMLInputElement).files?.[0] ?? null)
-const handleHistoryChange = (e: Event) =>
-  (historyFile.value = (e.target as HTMLInputElement).files?.[0] ?? null)
+const removeTag = async (uuid: string) => {
+  const index = form.value.tags.indexOf(uuid)
+  if (index !== -1) form.value.tags.splice(index, 1)
+  await tagStore.remove(uuid).catch(() => {
+    error.value = 'Erro ao remover a tag.'
+  })
+}
+const handleCurriculumChange = async (e: Event) => {
+  curriculumFile.value = (e.target as HTMLInputElement).files?.[0] ?? null
+  if (!curriculumFile.value) return
+  savingCurriculum.value = true
+  error.value = null
+  await studentStore
+    .uploadCurriculum(curriculumFile.value)
+    .then(() => {
+      alert('Currículo atualizado com sucesso!')
+    })
+    .catch(() => {
+      error.value = 'Erro ao atualizar o currículo.'
+    })
+  savingCurriculum.value = false
+}
+const handleHistoryChange = async (e: Event) => {
+  historyFile.value = (e.target as HTMLInputElement).files?.[0] ?? null
+  if (!historyFile.value) return
+  savingHistory.value = true
+  error.value = null
+  await studentStore
+    .uploadHistory(historyFile.value)
+    .then(() => {
+      alert('Histórico atualizado com sucesso!')
+    })
+    .catch(() => {
+      error.value = 'Erro ao atualizar o histórico.'
+    })
+  savingHistory.value = false
+}
 
-const addTag = () => {
+const addTag = async () => {
   const newTag = prompt('Digite o nome da nova tag:')
-  if (newTag && newTag.trim() && !form.value.tags.includes(newTag.trim())) {
-    form.value.tags.push(newTag.trim())
-  }
+  if (newTag) form.value.tags.push(newTag.trim())
+  await tagStore.create({ label: newTag ?? '' }).catch(() => {
+    error.value = 'Erro ao adicionar a tag.'
+  })
 }
 
 /* carregar dados ---------------------------------------------------- */
@@ -112,10 +151,6 @@ const loadData = async () => {
       })
     }
 
-    /* tags */
-    const tagDtos = userStore.loggedUser.tags || []
-    form.value.tags = tagDtos.map((t) => t.label)
-
     const addr = userStore.loggedUser.address
     if (addr) Object.assign(addressForm.value, addr)
 
@@ -141,15 +176,12 @@ const validate = (): boolean => {
   if (!addressForm.value.state) return (error.value = 'Estado é obrigatório.'), false
   return true
 }
-
-/* salvar ----------------------------------------------------------- */
-const save = async () => {
+const saveUser = async () => {
   if (!validate()) return
-  saving.value = true
+  savingUser.value = true
   error.value = null
 
   try {
-    /* -------- user -------- */
     if (role.value === 'student') {
       await studentStore.partialUpdate({
         name: form.value.name,
@@ -159,8 +191,6 @@ const save = async () => {
         registrationNumber: form.value.registrationNumber,
         lattes: form.value.lattes,
       })
-      if (curriculumFile.value) await studentStore.uploadCurriculum(curriculumFile.value)
-      if (historyFile.value) await studentStore.uploadHistory(historyFile.value)
     } else {
       await enterpriseStore.partialUpdate({
         name: form.value.name,
@@ -171,45 +201,26 @@ const save = async () => {
         description: form.value.description,
       })
     }
-
-    /* -------- endereço -------- */
-    await addressStore.createOrUpdate(addressForm.value)
-
-    /* -------- links sociais -------- */
-    const existing = await socialStore.findAllByUserUuid(userStore.loggedUser!.uuid)
-
-    const handleLink = async (type: 'discord' | 'linkedin' | 'github', url: string) => {
-      const prev = existing.find((s) => s.type === type)
-      if (url.trim()) {
-        await socialStore.createOrUpdate({ type, url })
-      } else if (prev) {
-        await socialStore.remove(prev.uuid)
-      }
-    }
-
-    await Promise.all([
-      handleLink('discord', socials.value.discord),
-      handleLink('linkedin', socials.value.linkedin),
-      handleLink('github', socials.value.github),
-    ])
-
-    /* -------- tags -------- */
-    const currentTags = await tagStore.findAllByUserUuid(userStore.loggedUser!.uuid)
-    const currentLabels = currentTags.map((t) => t.label)
-    const toRemove = currentTags.filter((t) => !form.value.tags.includes(t.label))
-    const toAdd = form.value.tags.filter((t) => !currentLabels.includes(t))
-    await Promise.all(toRemove.map((t) => tagStore.remove(t.uuid)))
-    await Promise.all(toAdd.map((l) => tagStore.create({ label: l })))
-
     alert('Perfil atualizado com sucesso!')
-    await userStore.fetch()
-    router.push({
-      name: role.value === 'student' ? Routes.StudentLoggedProfile : Routes.EnterpriseLoggedProfile,
-    })
   } catch {
     error.value = 'Erro ao salvar o perfil.'
   } finally {
-    saving.value = false
+    savingUser.value = false
+  }
+}
+
+const saveAddress = async () => {
+  if (!validate()) return
+  savingAddress.value = true
+  error.value = null
+
+  try {
+    await addressStore.createOrUpdate(addressForm.value)
+    alert('Endereço atualizado com sucesso!')
+  } catch {
+    error.value = 'Erro ao salvar o endereço.'
+  } finally {
+    savingAddress.value = false
   }
 }
 
@@ -225,7 +236,7 @@ onMounted(loadData)
     <div class="edit-profile">
       <h1>Editar perfil: {{ role === 'student' ? 'Talento' : 'Empresa' }}</h1>
 
-      <form @submit.prevent="save">
+      <form @submit.prevent="saveUser">
         <div v-if="error" class="error">{{ error }}</div>
 
         <!-- nome / email -->
@@ -276,7 +287,11 @@ onMounted(loadData)
           </div>
         </div>
 
-        <!-- endereço -->
+        <button type="submit" class="btn-submit" :disabled="savingUser">
+          {{ savingUser ? 'Salvando...' : 'Salvar' }}
+        </button>
+      </form>
+      <form @submit.prevent="saveAddress">
         <div class="row">
           <div class="field full-width">
             <label>Logradouro</label>
@@ -299,79 +314,78 @@ onMounted(loadData)
             <input v-model="addressForm.zipCode" required />
           </div>
         </div>
-        <!-- links sociais -->
-        <div class="row" style="flex-direction: column">
-          <div class="field">
-            <label>Discord</label>
-            <input v-model="socials.discord" type="url" placeholder="https://discord.gg/…" />
-          </div>
 
-          <div class="field">
-            <label>LinkedIn</label>
-            <input v-model="socials.linkedin" type="url" placeholder="https://linkedin.com/in/…" />
-          </div>
-
-          <div class="field">
-            <label>GitHub</label>
-            <input v-model="socials.github" type="url" placeholder="https://github.com/…" />
-          </div>
-        </div>
-
-        <!-- student extras -->
-        <div v-if="role === 'student'">
-          <!-- Lattes -->
-          <div class="row">
-            <div class="field full-width">
-              <label>Link Lattes</label>
-              <input v-model="form.lattes" placeholder="https://lattes.cnpq.br/..." />
-            </div>
-          </div>
-          <!-- arquivos -->
-          <div class="row two-cols">
-            <div class="field">
-              <label>Currículo (PDF)</label>
-              <label class="file-btn">
-                {{ curriculumFile ? 'Alterar arquivo' : 'Selecionar' }}
-                <input
-                  type="file"
-                  accept="application/pdf"
-                  class="hidden-input"
-                  @change="handleCurriculumChange"
-                />
-              </label>
-              <small v-if="curriculumFile">{{ curriculumFile.name }}</small>
-            </div>
-
-            <div class="field">
-              <label>Histórico escolar (PDF)</label>
-              <label class="file-btn">
-                {{ historyFile ? 'Alterar arquivo' : 'Selecionar' }}
-                <input
-                  type="file"
-                  accept="application/pdf"
-                  class="hidden-input"
-                  @change="handleHistoryChange"
-                />
-              </label>
-              <small v-if="historyFile">{{ historyFile.name }}</small>
-            </div>
-          </div>
-        </div>
-
-        <!-- tags -->
-        <div class="tags">
-          <span v-for="tag in form.tags" :key="tag" class="tag">
-            {{ tag }}
-            <button type="button" @click="removeTag(tag)">×</button>
-          </span>
-          <button type="button" class="btn-add-tag" @click="addTag">Adicionar tag</button>
-        </div>
-
-        <!-- salvar -->
-        <button type="submit" class="btn-submit" :disabled="saving">
-          {{ saving ? 'Salvando...' : 'Salvar' }}
+        <button type="submit" class="btn-submit" :disabled="savingAddress">
+          {{ savingAddress ? 'Salvando...' : 'Salvar' }}
         </button>
       </form>
+      <!-- links sociais -->
+      <div class="row" style="flex-direction: column">
+        <div class="field">
+          <label>Discord</label>
+          <input v-model="socials.discord" type="url" placeholder="https://discord.gg/…" />
+        </div>
+
+        <div class="field">
+          <label>LinkedIn</label>
+          <input v-model="socials.linkedin" type="url" placeholder="https://linkedin.com/in/…" />
+        </div>
+
+        <div class="field">
+          <label>GitHub</label>
+          <input v-model="socials.github" type="url" placeholder="https://github.com/…" />
+        </div>
+      </div>
+
+      <!-- student extras -->
+      <div v-if="role === 'student'">
+        <!-- Lattes -->
+        <div class="row">
+          <div class="field full-width">
+            <label>Link Lattes</label>
+            <input v-model="form.lattes" placeholder="https://lattes.cnpq.br/..." />
+          </div>
+        </div>
+        <!-- arquivos -->
+        <div class="row two-cols">
+          <div class="field">
+            <label>Currículo (PDF)</label>
+            <label class="file-btn">
+              {{ curriculumFile ? 'Alterar arquivo' : 'Selecionar' }}
+              <input
+                type="file"
+                accept="application/pdf"
+                class="hidden-input"
+                @change="handleCurriculumChange"
+              />
+            </label>
+            <small v-if="curriculumFile">{{ curriculumFile.name }}</small>
+          </div>
+
+          <div class="field">
+            <label>Histórico escolar (PDF)</label>
+            <label class="file-btn">
+              {{ historyFile ? 'Alterar arquivo' : 'Selecionar' }}
+              <input
+                type="file"
+                accept="application/pdf"
+                class="hidden-input"
+                @change="handleHistoryChange"
+              />
+            </label>
+            <small v-if="historyFile">{{ historyFile.name }}</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- tags -->
+      <div class="tags">
+        <span v-for="tag in userStore.loggedUser!.tags" :key="tag.label" class="tag">
+          {{ tag.label }}
+          <button type="button" @click="removeTag(tag.uuid)">×</button>
+        </span>
+        <button type="button" class="btn-add-tag" @click="addTag">Adicionar tag</button>
+      </div>
     </div>
   </LoadingBrand>
 </template>
