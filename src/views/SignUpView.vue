@@ -535,7 +535,7 @@
 
         <div class="form-footer">
           <span class="footer-text">Já tem uma conta?</span>
-          <a href="#" class="link-primary">
+            <RouterLink :to="RoutePaths[Routes.SignIn]" class="link-primary">
             <svg
               width="16"
               height="16"
@@ -544,15 +544,15 @@
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
-                d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+              d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
               />
             </svg>
             Fazer login
-          </a>
+            </RouterLink>
         </div>
       </form>
     </div>
@@ -563,7 +563,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { Routes } from '@/router'
+import { Routes, RoutePaths } from '@/router'
 import type { components } from '@/types/api'
 
 type SignUpDto = components['schemas']['SignUpDto']
