@@ -83,8 +83,20 @@ const refresh = async () => {
       error.value = 'Usuário não encontrado.'
       return
     }
-    /* likes */
+  } catch (e) {
+    console.error(e)
+    error.value = 'Falha ao carregar perfil.'
+  } finally {
+    loading.value = false
+  }
+}
 
+const fetchLikes = async () => {
+  if (!user.value) return
+
+  likesLoading.value = true
+
+  try {
     likesLoading.value = true
     initiatorLikes.value = await likeStore
       .initiatorLikes({
@@ -107,10 +119,9 @@ const refresh = async () => {
     }
     likesLoading.value = false
   } catch (e) {
-    console.error(e)
-    error.value = 'Falha ao carregar perfil.'
+    console.error('Erro ao buscar curtidas:', e)
   } finally {
-    loading.value = false
+    likesLoading.value = false
   }
 }
 
@@ -219,6 +230,14 @@ watch(
 /* ---------- ciclo ---------- */
 onMounted(refresh)
 watch(() => props.uuid, refresh)
+onMounted(fetchLikes)
+watch(
+  () => user.value,
+  (newUser) => {
+    if (!newUser) return
+    fetchLikes()
+  },
+)
 </script>
 
 <template>
