@@ -153,7 +153,106 @@
           </div>
         </div>
 
+        <div class="form-group" :class="{ 'has-error': usernameError, 'has-focus': username }">
+          <div class="input-container">
+            <div class="input-icon">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM12 14a7 7 0 0 0-7 7h14a7 7 0 0 0-7-7z"
+                  stroke="currentColor"
+                  stroke-width="2"
+                />
+              </svg>
+            </div>
+            <input
+              id="username"
+              v-model="username"
+              type="text"
+              class="form-input"
+              placeholder=" "
+              autocomplete="username"
+              @blur="validateUsername"
+              @input="usernameError && validateUsername()"
+            />
+            <label for="username" class="form-label">Nome de usuário</label>
+            <div class="input-border"></div>
+          </div>
+          <Transition name="error-text">
+            <div v-if="usernameError" class="error-text">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" stroke-width="2" />
+                <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" stroke-width="2" />
+              </svg>
+              <span>{{ usernameError }}</span>
+            </div>
+          </Transition>
+        </div>
         
+        <div class="form-group" :class="{ 'has-error': emailError, 'has-focus': email }">
+          <div class="input-container">
+            <div class="input-icon">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                  stroke="currentColor"
+                  stroke-width="2"
+                />
+                <polyline
+                  points="22,6 12,13 2,6"
+                  stroke="currentColor"
+                  stroke-width="2"
+                />
+              </svg>
+            </div>
+            <input
+              id="email"
+              v-model="email"
+              type="email"
+              class="form-input"
+              placeholder=" "
+              autocomplete="email"
+              @blur="validateEmail"
+              @input="emailError && validateEmail()"
+            />
+            <label for="email" class="form-label">E-mail</label>
+            <div class="input-border"></div>
+          </div>
+          <Transition name="error-text">
+            <div v-if="emailError" class="error-text">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" stroke-width="2" />
+                <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" stroke-width="2" />
+              </svg>
+              <span>{{ emailError }}</span>
+            </div>
+          </Transition>
+        </div>
       </form>
       
     </div>
@@ -629,6 +728,85 @@ onMounted(() => {
 .user-type-option.selected .option-description {
   color: var(--color-on-primary-container);
   opacity: 0.8;
+}
+
+/* Input Fields */
+.input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 16px;
+  z-index: 2;
+  color: var(--color-on-surface-variant);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.form-input {
+  width: 100%;
+  padding: 16px 16px 16px 52px;
+  border: 2px solid var(--color-outline-variant);
+  border-radius: 16px;
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  font-size: 16px;
+  font-family: inherit;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+  position: relative;
+  z-index: 1;
+}
+
+.form-input:focus {
+  border-color: var(--color-primary);
+  background: var(--color-surface);
+}
+
+.form-input:focus + .form-label,
+.form-input:not(:placeholder-shown) + .form-label {
+  transform: translateY(-32px) scale(0.85);
+  color: var(--color-primary);
+  background: var(--color-surface);
+  padding: 0 8px;
+}
+
+.form-input:focus ~ .input-icon {
+  color: var(--color-primary);
+  transform: scale(1.1);
+}
+
+.form-input:focus ~ .input-border {
+  transform: scaleX(1);
+}
+
+.form-label {
+  position: absolute;
+  left: 52px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-on-surface-variant);
+  font-size: 16px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  z-index: 2;
+  background: transparent;
+  border-radius: 4px;
+}
+
+.input-border {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--color-primary);
+  transform: scaleX(0);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 1px;
 }
 
 </style>
