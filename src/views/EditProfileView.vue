@@ -287,6 +287,13 @@ onMounted(loadData)
             <label>Descrição</label>
             <textarea v-model="form.description" required style="resize: none"></textarea>
           </div>
+
+          <div class="row" v-if="role === 'student'">
+            <div class="field full-width">
+              <label>Link Lattes</label>
+              <input v-model="form.lattes" placeholder="https://lattes.cnpq.br/..." />
+            </div>
+          </div>
         </div>
 
         <!-- curso / matrícula -->
@@ -321,6 +328,7 @@ onMounted(loadData)
           {{ savingUser ? 'Salvando...' : 'Salvar' }}
         </button>
       </form>
+      <h1>Editar endereço</h1>
       <form @submit.prevent="saveAddress">
         <div class="row">
           <div class="field full-width">
@@ -350,6 +358,7 @@ onMounted(loadData)
         </button>
       </form>
       <!-- links sociais -->
+      <h1>Editar medias sociais</h1>
       <form @submit.prevent="saveSocials">
         <div class="row" style="flex-direction: column">
           <div class="field">
@@ -373,13 +382,7 @@ onMounted(loadData)
       </form>
       <!-- student extras -->
       <div v-if="role === 'student'">
-        <!-- Lattes -->
-        <div class="row">
-          <div class="field full-width">
-            <label>Link Lattes</label>
-            <input v-model="form.lattes" placeholder="https://lattes.cnpq.br/..." />
-          </div>
-        </div>
+        <h1>Documentos</h1>
         <!-- arquivos -->
         <div class="row two-cols">
           <div class="field">
@@ -413,12 +416,18 @@ onMounted(loadData)
       </div>
 
       <!-- tags -->
-      <div class="tags">
-        <span v-for="tag in userStore.loggedUser!.tags" :key="tag.label" class="tag">
-          {{ tag.label }}
-          <button type="button" @click="removeTag(tag.uuid)">×</button>
-        </span>
-        <button type="button" class="btn-add-tag" @click="addTag">Adicionar tag</button>
+      <div>
+        <h1>Tags</h1>
+        <p style="margin-bottom: 0.5rem">
+          Você pode adicionar tags para destacar suas habilidades, interesses ou áreas de atuação.
+        </p>
+        <div class="tags">
+          <span v-for="tag in userStore.loggedUser!.tags" :key="tag.label" class="tag">
+            {{ tag.label }}
+            <button type="button" @click="removeTag(tag.uuid)">×</button>
+          </span>
+          <button type="button" class="btn-add-tag" @click="addTag">Adicionar tag</button>
+        </div>
       </div>
     </div>
   </LoadingBrand>
@@ -443,6 +452,11 @@ form {
   display: flex;
   flex-direction: column;
   gap: 1.2rem; /* espaço entre grupos maiores */
+}
+
+h1 {
+  margin-top: 1rem;
+  color: var(--color-on-surface);
 }
 
 /* ---------- GRID DE CAMPOS ---------- */
