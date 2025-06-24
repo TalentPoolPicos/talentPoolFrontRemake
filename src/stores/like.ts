@@ -11,7 +11,6 @@ type UsersPageDto = components['schemas']['UsersPageDto']
 export const useLikeStore = defineStore('tag', () => {
   const authStore = useAuthStore()
 
-
   const recommendedUsers = async (queries: {
     page?: number
     limit?: number
