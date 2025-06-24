@@ -167,7 +167,7 @@ const routes = [
     props: {
       type: 'receiver',
     },
-  }
+  },
 ]
 
 const router = createRouter({
