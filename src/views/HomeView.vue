@@ -36,7 +36,9 @@ import { Routes, RoutePaths } from '@/router/index'
             estágio que combinam com o seu perfil e te aproximam do futuro profissional que você
             sempre sonhou.
           </p>
-          <RouterLink :to="RoutePaths[Routes.StudentSignUp]" class="btn-primary">Cadastre-se</RouterLink>
+          <RouterLink :to="RoutePaths[Routes.StudentSignUp]" class="btn-primary"
+            >Cadastre-se</RouterLink
+          >
         </div>
       </div>
     </section>

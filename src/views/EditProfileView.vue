@@ -8,7 +8,6 @@ import { useTagStore } from '@/stores/tag'
 import { useAddressStore } from '@/stores/address'
 import { userSocialMediaStore } from '@/stores/socialmedia'
 import type { CreateOrUpdateAddressDto } from '@/stores/address'
-import { Routes } from '@/router'
 import LoadingBrand from '@/components/LoadingBrand.vue'
 import ImageUser from '@/components/ImageUser.vue'
 
@@ -26,8 +25,6 @@ const role = ref<'student' | 'enterprise'>('student')
 const loading = ref(true)
 const savingUser = ref(false)
 const savingAddress = ref(false)
-const savingCurriculum = ref(false)
-const savingHistory = ref(false)
 
 const savingSocials = ref(false)
 const error = ref<string | null>(null)
@@ -67,14 +64,6 @@ const addressForm = ref<CreateOrUpdateAddressDto>({
   zipCode: '',
 })
 
-/* helpers */
-const removeTag = async (uuid: string) => {
-  const index = form.value.tags.indexOf(uuid)
-  if (index !== -1) form.value.tags.splice(index, 1)
-  await tagStore.remove(uuid).catch(() => {
-    error.value = 'Erro ao remover a tag.'
-  })
-}
 const handleCurriculumChange = async (e: Event) => {
   curriculumFile.value = (e.target as HTMLInputElement).files?.[0] ?? null
   if (!curriculumFile.value) return
@@ -102,12 +91,50 @@ const handleHistoryChange = async (e: Event) => {
     })
 }
 
-const addTag = async () => {
+/* helpers */
+const removeTag = (uuid: string) => {
+  try {
+    tagStore
+      .remove(uuid)
+      .catch(() => {
+        error.value = 'Erro ao remover a tag.'
+      })
+      .then(() => {
+        const index = form.value.tags.indexOf(uuid)
+        if (index !== -1) {
+          form.value.tags.splice(index, 1)
+        }
+        alert('Tag removida com sucesso!')
+      })
+      .catch(() => {
+        error.value = 'Erro ao remover a tag.'
+      })
+  } catch {
+    error.value = 'Erro ao remover a tag.'
+  }
+}
+
+const addTag = () => {
   const newTag = prompt('Digite o nome da nova tag:')
-  if (newTag) form.value.tags.push(newTag.trim())
-  await tagStore.create({ label: newTag ?? '' }).catch(() => {
+  if (!newTag || newTag.trim() === '') {
+    error.value = 'Tag não pode ser vazia.'
+    return
+  }
+  try {
+    tagStore
+      .create({
+        label: newTag.trim(),
+      })
+      .then((tag) => {
+        form.value.tags.push(tag.uuid)
+      })
+      .catch(() => {
+        error.value = 'Erro ao adicionar a tag.'
+      })
+    alert('Tag adicionada com sucesso!')
+  } catch {
     error.value = 'Erro ao adicionar a tag.'
-  })
+  }
 }
 
 /* carregar dados ---------------------------------------------------- */
