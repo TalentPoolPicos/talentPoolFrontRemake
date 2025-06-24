@@ -1,316 +1,264 @@
-<!-- src/views/Registration.vue -->
 <template>
-  <div class="page registration">
-    <!-- barra de título -->
-    <div class="page-header registration">
-      <span>Cadastro</span>
+  <div class="signup-wrapper">
+    <div class="background-decoration">
+      <div class="decoration-circle decoration-circle-1"></div>
+      <div class="decoration-circle decoration-circle-2"></div>
+      <div class="decoration-circle decoration-circle-3"></div>
+      <div class="decoration-circle decoration-circle-4"></div>
     </div>
 
-    <main class="registration-grid">
-      <!-- ilustração -->
-      <div class="illustration">
-        <div class="shape"></div>
-        <img src="@/assets/hero-illustration.png" alt="Cadastro" />
+    <div class="signup-container" :class="{ 'fade-in': isVisible }">
+      <div class="signup-header">
+        <div class="logo-container">
+          <div class="logo-icon">
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2" />
+              <path
+                d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+        </div>
+        <h1 class="signup-title">Criar nova conta</h1>
+        <p class="signup-subtitle">Preencha os dados abaixo para começar</p>
       </div>
 
-      <!-- formulário -->
-      <div class="registration-card">
-        <h2>Banco de Talentos<br />para estudantes e empresas</h2>
-
-        <form @submit.prevent="onRegister" class="auth-form">
-          <!-- nome do usuário ou organização -->
-          <input type="text" placeholder="Nome" v-model="username" required />
-
-          <!-- email -->
-          <input type="email" placeholder="Email" v-model="email" required />
-
-          <!-- senha -->
-          <div class="pwd-wrapper">
-            <input
-              :type="showPwd ? 'text' : 'password'"
-              placeholder="Senha"
-              v-model="password"
-              required
-            />
-            <span class="eye" @click="showPwd = !showPwd">
-              <img :src="showPwd ? eyeClosed : eyeOpen" alt="Exibir/ocultar senha" />
-            </span>
-          </div>
-          <p v-if="passwordError" class="error-message">{{ passwordError }}</p>
-
-          <!-- confirmar senha -->
-          <div class="pwd-wrapper">
-            <input
-              :type="showPwd2 ? 'text' : 'password'"
-              placeholder="Confirme a senha"
-              v-model="password2"
-              required
-            />
-            <span class="eye" @click="showPwd2 = !showPwd2">
-              <img :src="showPwd2 ? eyeClosed : eyeOpen" alt="Exibir/ocultar senha" />
-            </span>
-          </div>
-
-          <button class="btn-primary" type="submit" :disabled="loading">
-            {{ loading ? 'Cadastrando...' : 'Cadastrar' }}
-          </button>
-        </form>
-      </div>
-    </main>
+      
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { Routes } from '@/router'
 import type { components } from '@/types/api'
-import eyeOpen from '@/assets/1visibility_pass.svg'
-import eyeClosed from '@/assets/0visibility_pass.svg'
 
 type SignUpDto = components['schemas']['SignUpDto']
 
-// Define prop role recebida da rota
-const props = defineProps<{ role: 'student' | 'enterprise' }>()
-const role = props.role ?? 'student' // fallback
-
-console.log('Role recebido:', role)
-
-const username = ref('')
-const email = ref('')
-const password = ref('')
-const password2 = ref('')
-
-const showPwd = ref(false)
-const showPwd2 = ref(false)
-const loading = ref(false)
+// Props - mantive o role para compatibilidade caso ainda queira passar via rota
+const props = defineProps<{ role?: 'student' | 'enterprise' }>()
 
 const auth = useAuthStore()
 const router = useRouter()
 
-function isStrongPassword(pwd: string): boolean {
-  // Pelo menos 8 caracteres, com letras maiúsculas, minúsculas, números e símbolos
-  const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/
-  return strongRegex.test(pwd)
-}
+// Dados do formulário
+const email = ref('')
+const username = ref('')
+const password = ref('')
+const confirmPassword = ref('')
+const userType = ref<'student' | 'enterprise'>(props.role ?? 'student') // Usa o role da prop se existir, senão 'student'
+const acceptTerms = ref(false)
 
+// Estados de UI
+const loading = ref(false)
+const error = ref('')
+const showPassword = ref(false)
+const showConfirmPassword = ref(false)
+const isVisible = ref(false) // Para a animação de fade-in
+
+// Estados de erro para validação
+const emailError = ref('')
+const usernameError = ref('')
 const passwordError = ref('')
+const confirmPasswordError = ref('')
+const termsError = ref('')
 
-const onRegister = async () => {
-  passwordError.value = ''
+// Computed property para validar o formulário
+const isFormValid = computed(() => {
+  return (
+    email.value.length > 0 &&
+    username.value.length > 0 &&
+    password.value.length > 0 &&
+    confirmPassword.value.length > 0 
+    // && acceptTerms.value 
+    && !emailError.value &&
+    !usernameError.value &&
+    !passwordError.value &&
+    !confirmPasswordError.value 
+    // && !termsError.value
+  )
+})
 
-  if (!isStrongPassword(password.value)) {
-    passwordError.value =
-      'Senha fraca: use maiúsculas, minúsculas, números e símbolos, mínimo 8 caracteres.'
-    return
-  }
 
-  if (password.value !== password2.value) {
-    alert('As senhas não coincidem.')
-    return
-  }
 
-  if (password.value !== password2.value) {
-    alert('As senhas não coincidem.')
-    return
-  }
-
-  // Se precisar, faça validações específicas do role aqui
-
-  const payload: SignUpDto = {
-    username: username.value,
-    email: email.value,
-    password: password.value,
-  }
-
-  loading.value = true
-  try {
-    // Passa o role recebido para a função de signUp
-    await auth.signUp(payload, role)
-    router.push({ name: Routes.Home })
-  } catch {
-    alert('Erro ao cadastrar.')
-  } finally {
-    loading.value = false
-  }
-}
+// Efeito de fade-in no carregamento do componente
+onMounted(() => {
+  setTimeout(() => {
+    isVisible.value = true
+  }, 100)
+})
 </script>
 
 <style scoped>
-/* estilos adaptados com novos nomes */
-
-.nav-bar {
-  position: relative;
-  z-index: 10;
-}
-
-.page-header.registration {
-  width: 100%;
-  height: 3rem;
-  background: var(--color-secondary-container);
+/* Base Layout */
+.signup-wrapper {
+  min-height: 100vh;
+  background: var(--color-background);
   display: flex;
   align-items: center;
-  padding-inline: 2rem;
-  border-radius: 0 0 0.5rem 0.5rem;
-  color: var(--color-on-secondary-container);
-  font-size: 1.1rem;
-  font-weight: 500;
-}
-
-.registration-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  align-items: center;
-  padding: 2rem 4rem;
-  background: var(--color-surface);
-  min-height: calc(100vh - 64px - 3rem);
-}
-
-.illustration {
+  justify-content: center;
+  padding: 24px;
   position: relative;
+  overflow: hidden;
 }
-.shape {
+
+.background-decoration {
   position: absolute;
-  width: 100%;
-  height: 100%;
-  background: var(--color-background-mute);
-  border-radius: 1.5rem;
-  top: -1rem;
-  left: -1rem;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
   z-index: 0;
 }
-.illustration img {
-  position: relative;
-  width: 100%;
-  height: auto;
-  z-index: 1;
-}
 
-.registration-card {
-  background: var(--color-secondary-container);
-  padding: 2.5rem;
-  border-radius: 1rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-.registration-card h2 {
-  margin-bottom: 1.5rem;
-  color: var(--color-text);
-  font-size: 1.75rem;
-  line-height: 1.2;
-}
-
-.auth-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-.auth-form input {
-  height: 2.5rem;
-  border-radius: 0.75rem;
-  border: none;
-  padding: 0 1rem 0 1rem;
-  padding-right: 3rem;
-  font-size: 0.95rem;
-  background: var(--color-always-white);
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.pwd-wrapper {
-  position: relative;
-  width: 100%;
-}
-.pwd-wrapper .eye {
+.decoration-circle {
   position: absolute;
-  top: 50%;
-  right: 1rem;
-  transform: translateY(-50%);
-  width: 1.25rem;
-  height: 1.25rem;
-  cursor: pointer;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary-container), var(--color-secondary-container));
+  opacity: 0.08;
+  animation: float 25s ease-in-out infinite;
 }
-.pwd-wrapper .eye img {
+
+.decoration-circle-1 {
+  width: 400px;
+  height: 400px;
+  top: -200px;
+  right: -200px;
+  animation-delay: 0s;
+}
+
+.decoration-circle-2 {
+  width: 300px;
+  height: 300px;
+  bottom: -150px;
+  left: -150px;
+  animation-delay: -8s;
+}
+
+.decoration-circle-3 {
+  width: 200px;
+  height: 200px;
+  top: 20%;
+  left: -100px;
+  animation-delay: -16s;
+}
+
+.decoration-circle-4 {
+  width: 150px;
+  height: 150px;
+  bottom: 30%;
+  right: -75px;
+  animation-delay: -24s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+  25% { transform: translate(20px, -20px) rotate(90deg) scale(1.05); }
+  50% { transform: translate(-15px, 15px) rotate(180deg) scale(0.95); }
+  75% { transform: translate(25px, 10px) rotate(270deg) scale(1.02); }
+}
+
+/* Signup Container */
+.signup-container {
+  background: var(--color-surface);
+  border-radius: 32px;
+  padding: 48px;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: 
+    0 1px 3px 0 var(--color-shadow),
+    0 4px 8px 3px color-mix(in srgb, var(--color-shadow) 15%, transparent),
+    0 8px 16px 6px color-mix(in srgb, var(--color-shadow) 10%, transparent);
+  border: 1px solid var(--color-outline-variant);
+  position: relative;
+  z-index: 1;
+  opacity: 0;
+  transform: translateY(40px) scale(0.95);
+  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.signup-container.fade-in {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Header */
+.signup-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.logo-container {
+  margin-bottom: 24px;
+}
+
+.logo-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  background: var(--color-primary-container);
+  color: var(--color-on-primary-container);
+  margin: 0 auto 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.logo-icon::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
   width: 100%;
   height: 100%;
-  display: block;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  animation: shimmer 3s ease-in-out infinite;
 }
 
-.btn-primary {
-  width: 100%;
-  margin-top: 1rem;
-  background: var(--color-primary);
-  color: var(--color-on-primary);
-  height: 3.5rem;
-  border-radius: 0.75rem;
-  font-size: 1.1rem;
+@keyframes shimmer {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+
+.signup-title {
+  font-size: 28px;
   font-weight: 600;
-  cursor: pointer;
-}
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-primary:hover:not(:disabled) {
-  opacity: 0.85;
+  color: var(--color-on-surface);
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
 }
 
-.error-message {
-  color: var(--color-error);
-  font-size: 0.85rem;
-  margin-top: 0.2rem;
-  margin-bottom: 0.8rem;
+.signup-subtitle {
+  color: var(--color-on-surface-variant);
+  font-size: 16px;
+  margin: 0;
+  font-weight: 400;
+  line-height: 1.5;
 }
 
-/* =================== tablets (≤ 1024 px) =================== */
-@media (max-width: 1024px) {
-  .registration-grid {
-    padding: 2rem;
-    gap: 1.5rem;
-  }
-  .registration-card {
-    padding: 2rem;
-  }
-  .registration-card h2 {
-    font-size: 1.6rem;
-  }
-}
 
-/* =================== móveis (≤ 768 px) =================== */
-@media (max-width: 768px) {
-  .registration-grid {
-    grid-template-columns: 1fr; /* quebra em 1 coluna */
-    padding: 1.5rem;
-  }
-  .illustration {
-    display: none; /* oculta imagem */
-  }
-  .registration-card {
-    width: 100%;
-    max-width: 420px;
-    margin: 0 auto;
-  }
-  .page-header.registration {
-    font-size: 1rem;
-    padding-inline: 1rem;
-  }
-}
-
-/* =================== mini-móveis (≤ 480 px) =================== */
-@media (max-width: 480px) {
-  .registration-card {
-    padding: 1.5rem;
-  }
-  .registration-card h2 {
-    font-size: 1.4rem;
-  }
-  .auth-form input {
-    font-size: 0.9rem;
-  }
-  .btn-primary {
-    font-size: 1rem;
-  }
-}
 </style>
