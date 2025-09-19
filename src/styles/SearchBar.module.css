@@ -1,0 +1,116 @@
+.searchContainer {
+  position: relative;
+  display: block;
+}
+
+.searchContainer input {
+  padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  font-size: 0.875rem;
+  width: 250px;
+  transition: all 0.2s ease;
+}
+
+.searchContainer input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+
+.searchContainer input::placeholder {
+  color: var(--color-on-surface-variant);
+}
+
+.searchIconBtn {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--color-on-surface-variant);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.searchIconBtn:hover {
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+}
+
+.searchIconBtn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  color: var(--color-primary);
+}
+
+.mobileSearchWrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+.mobileSearch {
+  flex: 1 1 auto;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-background);
+  color: var(--color-on-surface);
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.mobileSearch:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+
+.mobileSearch::placeholder {
+  color: var(--color-on-surface-variant);
+}
+
+.mobileSearchBtn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: transparent;
+  color: var(--color-on-surface);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.mobileSearchBtn:hover {
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  color: var(--color-primary);
+}
+
+.mobileSearchBtn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  color: var(--color-primary);
+}
+
+@media (max-width: 1023px) {
+  .searchContainer input {
+    width: 180px;
+  }
+}

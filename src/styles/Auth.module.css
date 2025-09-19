@@ -1,0 +1,234 @@
+/* ===== PAGE WRAPPER: gradiente na tela toda ===== */
+.authWrapper {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-primary) 8%, transparent),
+      color-mix(in srgb, var(--color-primary) 3%, transparent)
+    );
+  position: relative;
+  overflow: hidden;
+}
+
+.authWrapper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at top,
+    color-mix(in srgb, var(--color-primary) 6%, transparent),
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+/* ===== CARD ===== */
+.authContainer {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 2.25rem 2rem;
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--color-border) 45%, transparent);
+}
+
+/* ===== HEADER ===== */
+.authHeader {
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+
+.authTitle {
+  font-size: clamp(1.6rem, 2.5vw, 1.9rem);
+  font-weight: 800;
+  margin: 0 0 .25rem 0;
+  letter-spacing: -0.02em;
+  color: var(--color-on-surface);
+}
+
+.authSubtitle {
+  font-size: .95rem;
+  color: var(--color-on-surface-variant);
+  margin: 0;
+}
+
+/* ===== ERROR ALERT ===== */
+.errorAlert {
+  background-color: var(--color-error-container, #fde7e9);
+  border: 1px solid var(--color-error, #d14343);
+  color: var(--color-on-error-container, #7a1f1f);
+  padding: .75rem 1rem;
+  border-radius: 10px;
+  margin: 1rem 0 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: .75rem;
+}
+
+.errorText {
+  font-size: .95rem;
+}
+
+.errorClose {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: var(--color-error, #d14343);
+  cursor: pointer;
+  line-height: 1;
+  padding: .25rem .35rem;
+  border-radius: 8px;
+}
+
+.errorClose:hover {
+  background: color-mix(in srgb, var(--color-error) 10%, transparent);
+}
+
+/* ===== FORM ===== */
+.authForm {
+  margin-top: .25rem;
+}
+
+.formGroup {
+  margin-bottom: 1.2rem;
+}
+
+.inputWrapper {
+  position: relative;
+}
+
+.authForm input,
+.authForm textarea {
+  width: 100%;
+  padding: .8rem 1rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: 10px;
+  font-size: 1rem;
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  transition: border-color .2s ease, box-shadow .2s ease;
+  resize: vertical;
+}
+
+.authForm input:focus,
+.authForm textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+
+.textarea {
+  min-height: 110px;
+}
+
+.inputError {
+  border-color: var(--color-error, #d14343) !important;
+}
+
+.fieldError {
+  font-size: .85rem;
+  color: var(--color-error, #d14343);
+  margin-top: .35rem;
+}
+
+/* Check “válido” */
+.iconCheck {
+  position: absolute;
+  right: .75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--color-success, #10b981);
+}
+
+/* ===== SUBMIT BUTTON ===== */
+.submitButton {
+  width: 100%;
+  padding: .9rem;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border: 1px solid var(--color-primary);
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .6rem;
+  transition: transform .1s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
+}
+
+.submitButton:hover {
+  background: color-mix(in srgb, var(--color-primary) 88%, black);
+  border-color: color-mix(in srgb, var(--color-primary) 88%, black);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--color-primary) 28%, transparent);
+  transform: translateY(-1px);
+}
+
+.submitButton:active {
+  transform: translateY(0);
+}
+
+.submitButton:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Spinner */
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255,255,255,.35);
+  border-top: 2px solid #fff;
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ===== SWITCH AUTH (links entre as telas) ===== */
+.switchAuth {
+  text-align: center;
+  margin-top: 1rem;
+  color: var(--color-on-surface-variant);
+  font-size: .95rem;
+}
+
+.link {
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+/* ===== RESPONSIVO / A11Y ===== */
+@media (max-width: 520px) {
+  .authContainer {
+    padding: 1.75rem 1.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .submitButton,
+  .authForm input,
+  .authForm textarea {
+    transition: none !important;
+  }
+}
