@@ -15,9 +15,15 @@ import styles from '@/styles/NavigatorBar.module.css';
 export default function NavigatorBar() {
   const router = useRouter();
   const pathname = usePathname() ?? '/';
-  const { isLoggedIn, user: loggedUser, isBootstrapped, logout } = useAuth();
+  const {
+    isLoggedIn,
+    user: loggedUser,
+    isBootstrapped,
+    logout,
+    isStudent = false,
+    isEnterprise = false,
+  } = useAuth();
 
-  // === medir altura do header e escrever em --nav-h
   const headerRef = useRef<HTMLElement | null>(null);
 
   useLayoutEffect(() => {
@@ -30,10 +36,8 @@ export default function NavigatorBar() {
 
     setNavHeight();
 
-    // Atualiza em resize de janela
     window.addEventListener('resize', setNavHeight);
 
-    // Atualiza quando o próprio header muda de tamanho (menu abre, login muda, etc.)
     const ro = headerRef.current ? new ResizeObserver(setNavHeight) : null;
     if (headerRef.current && ro) ro.observe(headerRef.current);
 
@@ -91,18 +95,20 @@ export default function NavigatorBar() {
     setIsMenuOpen(false);
   }, [searchTerm, currentPath, router]);
 
-  const gotoProfile = useCallback(() => { router.push(path.profile()); }, [router]);
-  const gotoApplications = useCallback(() => { router.push('/applications'); }, [router]);
+  const closeAllMenus = useCallback(() => {
+    setIsUserMenuOpen(false);
+    setIsMenuOpen(false);
+  }, []);
 
   const doLogout = useCallback(async () => {
     try {
       await logout();
     } finally {
-      setIsUserMenuOpen(false);
+      closeAllMenus();
       router.push(path.home());
       router.refresh();
     }
-  }, [logout, router]);
+  }, [logout, router, closeAllMenus]);
 
   const isActive = (p: string, mode: 'equal' | 'startsWith' = 'equal') =>
     mode === 'equal' ? currentPath === p : currentPath.startsWith(p);
@@ -123,7 +129,7 @@ export default function NavigatorBar() {
     </span>
   );
 
-  const AuthSlot = () => {
+  const DesktopUserMenu = () => {
     if (!isBootstrapped) return <div style={{ width: 36, height: 36 }} aria-hidden />;
 
     if (!isLoggedIn) {
@@ -160,26 +166,42 @@ export default function NavigatorBar() {
           data-open={isUserMenuOpen || undefined}
           onKeyDown={(e) => e.key === 'Escape' && setIsUserMenuOpen(false)}
         >
-          <button
+          <Link
             role="menuitem"
+            href={path.profile()}
             className={styles.dropdownItem}
-            onClick={() => { setIsUserMenuOpen(false); gotoProfile(); }}
+            onClick={closeAllMenus}
           >
             <IconUser /> Perfil
-          </button>
+          </Link>
 
-          <button
-            role="menuitem"
-            className={styles.dropdownItem}
-            onClick={() => { setIsUserMenuOpen(false); gotoApplications(); }}
-          >
-            <IconClipboard /> Minhas candidaturas
-          </button>
+          {isStudent && (
+            <Link
+              role="menuitem"
+              href={path.applications()}
+              className={styles.dropdownItem}
+              onClick={closeAllMenus}
+            >
+              <IconClipboard /> Minhas candidaturas
+            </Link>
+          )}
+
+          {isEnterprise && (
+            <Link
+              role="menuitem"
+              href={path.companyJobs()}
+              className={styles.dropdownItem}
+              onClick={closeAllMenus}
+            >
+              <IconClipboard /> Minhas vagas
+            </Link>
+          )}
 
           <button
             role="menuitem"
             className={`${styles.dropdownItem} ${styles.menuItemDestructive}`}
             onClick={() => void doLogout()}
+            type="button"
           >
             <IconLogout /> Sair
           </button>
@@ -214,7 +236,7 @@ export default function NavigatorBar() {
 
           <ThemeToggle />
 
-          <AuthSlot />
+          <DesktopUserMenu />
 
           <button
             className={styles.mobileMenuToggle}
@@ -264,10 +286,39 @@ export default function NavigatorBar() {
             <Link href={path.home()} data-active={isActive(path.home()) || undefined} onClick={closeMobileMenu}>Início</Link>
             <Link href={path.about()} data-active={isActive(path.about(), 'startsWith') || undefined} onClick={closeMobileMenu}>Sobre</Link>
             <Link href={path.news()} data-active={isActive(path.news(), 'startsWith') || undefined} onClick={closeMobileMenu}>Notícias</Link>
+
+            <div style={{ borderTop: '1px solid var(--color-border)', margin: '.5rem 0' }} />
+
+            {!isBootstrapped ? null : !isLoggedIn ? (
+              <Link href={path.signin()} onClick={closeMobileMenu} className={styles.mobileAuthLink}>
+                Entrar
+              </Link>
+            ) : (
+              <>
+                <Link href={path.profile()} onClick={closeMobileMenu} className={styles.mobileAuthLink}>
+                  <IconUser /> Perfil
+                </Link>
+
+                {isStudent && (
+                  <Link href={path.applications()} onClick={closeMobileMenu} className={styles.mobileAuthLink}>
+                    <IconClipboard /> Minhas candidaturas
+                  </Link>
+                )}
+
+                {isEnterprise && (
+                  <Link href={path.companyJobs()} onClick={closeMobileMenu} className={styles.mobileAuthLink}>
+                    <IconClipboard /> Minhas vagas
+                  </Link>
+                )}
+
+                <button onClick={() => void doLogout()} className={`${styles.mobileAuthLink} ${styles.menuItemDestructive}`} type="button">
+                  <IconLogout /> Sair
+                </button>
+              </>
+            )}
           </nav>
 
           <div className={styles.mobileMenuFooter}>
-            <AuthSlot />
             <ThemeToggle />
           </div>
         </div>

@@ -10,8 +10,13 @@ export const path = {
 
   profileByUuid: (uuid: string) => `/profile/${uuid}` as const,
 
-  // helper - atualizar quando implementar a pesquisa //
   search: (q: string) => `/search?q=${encodeURIComponent(q)}` as const,
+
+  jobDetails: (uuid: string) => `/jobs/${uuid}` as const,
+
+  applications: () => '/applications' as const,
+
+  companyJobs: () => '/jobs' as const,
 } satisfies Record<string, (...args: any[]) => string>;
 
 export type AppPath = ReturnType<(typeof path)[keyof typeof path]>;
