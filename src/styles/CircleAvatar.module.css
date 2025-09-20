@@ -1,0 +1,26 @@
+.img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.circleAvatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  background: var(--color-surface-variant, var(--color-surface));
+  color: var(--color-on-surface-variant, var(--color-on-surface));
+  border: 2px solid var(--color-border-hover, var(--color-border, currentColor));
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.circleAvatar:hover,
+.circleAvatar:focus-visible {
+  border-color: var(--color-primary, var(--color-on-primary-container));
+}

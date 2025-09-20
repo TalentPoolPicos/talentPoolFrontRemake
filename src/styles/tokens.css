@@ -1,0 +1,77 @@
+:root,
+html[data-theme="light"] {
+  --background: 210 40% 96%;
+  --foreground: 0 0% 9%;
+  --surface: 210 30% 97%;
+  --on-surface: 200 25% 19%;
+  --on-surface-variant: 200 14% 39%;
+  --primary: 199 29% 43%;
+  --primary-foreground: 0 0% 100%;
+  --primary-container: 199 45% 90%;
+  --on-primary-container: 200 48% 12%;
+  --tertiary-container: 40 100% 70%;
+  --border: 204 22% 86%;
+  --border-hover: 204 16% 76%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 9%;
+  --secondary: 210 20% 95%;
+  --secondary-foreground: 0 0% 9%;
+  --muted: 210 20% 96%;
+  --muted-foreground: 210 10% 45%;
+  --accent: 210 20% 96%;
+  --accent-foreground: 0 0% 9%;
+  --destructive: 0 72% 50%;
+  --destructive-foreground: 0 0% 98%;
+  --input: 204 22% 86%;
+  --ring: 0 0% 9%;
+  --radius: 0.5rem;
+  --color-success: hsl(142 70% 45%);
+  --color-warning: hsl(45 95% 50%);
+}
+
+html[data-theme="dark"] {
+  --background: 210 20% 8%;
+  --foreground: 0 0% 96%;
+  --surface: 210 18% 11%;
+  --on-surface: 200 24% 90%;
+  --on-surface-variant: 204 16% 76%;
+  --primary: 199 31% 69%;
+  --primary-foreground: 210 25% 6%;
+  --primary-container: 203 23% 21%;
+  --on-primary-container: 198 30% 94%;
+  --tertiary-container: 40 100% 65%;
+  --border: 201 17% 20%;
+  --border-hover: 201 17% 28%;
+  --card: 210 18% 11%;
+  --card-foreground: 0 0% 98%;
+  --popover: 210 18% 11%;
+  --popover-foreground: 0 0% 98%;
+  --secondary: 210 12% 18%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 210 12% 18%;
+  --muted-foreground: 210 10% 64%;
+  --accent: 210 12% 18%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 45% 31%;
+  --destructive-foreground: 0 0% 98%;
+  --input: 201 17% 20%;
+  --ring: 0 0% 83%;
+}
+
+:root,
+html[data-theme="light"],
+html[data-theme="dark"] {
+  --color-primary: hsl(var(--primary));
+  --color-on-primary: hsl(var(--primary-foreground));
+  --color-background: hsl(var(--background));
+  --color-surface: hsl(var(--surface));
+  --color-on-surface: hsl(var(--on-surface));
+  --color-on-surface-variant: hsl(var(--on-surface-variant));
+  --color-primary-container: hsl(var(--primary-container));
+  --color-on-primary-container: hsl(var(--on-primary-container));
+  --color-tertiary-container: hsl(var(--tertiary-container));
+  --color-border: hsl(var(--border));
+  --color-border-hover: hsl(var(--border-hover));
+}
