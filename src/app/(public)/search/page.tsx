@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { Suspense, useEffect, useMemo, useState, useCallback } from 'react';
 import Image from 'next/image';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import LoadingBrand from '@/components/LoadingBrand';
@@ -32,7 +32,7 @@ const normalizeUser = (u: any): UserPreviewResponseDto => ({
   bannerUrl: pick(u.bannerUrl, u.banner_url, u.bannerURL),
 });
 
-export default function SearchPage() {
+function SearchPageInner() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -76,116 +76,128 @@ export default function SearchPage() {
   ];
   const availableTabs = baseTabs.filter((t) => t.count > 0);
 
-  const fetchAll = useCallback(async (term: string) => {
-    if (!term) {
-      setResults({
-        usersPeople: { items: [], total: 0 },
-        usersCompanies: { items: [], total: 0 },
-        jobs: { items: [], total: 0 },
-      });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const [people, companies, jobs] = await Promise.all([
-        searchService.users({
-          q: term,
-          role: ROLE_STUDENT,
-          limit: pageSize,
-          offset: (pageUsers - 1) * pageSize,
-        }),
-        searchService.users({
-          q: term,
-          role: ROLE_ENTERPRISE,
-          limit: pageSize,
-          offset: (pageCompanies - 1) * pageSize,
-        }),
-        searchService.jobs({
-          q: term,
-          limit: pageSize,
-          offset: (pageJobs - 1) * pageSize,
-        }),
-      ]);
-
-      setResults({
-        usersPeople: { items: (people.hits ?? []).map(normalizeUser), total: people.total ?? 0 },
-        usersCompanies: { items: (companies.hits ?? []).map(normalizeUser), total: companies.total ?? 0 },
-        jobs: { items: jobs.hits ?? [], total: jobs.total ?? 0 },
-      });
-    } catch {
-      setResults({
-        usersPeople: { items: [], total: 0 },
-        usersCompanies: { items: [], total: 0 },
-        jobs: { items: [], total: 0 },
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [pageUsers, pageCompanies, pageJobs]);
-
-  const fetchOne = useCallback(async (tab: TabKey, page: number) => {
-    if (!query) return;
-
-    try {
-      if (tab === 'users') {
-        const r = await searchService.users({
-          q: query,
-          role: ROLE_STUDENT,
-          limit: pageSize,
-          offset: (page - 1) * pageSize,
+  const fetchAll = useCallback(
+    async (term: string) => {
+      if (!term) {
+        setResults({
+          usersPeople: { items: [], total: 0 },
+          usersCompanies: { items: [], total: 0 },
+          jobs: { items: [], total: 0 },
         });
-        setResults((prev) => ({
-          ...prev,
-          usersPeople: { items: (r.hits ?? []).map(normalizeUser), total: r.total ?? 0 },
-        }));
-      } else if (tab === 'companies') {
-        const r = await searchService.users({
-          q: query,
-          role: ROLE_ENTERPRISE,
-          limit: pageSize,
-          offset: (page - 1) * pageSize,
-        });
-        setResults((prev) => ({
-          ...prev,
-          usersCompanies: { items: (r.hits ?? []).map(normalizeUser), total: r.total ?? 0 },
-        }));
-      } else {
-        const r = await searchService.jobs({
-          q: query,
-          limit: pageSize,
-          offset: (page - 1) * pageSize,
-        });
-        setResults((prev) => ({
-          ...prev,
-          jobs: { items: r.hits ?? [], total: r.total ?? 0 },
-        }));
+        return;
       }
-    } finally {
-    }
-  }, [query]);
 
-  const changeTab = useCallback((k: TabKey) => {
-    setActiveTab(k);
-    const sp = new URLSearchParams(searchParams ?? undefined);
-    sp.set('tab', k);
-    router.replace(`${pathname}?${sp.toString()}`, { scroll: false });
-  }, [router, pathname, searchParams]);
+      setLoading(true);
+      try {
+        const [people, companies, jobs] = await Promise.all([
+          searchService.users({
+            q: term,
+            role: ROLE_STUDENT,
+            limit: pageSize,
+            offset: (pageUsers - 1) * pageSize,
+          }),
+          searchService.users({
+            q: term,
+            role: ROLE_ENTERPRISE,
+            limit: pageSize,
+            offset: (pageCompanies - 1) * pageSize,
+          }),
+          searchService.jobs({
+            q: term,
+            limit: pageSize,
+            offset: (pageJobs - 1) * pageSize,
+          }),
+        ]);
 
-  const goToPage = useCallback((tab: TabKey, page: number) => {
-    if (tab === 'users') {
-      if (page < 1 || page > pages.users) return;
-      setPageUsers(page);
-    } else if (tab === 'companies') {
-      if (page < 1 || page > pages.companies) return;
-      setPageCompanies(page);
-    } else {
-      if (page < 1 || page > pages.jobs) return;
-      setPageJobs(page);
-    }
-    void fetchOne(tab, page);
-    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [pages.users, pages.companies, pages.jobs, fetchOne]);
+        setResults({
+          usersPeople: { items: (people.hits ?? []).map(normalizeUser), total: people.total ?? 0 },
+          usersCompanies: { items: (companies.hits ?? []).map(normalizeUser), total: companies.total ?? 0 },
+          jobs: { items: jobs.hits ?? [], total: jobs.total ?? 0 },
+        });
+      } catch {
+        setResults({
+          usersPeople: { items: [], total: 0 },
+          usersCompanies: { items: [], total: 0 },
+          jobs: { items: [], total: 0 },
+        });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [pageUsers, pageCompanies, pageJobs]
+  );
+
+  const fetchOne = useCallback(
+    async (tab: TabKey, page: number) => {
+      if (!query) return;
+
+      try {
+        if (tab === 'users') {
+          const r = await searchService.users({
+            q: query,
+            role: ROLE_STUDENT,
+            limit: pageSize,
+            offset: (page - 1) * pageSize,
+          });
+          setResults((prev) => ({
+            ...prev,
+            usersPeople: { items: (r.hits ?? []).map(normalizeUser), total: r.total ?? 0 },
+          }));
+        } else if (tab === 'companies') {
+          const r = await searchService.users({
+            q: query,
+            role: ROLE_ENTERPRISE,
+            limit: pageSize,
+            offset: (page - 1) * pageSize,
+          });
+          setResults((prev) => ({
+            ...prev,
+            usersCompanies: { items: (r.hits ?? []).map(normalizeUser), total: r.total ?? 0 },
+          }));
+        } else {
+          const r = await searchService.jobs({
+            q: query,
+            limit: pageSize,
+            offset: (page - 1) * pageSize,
+          });
+          setResults((prev) => ({
+            ...prev,
+            jobs: { items: r.hits ?? [], total: r.total ?? 0 },
+          }));
+        }
+      } finally {
+      }
+    },
+    [query]
+  );
+
+  const changeTab = useCallback(
+    (k: TabKey) => {
+      setActiveTab(k);
+      const sp = new URLSearchParams(searchParams ?? undefined);
+      sp.set('tab', k);
+      router.replace(`${pathname}?${sp.toString()}`, { scroll: false });
+    },
+    [router, pathname, searchParams]
+  );
+
+  const goToPage = useCallback(
+    (tab: TabKey, page: number) => {
+      if (tab === 'users') {
+        if (page < 1 || page > pages.users) return;
+        setPageUsers(page);
+      } else if (tab === 'companies') {
+        if (page < 1 || page > pages.companies) return;
+        setPageCompanies(page);
+      } else {
+        if (page < 1 || page > pages.jobs) return;
+        setPageJobs(page);
+      }
+      void fetchOne(tab, page);
+      if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    [pages.users, pages.companies, pages.jobs, fetchOne]
+  );
 
   useEffect(() => {
     const newQ = (searchParams.get('q') ?? '').trim();
@@ -338,5 +350,19 @@ export default function SearchPage() {
         )}
       </div>
     </LoadingBrand>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense
+      fallback={
+        <LoadingBrand loading>
+          <div style={{ minHeight: '40vh' }} />
+        </LoadingBrand>
+      }
+    >
+      <SearchPageInner />
+    </Suspense>
   );
 }

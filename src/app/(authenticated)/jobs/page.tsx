@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -29,7 +29,7 @@ type JobsResponse = {
 
 type StatusFilter = 'all' | 'draft' | 'published' | 'closed';
 
-export default function MyJobsPage() {
+function MyJobsPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isBootstrapped, isLoggedIn, isEnterprise } = useAuth();
@@ -203,5 +203,19 @@ export default function MyJobsPage() {
         )}
       </section>
     </LoadingBrand>
+  );
+}
+
+export default function MyJobsPage() {
+  return (
+    <Suspense
+      fallback={
+        <LoadingBrand loading>
+          <section style={{ minHeight: '40vh' }} />
+        </LoadingBrand>
+      }
+    >
+      <MyJobsPageInner />
+    </Suspense>
   );
 }

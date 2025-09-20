@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { Suspense, useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -24,7 +24,7 @@ type AppItem = JobApplicationStudentResponseDto & {
   };
 };
 
-export default function ApplicationsPage() {
+function ApplicationsPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -321,5 +321,19 @@ export default function ApplicationsPage() {
         )}
       </section>
     </LoadingBrand>
+  );
+}
+
+export default function ApplicationsPage() {
+  return (
+    <Suspense
+      fallback={
+        <LoadingBrand loading>
+          <section style={{ minHeight: '40vh' }} />
+        </LoadingBrand>
+      }
+    >
+      <ApplicationsPageInner />
+    </Suspense>
   );
 }
