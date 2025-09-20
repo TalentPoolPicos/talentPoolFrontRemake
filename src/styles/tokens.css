@@ -27,6 +27,8 @@ html[data-theme="light"] {
   --input: 204 22% 86%;
   --ring: 0 0% 9%;
   --radius: 0.5rem;
+  --color-success: hsl(142 70% 45%);
+  --color-warning: hsl(45 95% 50%);
 }
 
 html[data-theme="dark"] {
