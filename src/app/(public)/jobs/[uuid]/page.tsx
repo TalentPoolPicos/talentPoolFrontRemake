@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import LoadingBrand from '@/components/LoadingBrand';
 import { useAuth } from '@/hooks/useAuth';
 import { jobsService } from '@/services/jobs';
+import { searchService } from '@/services/search';
 import { path } from '@/lib/path';
 import type { JobResponseDto } from '@/types';
 import styles from '@/styles/JobDetails.module.css';
@@ -19,6 +20,12 @@ export default function JobDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [companyUserUuid, setCompanyUserUuid] = useState<string | null>(null);
+  const profileHref = useMemo(
+    () => (companyUserUuid ? path.profileByUuid(companyUserUuid) : null),
+    [companyUserUuid]
+  );
+
   const isPublished = useMemo(() => job?.status === 'published', [job?.status]);
   const isExpired = useMemo(() => {
     if (!job?.expiresAt) return false;
@@ -29,8 +36,6 @@ export default function JobDetailsPage() {
     }
   }, [job?.expiresAt]);
 
-  const canApply = isLoggedIn && isStudent && isPublished && !isExpired;
-
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -38,8 +43,9 @@ export default function JobDetailsPage() {
       setError(null);
       try {
         const data = await jobsService.getByUuid(uuid);
-        if (mounted) setJob(data);
-      } catch (e) {
+        if (!mounted) return;
+        setJob(data);
+      } catch {
         if (mounted) setError('Vaga não encontrada ou indisponível.');
       } finally {
         if (mounted) setLoading(false);
@@ -47,6 +53,31 @@ export default function JobDetailsPage() {
     })();
     return () => { mounted = false; };
   }, [uuid]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      if (!job?.company?.username) {
+        setCompanyUserUuid(null);
+        return;
+      }
+      try {
+        const res = await searchService.users({
+          q: job.company.username,
+          role: 'enterprise',
+          limit: 5,
+          offset: 0,
+        });
+        const hit = (res.hits || []).find(
+          h => h.username?.toLowerCase() === job.company.username.toLowerCase()
+        );
+        if (mounted) setCompanyUserUuid(hit?.uuid ?? null);
+      } catch {
+        if (mounted) setCompanyUserUuid(null);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [job?.company?.username]);
 
   const handleApplyClick = () => {
     if (!job) return;
@@ -81,15 +112,25 @@ export default function JobDetailsPage() {
             <h1 className={styles.title}>{job.title}</h1>
 
             <div className={styles.metaRow}>
-              <Link
-                href={path.profileByUuid(job.company.uuid)}
-                className={styles.company}
-                title={`Ver perfil de ${job.company.name ?? job.company.username}`}
-              >
-                {job.company.name ?? job.company.username}
-              </Link>
+              {profileHref ? (
+                <Link
+                  href={profileHref}
+                  className={styles.company}
+                  title={`Ver perfil de ${job.company.name ?? job.company.username}`}
+                >
+                  {job.company.name ?? job.company.username}
+                </Link>
+              ) : (
+                <span
+                  className={styles.company}
+                  aria-disabled="true"
+                  title="Perfil indisponível no momento"
+                >
+                  {job.company.name ?? job.company.username}
+                </span>
+              )}
 
-              <span className={`${styles.badge} ${styles[ `status_${job.status}` as const ]}`}>
+              <span className={`${styles.badge} ${styles[`status_${job.status}` as const]}`}>
                 {job.status === 'published' ? 'Publicada' :
                  job.status === 'draft' ? 'Rascunho' : 'Encerrada'}
               </span>
@@ -160,12 +201,18 @@ export default function JobDetailsPage() {
                     <strong className={styles.companyName}>
                       {job.company.name ?? job.company.username}
                     </strong>
-                    <Link
-                      href={path.profileByUuid(job.company.uuid)}
-                      className={styles.companyLink}
-                    >
-                      Ver perfil
-                    </Link>
+                    {profileHref ? (
+                      <Link
+                        href={profileHref}
+                        className={styles.companyLink}
+                      >
+                        Ver perfil
+                      </Link>
+                    ) : (
+                      <span className={styles.companyLink} aria-disabled="true" style={{ opacity: .6 }}>
+                        Ver perfil
+                      </span>
+                    )}
                   </div>
                 </div>
               </section>
