@@ -10,15 +10,10 @@ type Props = { job: JobPreviewDto };
 export default function JobCard({ job }: Props) {
   const router = useRouter();
 
-  const handleApply = (e: React.MouseEvent) => {
+  const handleDetail = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const applyUrl = (job as any)?.applyUrl as string | undefined;
-    if (applyUrl) {
-      window.open(applyUrl, '_blank', 'noopener,noreferrer');
-    } else {
-      router.push(`/jobs/${job.uuid}#apply`);
-    }
+    router.push(`/jobs/${job.uuid}`);
   };
 
   const companyName = job?.company?.name ?? 'Empresa';
@@ -57,8 +52,8 @@ export default function JobCard({ job }: Props) {
           </div>
 
           <div className={styles.cardActions}>
-            <button className={styles.applyButton} onClick={handleApply} type="button">
-              Aplicar
+            <button className={styles.applyButton} onClick={handleDetail} type="button">
+              Detalhar
             </button>
           </div>
         </div>
