@@ -212,11 +212,7 @@ export default function JobDetailsPage() {
           appliedAt: a.appliedAt,
           notes: a.notes ?? null,
           student: {
-            userUuid:
-              a?.student?.userUuid ??
-              a?.student?.user?.uuid ??
-              a?.userUuid ??
-              undefined,
+            userUuid: a?.student?.userUuid ?? a?.student?.user?.uuid ?? a?.userUuid ?? undefined,
             username: a?.student?.username ?? a?.username ?? undefined,
             name: a?.student?.name ?? a?.name ?? undefined,
             avatarUrl: a?.student?.avatarUrl ?? a?.avatarUrl ?? null,
@@ -336,10 +332,7 @@ export default function JobDetailsPage() {
         j
           ? {
             ...j,
-            totalApplications: Math.max(
-              0,
-              (j.totalApplications ?? 0) - 1
-            ),
+            totalApplications: Math.max(0, (j.totalApplications ?? 0) - 1),
           }
           : j
       );
@@ -487,8 +480,7 @@ export default function JobDetailsPage() {
                 <Link
                   href={profileHref}
                   className={styles.company}
-                  title={`Ver perfil de ${job.company.name ?? job.company.username
-                    }`}
+                  title={`Ver perfil de ${job.company.name ?? job.company.username}`}
                 >
                   {job.company.name ?? job.company.username}
                 </Link>
