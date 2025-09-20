@@ -1,0 +1,367 @@
+.navBar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: color-mix(in srgb, var(--color-surface) 90%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  padding: 0.75rem 1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--color-on-surface);
+}
+
+.navBar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--color-surface);
+  opacity: 0.08;
+  pointer-events: none;
+}
+
+.navBarContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+  text-align: left;
+  user-select: none;
+  color: var(--color-on-surface);
+}
+
+.small {
+  font-size: .75rem;
+  opacity: .9;
+}
+
+.strong {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.links {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.links a {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  color: var(--color-on-surface-variant);
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.links a:hover {
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+}
+
+.links a[data-active] {
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.links a[data-active]::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 2px;
+  background: var(--color-primary);
+  border-radius: 1px;
+}
+
+@media (min-width: 768px) {
+  .links {
+    display: flex;
+  }
+}
+
+.rightTools {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.btnOutline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1.2rem;
+  height: 36px;
+  border: 2px solid var(--color-on-primary-container);
+  color: var(--color-on-primary-container);
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background-color .25s, color .25s;
+}
+
+.btnOutline:hover {
+  background: var(--color-on-primary-container);
+  color: var(--color-primary-container);
+}
+
+.userDropdown {
+  position: relative;
+}
+
+.userTrigger {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.userTrigger:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px color-mix(in srgb, var(--color-border) 40%, transparent);
+  min-width: 240px;
+  z-index: 1200;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--color-on-surface);
+  padding: 6px;
+}
+
+.dropdownMenu[data-open] {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdownItem {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color .18s ease, transform .12s ease, color .18s ease;
+}
+
+.dropdownItem:hover {
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  color: var(--color-primary);
+}
+
+.menuItemDestructive {
+  color: #8B0000;
+  font-weight: 700;
+}
+
+.menuItemDestructive:hover {
+  background: color-mix(in srgb, #8B0000 15%, transparent);
+  color: #8B0000;
+}
+
+.menuIcon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform .18s ease;
+}
+
+.menuIcon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.dropdownItem:hover .menuIcon {
+  transform: scale(1.06);
+}
+
+.mobileMenuToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: transparent;
+  color: var(--color-on-surface);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.mobileMenuToggle:hover {
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  color: var(--color-primary);
+}
+
+.mobileMenuToggle:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  color: var(--color-primary);
+}
+
+@media (min-width: 768px) {
+  .mobileMenuToggle {
+    display: none;
+  }
+}
+
+.mobileMenu {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--color-background) 50%, transparent);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mobileMenu[data-open] {
+  opacity: 1;
+  visibility: visible;
+}
+
+.mobileMenuContent {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: min(400px, 85vw);
+  height: 100%;
+  background: var(--color-surface);
+  border-left: 1px solid var(--color-border);
+  box-shadow: -8px 0 32px color-mix(in srgb, var(--color-border) 40%, transparent);
+  padding: 2rem;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.mobileMenu[data-open] .mobileMenuContent {
+  transform: translateX(0);
+}
+
+.mobileMenuHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.mobileMenuClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: transparent;
+  color: var(--color-on-surface);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.mobileMenuClose:hover {
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  color: var(--color-primary);
+}
+
+.mobileMenuClose:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  color: var(--color-primary);
+}
+
+.mobileMenuLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mobileMenuLinks a {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  color: var(--color-on-surface);
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  min-height: 44px;
+  box-sizing: border-box;
+  font-size: 1.05rem;
+}
+
+.mobileMenuLinks a:hover {
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  color: var(--color-primary);
+}
+
+.mobileMenuLinks a[data-active] {
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+}
+
+.mobileMenuFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  margin-top: auto;
+}
+
+@media (prefers-contrast: high) {
+  .navBar {
+    border-bottom-width: 2px;
+  }
+
+  .links a:focus-visible,
+  .userTrigger:focus-visible,
+  .mobileMenuToggle:focus-visible,
+  .mobileMenuClose:focus-visible {
+    outline-width: 3px;
+  }
+}
