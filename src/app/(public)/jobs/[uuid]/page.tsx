@@ -2,14 +2,26 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+
 import LoadingBrand from '@/components/LoadingBrand';
+import CircleAvatar from '@/components/CircleAvatar';
+
 import { useAuth } from '@/hooks/useAuth';
 import { jobsService } from '@/services/jobs';
+import { meService } from '@/services/me';
 import { searchService } from '@/services/search';
 import { path } from '@/lib/path';
+
 import type { JobResponseDto } from '@/types';
 import styles from '@/styles/JobDetails.module.css';
-import Link from 'next/link';
+
+type StudentApplicationHit = {
+  uuid: string;
+  job?: { uuid: string };
+  status?: string;
+  appliedAt?: string;
+};
 
 export default function JobDetailsPage() {
   const { uuid } = useParams<{ uuid: string }>();
@@ -21,6 +33,12 @@ export default function JobDetailsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [companyUserUuid, setCompanyUserUuid] = useState<string | null>(null);
+  const [companyAvatarUrl, setCompanyAvatarUrl] = useState<string | null>(null);
+
+  const [myApplication, setMyApplication] = useState<StudentApplicationHit | null>(null);
+  const [applying, setApplying] = useState(false);
+  const [removing, setRemoving] = useState(false);
+
   const profileHref = useMemo(
     () => (companyUserUuid ? path.profileByUuid(companyUserUuid) : null),
     [companyUserUuid]
@@ -45,6 +63,7 @@ export default function JobDetailsPage() {
         const data = await jobsService.getByUuid(uuid);
         if (!mounted) return;
         setJob(data);
+        setCompanyAvatarUrl(data.company?.avatarUrl ?? null);
       } catch {
         if (mounted) setError('Vaga não encontrada ou indisponível.');
       } finally {
@@ -57,38 +76,141 @@ export default function JobDetailsPage() {
   useEffect(() => {
     let mounted = true;
     (async () => {
-      if (!job?.company?.username) {
-        setCompanyUserUuid(null);
+      const username = job?.company?.username;
+      if (!username) {
+        if (mounted) setCompanyUserUuid(null);
         return;
       }
       try {
         const res = await searchService.users({
-          q: job.company.username,
+          q: username,
           role: 'enterprise',
           limit: 5,
           offset: 0,
         });
         const hit = (res.hits || []).find(
-          h => h.username?.toLowerCase() === job.company.username.toLowerCase()
+          (h) => h.username?.toLowerCase() === username.toLowerCase()
         );
-        if (mounted) setCompanyUserUuid(hit?.uuid ?? null);
+        if (!mounted) return;
+        setCompanyUserUuid(hit?.uuid ?? null);
+        setCompanyAvatarUrl(hit?.avatarUrl ?? job?.company?.avatarUrl ?? null);
       } catch {
-        if (mounted) setCompanyUserUuid(null);
+        if (!mounted) return;
+        setCompanyUserUuid(null);
+        setCompanyAvatarUrl(job?.company?.avatarUrl ?? null);
       }
     })();
     return () => { mounted = false; };
-  }, [job?.company?.username]);
+  }, [job?.company?.username, job?.company?.avatarUrl]);
 
-  const handleApplyClick = () => {
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      if (!isLoggedIn || !isStudent || !job?.uuid) {
+        if (mounted) setMyApplication(null);
+        return;
+      }
+      try {
+        const pageSize = 50;
+        let offset = 0;
+        let found: StudentApplicationHit | null = null;
+        while (true) {
+          const resp: any = await meService.getMyApplications({ limit: pageSize, offset });
+          const items: StudentApplicationHit[] = resp?.applications ?? [];
+          const match = items.find((a) => a?.job?.uuid === job.uuid) ?? null;
+          if (match) {
+            found = match;
+            break;
+          }
+          const total: number = resp?.total ?? items.length;
+          offset += pageSize;
+          if (offset >= total || offset >= 1000) break;
+        }
+        if (mounted) setMyApplication(found);
+      } catch {
+        if (mounted) setMyApplication(null);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [isLoggedIn, isStudent, job?.uuid]);
+
+  const handleApply = async () => {
     if (!job) return;
     if (!isLoggedIn) {
       const next = `/jobs/${job.uuid}#apply`;
       router.push(`/signin?next=${encodeURIComponent(next)}`);
       return;
     }
-    const el = document.getElementById('apply');
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!isStudent) {
+      alert('Apenas estudantes podem se candidatar a vagas.');
+      return;
+    }
+    if (!isPublished || isExpired) return;
+
+    try {
+      setApplying(true);
+      const created = await meService.applyToJob(job.uuid, {});
+      setMyApplication({ uuid: created.uuid, job: { uuid: job.uuid } });
+      setJob((j) => (j ? { ...j, totalApplications: (j.totalApplications ?? 0) + 1 } : j));
+      alert('Candidatura enviada com sucesso!');
+    } catch (e: any) {
+      alert(e?.response?.data?.message ?? 'Não foi possível enviar a candidatura.');
+    } finally {
+      setApplying(false);
+    }
   };
+
+  const handleRemoveApplication = async () => {
+    if (!job || !myApplication?.uuid) return;
+    const ok = window.confirm('Deseja realmente remover sua candidatura?');
+    if (!ok) return;
+
+    try {
+      setRemoving(true);
+      await meService.removeApplication(myApplication.uuid);
+      setMyApplication(null);
+      setJob((j) => (j ? { ...j, totalApplications: Math.max(0, (j.totalApplications ?? 0) - 1) } : j));
+      alert('Candidatura removida.');
+    } catch (e: any) {
+      alert(e?.response?.data?.message ?? 'Não foi possível remover a candidatura.');
+    } finally {
+      setRemoving(false);
+    }
+  };
+
+  const handlePrimaryCta = () => {
+    if (!job) return;
+    if (!isLoggedIn) {
+      const next = `/jobs/${job.uuid}#apply`;
+      router.push(`/signin?next=${encodeURIComponent(next)}`);
+      return;
+    }
+    if (!isStudent) {
+      alert('Apenas estudantes podem se candidatar.');
+      return;
+    }
+    if (myApplication) {
+      void handleRemoveApplication();
+      return;
+    }
+    void handleApply();
+  };
+
+  const renderPrimaryCtaLabel = () => {
+    if (!isLoggedIn) return 'Entrar para aplicar';
+    if (!isStudent) return 'Disponível apenas para estudantes';
+    if (myApplication) return removing ? 'Removendo…' : 'Remover candidatura';
+    return applying ? 'Enviando…' : 'Aplicar agora';
+  };
+
+  const primaryCtaDisabled =
+    (!isPublished || isExpired) ||
+    (isLoggedIn && !isStudent) ||
+    applying ||
+    removing;
+
+  const primaryCtaClass =
+    myApplication ? styles.dangerBtn : styles.primaryBtn;
 
   return (
     <LoadingBrand loading={loading}>
@@ -142,12 +264,17 @@ export default function JobDetailsPage() {
 
             <div className={styles.ctaRow}>
               <button
-                className={styles.primaryBtn}
-                onClick={handleApplyClick}
-                disabled={!isPublished || isExpired}
-                title={!isPublished ? 'Vaga não está publicada' : (isExpired ? 'Vaga expirada' : 'Aplicar')}
+                className={primaryCtaClass}
+                onClick={handlePrimaryCta}
+                disabled={primaryCtaDisabled}
+                title={
+                  !isPublished ? 'Vaga não está publicada'
+                    : (isExpired ? 'Vaga expirada'
+                      : (isLoggedIn ? (myApplication ? 'Remover candidatura' : 'Aplicar') : 'Entrar para aplicar'))
+                }
+                type="button"
               >
-                {isLoggedIn ? 'Aplicar agora' : 'Entrar para aplicar'}
+                {renderPrimaryCtaLabel()}
               </button>
 
               <button
@@ -196,16 +323,20 @@ export default function JobDetailsPage() {
               <section className={styles.card}>
                 <h3 className={styles.cardTitle}>Empresa</h3>
                 <div className={styles.companyCard}>
-                  <div className={styles.companyAvatar} aria-hidden />
+                  <CircleAvatar
+                    avatarUrl={companyAvatarUrl ?? job.company.avatarUrl ?? null}
+                    username={job.company.username}
+                    alt={job.company.name ?? job.company.username}
+                    width={44}
+                    height={44}
+                    treatDefaultAsEmpty={false}
+                  />
                   <div className={styles.companyInfo}>
                     <strong className={styles.companyName}>
                       {job.company.name ?? job.company.username}
                     </strong>
                     {profileHref ? (
-                      <Link
-                        href={profileHref}
-                        className={styles.companyLink}
-                      >
+                      <Link href={profileHref} className={styles.companyLink}>
                         Ver perfil
                       </Link>
                     ) : (

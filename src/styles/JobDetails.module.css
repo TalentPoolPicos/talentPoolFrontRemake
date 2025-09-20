@@ -365,3 +365,37 @@
 .errorMsg {
   color: var(--color-on-surface-variant);
 }
+
+.dangerBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+
+  padding: .6rem 1rem;
+  border-radius: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  user-select: none;
+  border: 1px solid color-mix(in srgb, var(--color-destructive, hsl(0 72% 50%)) 35%, var(--color-border));
+  transition: transform .04s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
+
+  background: linear-gradient(180deg,
+      color-mix(in srgb, var(--color-destructive, hsl(0 72% 50%)) 16%, transparent) 0%,
+      color-mix(in srgb, var(--color-destructive, hsl(0 72% 50%)) 9%, transparent) 100%);
+  color: var(--color-destructive-foreground, #fff);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .12);
+}
+
+.dangerBtn:hover {
+  filter: brightness(.98) saturate(1.02);
+  background: color-mix(in srgb, var(--color-destructive, hsl(0 72% 50%)) 24%, transparent);
+}
+
+.dangerBtn:disabled {
+  cursor: not-allowed;
+  opacity: .65;
+  background: var(--color-outline-variant);
+  color: color-mix(in srgb, var(--color-on-surface) 70%, var(--color-surface));
+  box-shadow: none;
+}
