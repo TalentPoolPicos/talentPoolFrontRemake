@@ -1,0 +1,187 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 8%);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: .75rem;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.2;
+  font-weight: 900;
+  color: var(--color-on-surface);
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.badge {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  padding: .2rem .55rem;
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 800;
+  border: 1px solid var(--color-border);
+}
+
+.status_draft {
+  background: var(--secondary);
+  color: var(--color-on-surface);
+  border-color: var(--color-border);
+}
+
+.status_published {
+  background: var(--color-primary-container);
+  color: var(--color-on-primary-container);
+  border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
+}
+
+.status_closed {
+  background: color-mix(in srgb, var(--destructive) 18%, var(--color-surface));
+  color: var(--destructive-foreground);
+  border-color: color-mix(in srgb, var(--destructive) 38%, var(--color-border));
+}
+
+.body {
+  min-width: 0;
+}
+
+.kv {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .6rem .75rem;
+}
+
+.kv li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: .4rem .5rem;
+  min-width: 0;
+}
+
+.kv li>span {
+  color: var(--color-on-surface-variant);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.kv li>strong {
+  color: var(--color-on-surface);
+  font-weight: 900;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin-top: .25rem;
+  min-width: 0;
+}
+
+.iconBtn {
+  height: 38px;
+  width: 38px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform .04s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease, filter .2s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .08);
+}
+
+.icon {
+  font-size: 18px;
+}
+
+.primaryBtn {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.primaryBtn:hover {
+  filter: brightness(.98) saturate(1.03);
+}
+
+.secondaryBtn {
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  border-color: var(--color-border);
+}
+
+.secondaryBtn:hover {
+  background: var(--secondary);
+  border-color: var(--color-border-hover);
+}
+
+.publishBtn {
+  background: var(--color-primary-container);
+  color: var(--color-on-primary-container);
+  border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
+}
+
+.publishBtn:hover {
+  filter: brightness(.98) saturate(1.02);
+}
+
+.pauseBtn {
+  background: color-mix(in srgb, var(--color-tertiary-container) 20%, var(--color-border));
+  color: var(--color-on-surface);
+  border-color: color-mix(in srgb, var(--color-tertiary-container) 50%, var(--color-border));
+}
+
+html[data-theme="dark"] .pauseBtn {
+  color: var(--color-on-surface);
+  border-color: color-mix(in srgb, var(--color-tertiary-container) 55%, var(--color-border));
+}
+
+.pauseBtn:hover {
+  filter: brightness(.98) saturate(1.01);
+}
+
+.destructiveBtn {
+  background: color-mix(in srgb, var(--destructive) 18%, var(--color-surface));
+  color: var(--destructive-foreground);
+  border-color: color-mix(in srgb, var(--destructive) 38%, var(--color-border));
+}
+
+.destructiveBtn:hover {
+  background: color-mix(in srgb, var(--destructive) 26%, var(--color-surface));
+}
+
+.iconBtn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 380px) {
+  .kv {
+    grid-template-columns: 1fr;
+  }
+}
