@@ -1,7 +1,7 @@
 .navBar {
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 10;
   background: color-mix(in srgb, var(--color-surface) 90%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);

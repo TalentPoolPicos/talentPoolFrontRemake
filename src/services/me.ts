@@ -140,6 +140,11 @@ export const meService = {
     return data;
   },
 
+  async getMyJob(uuid: string): Promise<JobResponseDto> {
+    const { data } = await http.get<JobResponseDto>(`/me/enterprise/jobs/${uuid}`);
+    return data;
+  },
+
   async updateJobContent(uuid: string, body: UpdateJobContentDto): Promise<JobResponseDto> {
     const { data } = await http.put<JobResponseDto>(`/me/enterprise/jobs/${uuid}/content`, body);
     return data;

@@ -9,12 +9,14 @@ import MyJobCard from '@/components/MyJobCard';
 import { useAuth } from '@/hooks/useAuth';
 import { meService } from '@/services/me';
 
+import JobEditor from '@/components/JobEditor';
+
 import styles from '@/styles/MyJobs.module.css';
 
 type Job = {
   uuid: string;
   title: string;
-  status: 'draft' | 'published' | 'closed' | string;
+  status: 'draft' | 'published' | 'paused' | 'closed' | 'expired' | string;
   createdAt: string;
   updatedAt: string;
   publishedAt?: string | null;
@@ -27,7 +29,16 @@ type JobsResponse = {
   total: number;
 };
 
-type StatusFilter = 'all' | 'draft' | 'published' | 'closed';
+type StatusFilter = 'all' | 'draft' | 'published' | 'paused' | 'closed' | 'expired';
+
+const statusLabels: Record<StatusFilter, string> = {
+  all: 'Todas',
+  draft: 'Rascunhos',
+  published: 'Publicadas',
+  paused: 'Pausadas',
+  closed: 'Encerradas',
+  expired: 'Expiradas',
+};
 
 function MyJobsPageInner() {
   const router = useRouter();
@@ -37,6 +48,15 @@ function MyJobsPageInner() {
   const [loading, setLoading] = useState(true);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [total, setTotal] = useState(0);
+
+  const [showCreate, setShowCreate] = useState(false);
+  const [editUuid, setEditUuid] = useState<string | null>(null);
+
+  const closeEditor = () => {
+    setShowCreate(false);
+    setEditUuid(null);
+    void load();
+  };
 
   const [limit, setLimit] = useState<number>(() => {
     const p = searchParams?.get('limit');
@@ -50,7 +70,7 @@ function MyJobsPageInner() {
   });
   const [status, setStatus] = useState<StatusFilter>(() => {
     const s = (searchParams?.get('status') as StatusFilter) || 'all';
-    return (['all', 'draft', 'published', 'closed'] as const).includes(s) ? s : 'all';
+    return (['all', 'draft', 'published', 'paused', 'closed', 'expired'] as const).includes(s) ? s : 'all';
   });
 
   const page = useMemo(() => Math.floor(offset / limit) + 1, [offset, limit]);
@@ -107,15 +127,15 @@ function MyJobsPageInner() {
           <div className={styles.headerTop}>
             <h1 className={styles.title}>Minhas vagas</h1>
             <div className={styles.actions}>
-              <Link href="/jobs/new" className={styles.primaryBtn}>
+              <button className={styles.primaryBtn} onClick={() => setShowCreate(true)} type="button">
                 Nova vaga
-              </Link>
+              </button>
             </div>
           </div>
 
           <div className={styles.toolbar}>
             <div className={styles.filters} role="tablist" aria-label="Filtrar por status">
-              {(['all','draft','published','closed'] as StatusFilter[]).map((s) => (
+              {(['all', 'draft', 'published', 'paused', 'closed', 'expired'] as StatusFilter[]).map((s) => (
                 <button
                   key={s}
                   type="button"
@@ -124,7 +144,7 @@ function MyJobsPageInner() {
                   className={`${styles.filterBtn} ${status === s ? styles.filterBtn_active : ''}`}
                   onClick={() => onChangeStatus(s)}
                 >
-                  {s === 'all' ? 'Todas' : s === 'draft' ? 'Rascunho' : s === 'published' ? 'Publicadas' : 'Encerradas'}
+                  {statusLabels[s]}
                 </button>
               ))}
             </div>
@@ -175,6 +195,7 @@ function MyJobsPageInner() {
                 job={job}
                 ctaLabel="Ver página pública"
                 onView={() => router.push(`/jobs/${job.uuid}`)}
+                onEdit={() => setEditUuid(job.uuid)}
               />
             ))}
           </div>
@@ -199,6 +220,18 @@ function MyJobsPageInner() {
             >
               Próxima →
             </button>
+          </div>
+        )}
+
+        {(showCreate || editUuid) && (
+          <div className={styles.modalBackdrop} role="dialog" aria-modal="true">
+            <div className={styles.modalPanel}>
+              <JobEditor
+                mode={showCreate ? 'create' : 'edit'}
+                jobUuid={editUuid ?? undefined}
+                onClose={closeEditor}
+              />
+            </div>
           </div>
         )}
       </section>

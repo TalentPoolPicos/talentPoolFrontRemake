@@ -4,9 +4,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  FiEdit,
   FiPauseCircle,
-  FiSend,
   FiXCircle,
   FiUserCheck,
   FiUserX,
@@ -414,11 +412,6 @@ export default function JobDetailsPage() {
     }
   };
 
-  const onEdit = () => {
-    if (!job) return;
-    router.push(`/my/jobs/${job.uuid}/edit`);
-  };
-
   const setAppStatus = async (
     appUuid: string,
     status: 'approved' | 'rejected' | 'pending'
@@ -550,16 +543,6 @@ export default function JobDetailsPage() {
               </div>
             ) : (
               <div className={styles.ctaRow}>
-                {isDraft && (
-                  <button
-                    className={styles.primaryBtn}
-                    onClick={onPublish}
-                    type="button"
-                    title="Publicar"
-                  >
-                    <FiSend /> Publicar
-                  </button>
-                )}
                 {isPublished && (
                   <button
                     className={styles.secondaryBtn}
@@ -580,14 +563,6 @@ export default function JobDetailsPage() {
                     <FiXCircle /> Encerrar
                   </button>
                 )}
-                <button
-                  className={styles.secondaryBtn}
-                  onClick={onEdit}
-                  type="button"
-                  title="Editar"
-                >
-                  <FiEdit /> Editar vaga
-                </button>
               </div>
             )}
           </header>

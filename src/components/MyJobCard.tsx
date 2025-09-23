@@ -1,4 +1,3 @@
-// src/components/MyJobCard.tsx
 'use client';
 
 import { useState } from 'react';
@@ -10,7 +9,7 @@ import styles from '@/styles/MyJobCard.module.css';
 type Job = {
   uuid: string;
   title: string;
-  status: 'draft' | 'published' | 'closed' | string;
+  status: 'draft' | 'published' | 'paused' | 'closed' | 'expired' | string;
   createdAt: string;
   updatedAt: string;
   publishedAt?: string | null;
@@ -22,14 +21,25 @@ type Props = {
   job: Job;
   onView: () => void;
   ctaLabel?: string;
+  onEdit?: () => void;
 };
 
-export default function MyJobCard({ job, onView, ctaLabel = 'Ver detalhes' }: Props) {
+export default function MyJobCard({ job, onView, ctaLabel = 'Ver detalhes', onEdit }: Props) {
   const router = useRouter();
   const [localJob, setLocalJob] = useState<Job>(job);
   const [busy, setBusy] = useState<'publish' | 'pause' | 'close' | 'edit' | null>(null);
 
-  const status = (localJob.status as 'draft' | 'published' | 'closed') ?? 'draft';
+  const status = (localJob.status as Job['status']) ?? 'draft';
+  
+  const canEdit = status === 'draft';
+
+  const statusLabel: Record<Exclude<Job['status'], string>, string> = {
+    draft: 'Rascunho',
+    published: 'Publicada',
+    paused: 'Pausada',
+    closed: 'Encerrada',
+    expired: 'Expirada',
+  };
 
   const fmt = (iso?: string | null) => {
     if (!iso) return '—';
@@ -83,16 +93,20 @@ export default function MyJobCard({ job, onView, ctaLabel = 'Ver detalhes' }: Pr
   };
 
   const handleEdit = () => {
+    if (!canEdit) return;
+    if (onEdit) return onEdit();
     setBusy('edit');
     router.push(`/my/jobs/${localJob.uuid}/edit`);
   };
+
+  const isPublishedOrClosed = status === 'published' || status === 'closed';
 
   return (
     <article className={styles.card} title={localJob.title}>
       <header className={styles.header}>
         <h3 className={styles.title}>{localJob.title}</h3>
         <span className={`${styles.badge} ${styles[`status_${status}` as const]}`}>
-          {status === 'draft' ? 'Rascunho' : status === 'published' ? 'Publicada' : 'Encerrada'}
+          {statusLabel[status as keyof typeof statusLabel] ?? '—'}
         </span>
       </header>
 
@@ -118,26 +132,30 @@ export default function MyJobCard({ job, onView, ctaLabel = 'Ver detalhes' }: Pr
       </div>
 
       <footer className={styles.footer}>
-        <button
-          type="button"
-          className={`${styles.iconBtn} ${styles.primaryBtn}`}
-          onClick={onView}
-          title={ctaLabel}
-          aria-label={ctaLabel}
-        >
-          <FiEye className={styles.icon} />
-        </button>
+        {isPublishedOrClosed && (
+          <button
+            type="button"
+            className={`${styles.iconBtn} ${styles.primaryBtn}`}
+            onClick={onView}
+            title={ctaLabel}
+            aria-label={ctaLabel}
+          >
+            <FiEye className={styles.icon} />
+          </button>
+        )}
 
-        <button
-          type="button"
-          className={`${styles.iconBtn} ${styles.secondaryBtn}`}
-          onClick={handleEdit}
-          disabled={busy !== null}
-          title="Editar"
-          aria-label="Editar"
-        >
-          <FiEdit className={styles.icon} />
-        </button>
+        {status === 'draft' && (
+          <button
+            type="button"
+            className={`${styles.iconBtn} ${styles.secondaryBtn}`}
+            onClick={handleEdit}
+            disabled={busy !== null}
+            title="Editar"
+            aria-label="Editar"
+          >
+            <FiEdit className={styles.icon} />
+          </button>
+        )}
 
         {status === 'draft' && (
           <button

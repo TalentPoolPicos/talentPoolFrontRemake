@@ -13,6 +13,16 @@ import type { JobApplicationStudentResponseDto, JobPreviewDto } from '@/types';
 
 import styles from '@/styles/Applications.module.css';
 
+type ApplicationStatusType = 'pending' | 'reviewing' | 'approved' | 'rejected' | 'withdrawn';
+
+const APP_STATUS_LABEL: Record<ApplicationStatusType, string> = {
+  pending: 'Pendente',
+  reviewing: 'Em análise',
+  approved: 'Aprovada',
+  rejected: 'Rejeitada',
+  withdrawn: 'Retirada',
+};
+
 type AppItem = JobApplicationStudentResponseDto & {
   job: JobPreviewDto & {
     company?: {
@@ -98,7 +108,7 @@ function ApplicationsPageInner() {
             entries.push([username, hit.uuid]);
           }
         } catch {
-          // ignore
+
         }
       }
       if (entries.length) {
@@ -213,7 +223,7 @@ function ApplicationsPageInner() {
               const job = app.job;
               const company = job?.company;
               const companyName = company?.name || company?.username || 'Empresa';
-              const status = (app.status as 'pending' | 'approved' | 'rejected') ?? 'pending';
+              const status = (app.status as ApplicationStatusType) ?? 'pending';
               const profileUuid = company?.username ? enterpriseUserUuid[company.username] : undefined;
 
               return (
@@ -230,7 +240,7 @@ function ApplicationsPageInner() {
                         {job.publishedAt && (
                           <span className={styles.metaPill}>Publicada em {fmtDate(job.publishedAt)}</span>
                         )}
-                        <span className={styles.metaPill}>Candidatou-se {daysFrom(app.appliedAt)}</span>
+                        <span className={styles.metaPill}>Candidatou-se há {daysFrom(app.appliedAt)}</span>
                       </div>
 
                       <div className={styles.actions}>
@@ -283,15 +293,7 @@ function ApplicationsPageInner() {
                       <ul className={styles.kv}>
                         <li>
                           <span>Status</span>
-                          <strong>
-                            {status === 'pending'
-                              ? 'Pendente'
-                              : status === 'approved'
-                              ? 'Aprovada'
-                              : status === 'rejected'
-                              ? 'Rejeitada'
-                              : status}
-                          </strong>
+                          <strong>{APP_STATUS_LABEL[status] ?? status}</strong>
                         </li>
                         <li>
                           <span>Aplicação</span>
