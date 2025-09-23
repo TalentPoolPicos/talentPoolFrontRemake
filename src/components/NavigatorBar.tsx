@@ -12,6 +12,14 @@ import ThemeToggle from '@/components/ThemeToggle';
 import SearchBar from '@/components/SearchBar';
 import styles from '@/styles/NavigatorBar.module.css';
 
+import { meService } from '@/services/me';
+import { FiBell } from 'react-icons/fi';
+
+function pickUrl(...vals: Array<string | null | undefined>) {
+  const v = vals.find((x) => !!x && String(x).trim() !== '');
+  return v ?? undefined;
+}
+
 export default function NavigatorBar() {
   const router = useRouter();
   const pathname = usePathname() ?? '/';
@@ -50,8 +58,31 @@ export default function NavigatorBar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [unreadCount, setUnreadCount] = useState<number | null>(null);
 
   const currentPath = useMemo(() => pathname, [pathname]);
+
+  const fetchUnreadCount = useCallback(async () => {
+    if (!isLoggedIn) {
+      setUnreadCount(0);
+      return;
+    }
+    try {
+      const { unreadCount: count } = await meService.getUnreadNotificationsCount();
+      setUnreadCount(count);
+    } catch (err) {
+      console.error('Erro ao buscar notificações não lidas', err);
+      setUnreadCount(0);
+    }
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    fetchUnreadCount();
+    const interval = setInterval(() => {
+      fetchUnreadCount();
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [fetchUnreadCount]);
 
   useEffect(() => setIsUserMenuOpen(false), [pathname]);
 
@@ -151,7 +182,7 @@ export default function NavigatorBar() {
           type="button"
         >
           <CircleAvatar
-            avatarUrl={loggedUser?.profilePicture ?? (loggedUser as any)?.avatarUrl ?? null}
+            avatarUrl={pickUrl(loggedUser?.profilePicture, (loggedUser as any)?.avatarUrl)}
             username={loggedUser?.username}
             alt={loggedUser?.username ?? 'Avatar'}
             treatDefaultAsEmpty
@@ -234,6 +265,21 @@ export default function NavigatorBar() {
             ariaLabel="Pesquisar"
           />
 
+          {isLoggedIn && (
+            <Link
+              href={path.notifications()}
+              className={styles.notificationsBtn}
+              title="Notificações"
+              aria-label="Notificações"
+              data-active={isActive(path.notifications(), 'startsWith') || undefined}
+            >
+              <FiBell />
+              {unreadCount !== null && unreadCount > 0 && (
+                <span className={styles.unreadBadge}>{unreadCount > 99 ? '99+' : unreadCount}</span>
+              )}
+            </Link>
+          )}
+
           <ThemeToggle />
 
           <DesktopUserMenu />
@@ -286,6 +332,14 @@ export default function NavigatorBar() {
             <Link href={path.home()} data-active={isActive(path.home()) || undefined} onClick={closeMobileMenu}>Início</Link>
             <Link href={path.about()} data-active={isActive(path.about(), 'startsWith') || undefined} onClick={closeMobileMenu}>Sobre</Link>
             <Link href={path.news()} data-active={isActive(path.news(), 'startsWith') || undefined} onClick={closeMobileMenu}>Notícias</Link>
+            {isLoggedIn && (
+              <Link href={path.notifications()} data-active={isActive(path.notifications(), 'startsWith') || undefined} onClick={closeMobileMenu} className={styles.mobileAuthLink}>
+                <FiBell /> Notificações
+                {unreadCount !== null && unreadCount > 0 && (
+                  <span className={styles.unreadBadge}>{unreadCount > 99 ? '99+' : unreadCount}</span>
+                )}
+              </Link>
+            )}
 
             <div style={{ borderTop: '1px solid var(--color-border)', margin: '.5rem 0' }} />
 
@@ -310,7 +364,7 @@ export default function NavigatorBar() {
                     <IconClipboard /> Minhas vagas
                   </Link>
                 )}
-
+                
                 <button onClick={() => void doLogout()} className={`${styles.mobileAuthLink} ${styles.menuItemDestructive}`} type="button">
                   <IconLogout /> Sair
                 </button>

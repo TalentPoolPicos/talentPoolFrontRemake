@@ -17,6 +17,8 @@ export const path = {
   applications: () => '/applications' as const,
 
   companyJobs: () => '/jobs' as const,
+
+  notifications: () => '/notifications' as const,
 } satisfies Record<string, (...args: any[]) => string>;
 
 export type AppPath = ReturnType<(typeof path)[keyof typeof path]>;

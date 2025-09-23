@@ -365,3 +365,57 @@
     outline-width: 3px;
   }
 }
+
+.notificationsBtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  color: var(--color-on-surface);
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  border-radius: 8px;
+}
+
+.notificationsBtn:hover {
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  color: var(--color-primary);
+}
+
+.notificationsBtn[data-active] {
+  color: var(--color-primary);
+}
+
+.notificationsBtn svg {
+  width: 22px;
+  height: 22px;
+}
+
+.unreadBadge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: var(--color-destructive);
+  color: var(--color-destructive-foreground);
+  border-radius: 999px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  min-width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transform: scale(0.9);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.unreadBadge.animate-in {
+  transform: scale(1);
+}
