@@ -60,6 +60,18 @@
   border-color: color-mix(in srgb, var(--destructive) 38%, var(--color-border));
 }
 
+.status_paused {
+  background: #eef2ff;
+  color: #243b7b;
+  border: 1px solid #b6c4ff;
+}
+
+.status_expired {
+  background: #fde8ea;
+  color: #7a1f1f;
+  border: 1px solid #f5b5bd;
+}
+
 .body {
   min-width: 0;
 }
