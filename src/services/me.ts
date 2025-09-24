@@ -28,7 +28,8 @@ import type {
   UpdateApplicationStatusDto,
   AddApplicationNotesDto,
   ApplyToJobDto,
-  NotificationListDto
+  NotificationListDto,
+  MeRecommendationsResponse
 } from '@/types';
 import { toFormData } from '@/helpers/formData';
 
@@ -224,6 +225,13 @@ export const meService = {
 
   async getUnreadNotificationsCount(): Promise<{ unreadCount: number }> {
     const { data } = await http.get<{ unreadCount: number }>(`/me/notifications/unread-count`);
+    return data;
+  },
+
+   async getRecommendations(
+    params: { limit?: number; offset?: number } = {}
+  ): Promise<MeRecommendationsResponse> {
+    const { data } = await http.get<MeRecommendationsResponse>('/me/recomendations', { params });
     return data;
   },
 };

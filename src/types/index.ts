@@ -307,3 +307,41 @@ export type JobResponseDto = {
   totalApplications: number;
   hasApplied?: boolean;
 };
+
+export type EnterprisePublishedJob = {
+  uuid: string;
+  title: string;
+  status: 'published' | string;
+  createdAt: string;
+  publishedAt?: string | null;
+  company?: {
+    uuid: string;
+    username: string;
+    name: string;
+    avatarUrl?: string | null;
+  };
+};
+
+export type EnterprisePublishedJobsResponse = {
+  jobs: EnterprisePublishedJob[];
+  total: number;
+  limit: number;
+  offset: number;
+};
+
+export type MeRecommendationsUser = {
+  uuid: string;
+  username?: string;
+  name?: string;
+  avatarUrl?: string | null;
+};
+
+export type MeRecommendationsResponse = {
+  users: MeRecommendationsUser[];
+  total: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+  count: number;
+  offset: number;
+  limit: number;
+};

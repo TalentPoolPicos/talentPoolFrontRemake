@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import LoadingBrand from '@/components/LoadingBrand';
 import ImageUser from '@/components/ImageUser';
@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { usersService } from '@/services/users';
 import { meService } from '@/services/me';
 import { likesService } from '@/services/likes';
+import { jobsService } from '@/services/jobs';
 import { path } from '@/lib/path';
 import styles from '@/styles/Profile.module.css';
 import type {
@@ -57,6 +58,31 @@ function isPrivate(u: ProfileDto | null): u is UserProfileResponseDto {
   return !!u && 'stats' in u;
 }
 
+type Job = {
+  uuid: string;
+  title: string;
+  status: 'draft' | 'published' | 'paused' | 'closed' | 'expired' | string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt?: string | null;
+  expiresAt?: string | null;
+  totalApplications?: number | null;
+};
+
+const statusLabel: Record<string, string> = {
+  draft: 'Rascunho',
+  published: 'Publicada',
+  paused: 'Pausada',
+  closed: 'Encerrada',
+  expired: 'Expirada',
+};
+
+const byMostRecent = (a: Job, b: Job) => {
+  const aKey = new Date(a.publishedAt ?? a.updatedAt ?? a.createdAt).getTime();
+  const bKey = new Date(b.publishedAt ?? b.updatedAt ?? b.createdAt).getTime();
+  return bKey - aKey;
+};
+
 export default function ProfileView({ uuid }: { uuid?: string }) {
   const router = useRouter();
   const { isLoggedIn, user: loggedUser, isBootstrapped } = useAuth();
@@ -72,6 +98,21 @@ export default function ProfileView({ uuid }: { uuid?: string }) {
   const [loadingLike, setLoadingLike] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
 
+  // ---- Vagas (scroll infinito) ----
+  const [jobsLoading, setJobsLoading] = useState(false);
+  const [jobsError, setJobsError] = useState<string | null>(null);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [totalJobs, setTotalJobs] = useState(0);
+  const JOBS_LIMIT = 8;
+  const [jobsOffset, setJobsOffset] = useState(0);
+  const [jobsHasMore, setJobsHasMore] = useState(true);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  const [recsLoading, setRecsLoading] = useState(false);
+  const [recsError, setRecsError] = useState<string | null>(null);
+  const [recs, setRecs] = useState<Array<{ uuid: string; username?: string; name?: string; avatarUrl?: string | null }>>([]);
+  const [recsTotal, setRecsTotal] = useState(0);
+
   const isOwn = useMemo(
     () => !!user?.uuid && !!loggedUser?.uuid && user.uuid === loggedUser.uuid,
     [user?.uuid, loggedUser?.uuid]
@@ -83,6 +124,7 @@ export default function ProfileView({ uuid }: { uuid?: string }) {
     return Boolean(hasLattes || hasSocials);
   }, [user]);
 
+  // ---------- Perfil ----------
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -113,6 +155,11 @@ export default function ProfileView({ uuid }: { uuid?: string }) {
     }
   }, [uuid, isLoggedIn, isBootstrapped, router]);
 
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  // ---------- Likes ----------
   const fetchLikes = useCallback(async () => {
     if (!user?.uuid) return;
     setLikesLoading(true);
@@ -134,6 +181,28 @@ export default function ProfileView({ uuid }: { uuid?: string }) {
     }
   }, [user?.uuid]);
 
+  const fetchRecommendations = useCallback(async () => {
+    if (!isOwn) return; // recomendações são do /me
+    setRecsLoading(true);
+    setRecsError(null);
+    try {
+      const data = await meService.getRecommendations({ limit: 20, offset: 0 });
+      setRecs(data.users ?? []);
+      setRecsTotal(data.total ?? (data.users?.length ?? 0));
+    } catch (e) {
+      setRecs([]);
+      setRecsTotal(0);
+      setRecsError('Não foi possível carregar as recomendações.');
+    } finally {
+      setRecsLoading(false);
+    }
+  }, [isOwn]);
+
+  useEffect(() => {
+    // sempre que for seu próprio perfil, buscar recomendações
+    if (isOwn) void fetchRecommendations();
+  }, [isOwn, fetchRecommendations]);
+
   const checkIfLiked = useCallback(
     async (u?: ProfileDto | null) => {
       if (!u || !isLoggedIn || !loggedUser) return;
@@ -153,6 +222,14 @@ export default function ProfileView({ uuid }: { uuid?: string }) {
     [isLoggedIn, loggedUser]
   );
 
+  useEffect(() => {
+    if (user) {
+      void fetchLikes();
+      void checkIfLiked(user);
+    }
+  }, [user, fetchLikes, checkIfLiked]);
+
+  // ---------- Ações ----------
   const matchToggle = async () => {
     if (!isLoggedIn) {
       router.push(path.home());
@@ -191,16 +268,124 @@ export default function ProfileView({ uuid }: { uuid?: string }) {
 
   const goToEdit = () => router.push('/profile/edit');
 
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+  // ---------- Vagas (fetch + append) ----------
+  const resetJobs = useCallback(() => {
+    setJobs([]);
+    setTotalJobs(0);
+    setJobsOffset(0);
+    setJobsHasMore(true);
+    setJobsError(null);
+  }, []);
 
+  // Zera a lista sempre que muda o perfil ou muda o "isOwn"
   useEffect(() => {
-    if (user) {
-      void fetchLikes();
-      void checkIfLiked(user);
+    if (!user || user.role !== 'enterprise') {
+      resetJobs();
+      return;
     }
-  }, [user, fetchLikes, checkIfLiked]);
+    resetJobs();
+  }, [user?.uuid, user?.role, isOwn, resetJobs]);
+
+  const fetchNextJobs = useCallback(async () => {
+    if (!user || user.role !== 'enterprise') return;
+    if (jobsLoading || !jobsHasMore) return;
+
+    setJobsLoading(true);
+    setJobsError(null);
+    try {
+      const params = { limit: JOBS_LIMIT, offset: jobsOffset };
+
+      if (isOwn) {
+        // Empresa logada: pega T O D A S as vagas
+        const data = await meService.getMyJobs(params);
+        const page = (data.jobs ?? []) as Job[];
+
+        // Ordena por mais recentes (publicada, senão atualizada, senão criada)
+        page.sort(byMostRecent);
+
+        // Append sem duplicar
+        setJobs((prev) => {
+          const seen = new Set(prev.map((j) => j.uuid));
+          const merged = [...prev, ...page.filter((j) => !seen.has(j.uuid))].sort(byMostRecent);
+          return merged;
+        });
+        setTotalJobs((t) => (t === 0 ? data.total ?? page.length : t));
+        setJobsOffset((o) => o + (params.limit ?? 0));
+        setJobsHasMore((params.offset ?? 0) + (params.limit ?? 0) < (data.total ?? 0));
+      } else {
+        // Visitantes / outros usuários: apenas publicadas da empresa
+        const data = await jobsService.getEnterprisePublishedJobs(user.uuid, params);
+
+        const mapped: Job[] = (data.jobs ?? []).map((j) => ({
+          uuid: j.uuid,
+          title: j.title,
+          status: (j.status as any) ?? 'published',
+          createdAt: j.createdAt,
+          updatedAt: j.publishedAt ?? j.createdAt,
+          publishedAt: j.publishedAt ?? null,
+          expiresAt: null,
+          totalApplications: null,
+        }));
+
+        mapped.sort(byMostRecent);
+
+        setJobs((prev) => {
+          const seen = new Set(prev.map((j) => j.uuid));
+          const merged = [...prev, ...mapped.filter((j) => !seen.has(j.uuid))].sort(byMostRecent);
+          return merged;
+        });
+        setTotalJobs((t) => (t === 0 ? data.total ?? mapped.length : t));
+        setJobsOffset((o) => o + (params.limit ?? 0));
+        setJobsHasMore((params.offset ?? 0) + (params.limit ?? 0) < (data.total ?? 0));
+      }
+    } catch (e: any) {
+      console.error('Erro ao carregar vagas da empresa', e);
+      setJobsError('Não foi possível carregar as vagas.');
+      setJobsHasMore(false);
+    } finally {
+      setJobsLoading(false);
+    }
+  }, [user, isOwn, jobsLoading, jobsHasMore, jobsOffset]);
+
+  // Primeira carga de vagas quando existir empresa
+  useEffect(() => {
+    if (!user || user.role !== 'enterprise') return;
+    // Evita dupla chamada: só busca se lista vazia e hasMore true
+    if (jobs.length === 0 && jobsHasMore && !jobsLoading) {
+      void fetchNextJobs();
+    }
+  }, [user, jobs.length, jobsHasMore, jobsLoading, fetchNextJobs]);
+
+  // IntersectionObserver para scroll infinito
+  useEffect(() => {
+    if (!sentinelRef.current) return;
+    const el = sentinelRef.current;
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting) {
+          void fetchNextJobs();
+        }
+      },
+      { rootMargin: '600px 0px 600px 0px', threshold: 0.01 }
+    );
+
+    io.observe(el);
+    return () => {
+      io.unobserve(el);
+      io.disconnect();
+    };
+  }, [fetchNextJobs]);
+
+  const fmtDate = (iso?: string | null) => {
+    if (!iso) return '—';
+    try {
+      return new Date(iso).toLocaleDateString();
+    } catch {
+      return '—';
+    }
+  };
 
   const displayName = useMemo(() => {
     if (!user) return '';
@@ -226,7 +411,7 @@ export default function ProfileView({ uuid }: { uuid?: string }) {
 
                 {user?.username && <span className={styles.usernameAt}>@{user.username}</span>}
 
-                {isLoggedIn && !isOwn && loggedUser?.role !== user?.role && (
+                {isLoggedIn && !!user && !isOwn && loggedUser?.role !== user?.role && (
                   <button
                     type="button"
                     className={`${styles.matchIndicator} ${isLiked ? styles.liked : ''}`}
@@ -302,6 +487,82 @@ export default function ProfileView({ uuid }: { uuid?: string }) {
                 )}
               </div>
             </div>
+
+            {user?.role === 'enterprise' && (
+              <div className={`${styles.jobsCard}`}>
+                {jobsError && <div className={styles.jobsEmpty}>{jobsError}</div>}
+
+                <div className={styles.jobsGrid}>
+                  {jobs.map((j) => {
+                    const badge = statusLabel[j.status] ?? j.status;
+                    const dateRef = j.publishedAt ?? j.updatedAt ?? j.createdAt;
+                    const isPublished = j.status === 'published';
+
+                    return (
+                      <article key={j.uuid} className={styles.jobCard}>
+                        <header className={styles.jobCardHeader}>
+                          {isPublished ? (
+                            <a
+                              href={`/jobs/${j.uuid}`}
+                              className={styles.jobTitle}
+                              title={j.title}
+                            >
+                              {j.title}
+                            </a>
+                          ) : (
+                            <span
+                              className={`${styles.jobTitle} ${styles.jobTitleDisabled}`}
+                              aria-disabled="true"
+                              title="Apenas vagas publicadas podem ser abertas"
+                            >
+                              {j.title}
+                            </span>
+                          )}
+
+                          {isOwn && (
+                            <span
+                              className={`${styles.jobBadge} ${styles[`job_${j.status}` as const]}`}
+                              title={badge}
+                            >
+                              {badge}
+                            </span>
+                          )}
+                        </header>
+
+                        <div className={styles.jobMeta}>
+                          <span className={styles.jobDate}>
+                            {j.publishedAt ? 'Publicada: ' : 'Atualizada: '}
+                            {fmtDate(dateRef)}
+                          </span>
+                          {isOwn && typeof j.totalApplications === 'number' && (
+                            <span className={styles.jobApps}>
+                              {j.totalApplications}{' '}
+                              {j.totalApplications === 1 ? 'candidatura' : 'candidaturas'}
+                            </span>
+                          )}
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+
+                {jobsLoading && jobs.length === 0 && (
+                  <div className={styles.jobsEmpty}>Carregando vagas…</div>
+                )}
+                {!jobsLoading && jobs.length === 0 && !jobsError && (
+                  <div className={styles.jobsEmpty}>
+                    {isOwn
+                      ? 'Você ainda não possui vagas.'
+                      : 'Esta empresa ainda não possui vagas publicadas.'}
+                  </div>
+                )}
+
+                <div ref={sentinelRef} className={styles.jobsLoadMoreSentinel} aria-hidden />
+                {jobsLoading && jobs.length > 0 && (
+                  <div className={styles.jobsLoadingMore}>Carregando mais…</div>
+                )}
+              </div>
+            )}
           </section>
 
           <aside className={styles.sidebar}>

@@ -18,6 +18,8 @@ export default function LoginPage() {
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -79,17 +81,17 @@ export default function LoginPage() {
     } catch (err: unknown) {
       if (isAxiosError(err) && err.response) {
         const status = err.response.status;
-        if (status === 409) {
-          setError('Nome de usuário ou email já existe.');
-        } else if (status === 422) {
-          setError('Falha ao criar usuário (validação do servidor).');
-        } else if (status === 400) {
-          setError('Dados inválidos. Verifique e tente novamente.');
+        if (status === 401) {
+          setError('Usuário ou senha incorretos.');
+        } else if (status === 429) {
+          setError('Muitas tentativas. Tente novamente em instantes.');
+        } else if (status >= 500) {
+          setError('Erro no servidor ao entrar. Tente novamente mais tarde.');
         } else {
-          setError(`Erro ${status} ao cadastrar. Tente novamente mais tarde.`);
+          setError('Não foi possível entrar. Verifique seus dados e tente novamente.');
         }
       } else {
-        setError('Erro inesperado ao cadastrar. Verifique sua conexão e tente novamente.');
+        setError('Erro inesperado ao entrar. Verifique sua conexão e tente novamente.');
       }
     } finally {
       setLoading(false);
@@ -158,7 +160,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); if (error) clearError(); }}
                 onBlur={() => validateField('password')}
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 placeholder="Digite sua senha"
                 className={`${fieldErrors.password ? styles.inputError : ''}`}
                 disabled={loading}
@@ -166,6 +168,25 @@ export default function LoginPage() {
                 aria-invalid={!!fieldErrors.password}
                 aria-describedby={fieldErrors.password ? 'password-error' : undefined}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className={styles.revealBtn}
+                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                title={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+              >
+                {showPassword ? (
+                  <svg viewBox="0 0 24 24" className={styles.revealIcon} aria-hidden="true">
+                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Zm10 4a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/>
+                    <path d="M3 3l18 18" stroke="currentColor" strokeWidth="2" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" className={styles.revealIcon} aria-hidden="true">
+                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Zm10 4a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/>
+                  </svg>
+                )}
+              </button>
+
               {!fieldErrors.password && password.trim().length >= 6 && (
                 <svg className={styles.iconCheck} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                   <path

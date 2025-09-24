@@ -11,8 +11,8 @@ type FieldErrors = {
   username?: string;
   email?: string;
   password?: string;
+  confirmPassword?: string;
   name?: string;
-  description?: string;
 };
 
 export default function StudentSignUpPage() {
@@ -21,9 +21,13 @@ export default function StudentSignUpPage() {
 
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -38,21 +42,24 @@ export default function StudentSignUpPage() {
   const isFormValid = useMemo(() => {
     const u = username.trim();
     const e = email.trim();
-    const p = password.trim();
     const n = name.trim();
+    const p = password.trim();
+    const c = confirmPassword.trim();
 
     return (
       u.length >= 3 &&
       isValidEmail(e) &&
-      p.length >= 6 &&
       n.length >= 2 &&
+      p.length >= 6 &&
+      c.length >= 6 &&
+      p === c &&
       !fieldErrors.username &&
       !fieldErrors.email &&
       !fieldErrors.password &&
-      !fieldErrors.name &&
-      !fieldErrors.description
+      !fieldErrors.confirmPassword &&
+      !fieldErrors.name
     );
-  }, [username, email, password, name, fieldErrors]);
+  }, [username, email, name, password, confirmPassword, fieldErrors]);
 
   function validateField(field: keyof FieldErrors) {
     setFieldErrors((prev) => {
@@ -72,13 +79,6 @@ export default function StudentSignUpPage() {
         else delete next.email;
       }
 
-      if (field === 'password') {
-        const p = password;
-        if (!p.trim()) next.password = 'Senha é obrigatória';
-        else if (p.length < 6) next.password = 'Mínimo de 6 caracteres';
-        else delete next.password;
-      }
-
       if (field === 'name') {
         const n = name.trim();
         if (!n) next.name = 'Nome é obrigatório';
@@ -86,10 +86,27 @@ export default function StudentSignUpPage() {
         else delete next.name;
       }
 
-      if (field === 'description') {
-        const d = description.trim();
-        if (d && d.length > 500) next.description = 'Máximo de 500 caracteres';
-        else delete next.description;
+      if (field === 'password') {
+        const p = password.trim();
+        if (!p) next.password = 'Senha é obrigatória';
+        else if (p.length < 6) next.password = 'Mínimo de 6 caracteres';
+        else delete next.password;
+
+        // também revalida a confirmação ao mudar a senha
+        const c = confirmPassword.trim();
+        if (!c) next.confirmPassword = 'Confirmação de senha é obrigatória';
+        else if (p !== c) next.confirmPassword = 'As senhas não conferem';
+        else if (c.length < 6) next.confirmPassword = 'Mínimo de 6 caracteres';
+        else delete next.confirmPassword;
+      }
+
+      if (field === 'confirmPassword') {
+        const p = password.trim();
+        const c = confirmPassword.trim();
+        if (!c) next.confirmPassword = 'Confirmação de senha é obrigatória';
+        else if (c.length < 6) next.confirmPassword = 'Mínimo de 6 caracteres';
+        else if (p !== c) next.confirmPassword = 'As senhas não conferem';
+        else delete next.confirmPassword;
       }
 
       return next;
@@ -104,7 +121,7 @@ export default function StudentSignUpPage() {
     e.preventDefault();
     setError('');
 
-    (['username', 'email', 'password', 'name', 'description'] as (keyof FieldErrors)[])
+    (['username', 'email', 'name', 'password', 'confirmPassword'] as (keyof FieldErrors)[])
       .forEach(validateField);
 
     if (!isFormValid) {
@@ -117,9 +134,9 @@ export default function StudentSignUpPage() {
       await signUp({
         username: username.trim(),
         email: email.trim(),
-        password,
+        password: password.trim(),
         name: name.trim(),
-        description: description.trim() || undefined,
+        // descrição removida conforme solicitado
       });
 
       router.replace('/profile');
@@ -229,37 +246,6 @@ export default function StudentSignUpPage() {
           </div>
 
           <div className={styles.formGroup}>
-            <label htmlFor="password">Senha</label>
-            <div className={styles.inputWrapper}>
-              <input
-                id="password"
-                value={password}
-                onChange={(e) => { setPassword(e.target.value); if (error) clearError(); }}
-                onBlur={() => validateField('password')}
-                type="password"
-                placeholder="Digite sua senha"
-                className={`${fieldErrors.password ? styles.inputError : ''}`}
-                disabled={loading}
-                autoComplete="new-password"
-                aria-invalid={!!fieldErrors.password}
-                aria-describedby={fieldErrors.password ? 'password-error' : undefined}
-              />
-              {!fieldErrors.password && password.trim().length >= 6 && (
-                <svg className={styles.iconCheck} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                  <path
-                    fillRule="evenodd"
-                    d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 111.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              )}
-            </div>
-            {fieldErrors.password && (
-              <p id="password-error" className={styles.fieldError}>{fieldErrors.password}</p>
-            )}
-          </div>
-
-          <div className={styles.formGroup}>
             <label htmlFor="name">Nome completo</label>
             <div className={styles.inputWrapper}>
               <input
@@ -291,23 +277,105 @@ export default function StudentSignUpPage() {
           </div>
 
           <div className={styles.formGroup}>
-            <label htmlFor="description">Descrição (opcional)</label>
+            <label htmlFor="password">Senha</label>
             <div className={styles.inputWrapper}>
-              <textarea
-                id="description"
-                value={description}
-                onChange={(e) => { setDescription(e.target.value); if (error) clearError(); }}
-                onBlur={() => validateField('description')}
-                placeholder="Fale brevemente sobre você"
-                rows={4}
-                className={`${fieldErrors.description ? styles.inputError : ''} ${styles.textarea}`}
+              <input
+                id="password"
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); if (error) clearError(); }}
+                onBlur={() => validateField('password')}
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Digite sua senha"
+                className={`${fieldErrors.password ? styles.inputError : ''}`}
                 disabled={loading}
-                aria-invalid={!!fieldErrors.description}
-                aria-describedby={fieldErrors.description ? 'description-error' : undefined}
+                autoComplete="new-password"
+                aria-invalid={!!fieldErrors.password}
+                aria-describedby={fieldErrors.password ? 'password-error' : undefined}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className={styles.revealBtn}
+                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                title={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+              >
+                {showPassword ? (
+                  <svg viewBox="0 0 24 24" className={styles.revealIcon} aria-hidden="true">
+                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Zm10 4a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+                    <path d="M3 3l18 18" stroke="currentColor" strokeWidth="2" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" className={styles.revealIcon} aria-hidden="true">
+                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Zm10 4a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+                  </svg>
+                )}
+              </button>
+
+              {!fieldErrors.password && password.trim().length >= 6 && (
+                <svg className={styles.iconCheck} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path
+                    fillRule="evenodd"
+                    d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 111.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              )}
             </div>
-            {fieldErrors.description && (
-              <p id="description-error" className={styles.fieldError}>{fieldErrors.description}</p>
+            {fieldErrors.password && (
+              <p id="password-error" className={styles.fieldError}>{fieldErrors.password}</p>
+            )}
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="confirm">Confirmar senha</label>
+            <div className={styles.inputWrapper}>
+              <input
+                id="confirm"
+                value={confirmPassword}
+                onChange={(e) => { setConfirmPassword(e.target.value); if (error) clearError(); }}
+                onBlur={() => validateField('confirmPassword')}
+                type={showConfirm ? 'text' : 'password'}
+                placeholder="Repita sua senha"
+                className={`${fieldErrors.confirmPassword ? styles.inputError : ''}`}
+                disabled={loading}
+                autoComplete="new-password"
+                aria-invalid={!!fieldErrors.confirmPassword}
+                aria-describedby={fieldErrors.confirmPassword ? 'confirm-error' : undefined}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm((v) => !v)}
+                className={styles.revealBtn}
+                aria-label={showConfirm ? 'Ocultar senha' : 'Mostrar senha'}
+                title={showConfirm ? 'Ocultar senha' : 'Mostrar senha'}
+              >
+                {showConfirm ? (
+                  <svg viewBox="0 0 24 24" className={styles.revealIcon} aria-hidden="true">
+                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Zm10 4a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+                    <path d="M3 3l18 18" stroke="currentColor" strokeWidth="2" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" className={styles.revealIcon} aria-hidden="true">
+                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Zm10 4a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+                  </svg>
+                )}
+              </button>
+
+              {!fieldErrors.confirmPassword &&
+                confirmPassword.trim().length >= 6 &&
+                password.trim().length >= 6 &&
+                confirmPassword.trim() === password.trim() && (
+                  <svg className={styles.iconCheck} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 111.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                )}
+            </div>
+            {fieldErrors.confirmPassword && (
+              <p id="confirm-error" className={styles.fieldError}>{fieldErrors.confirmPassword}</p>
             )}
           </div>
 

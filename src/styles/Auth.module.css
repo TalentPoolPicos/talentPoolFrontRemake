@@ -1,16 +1,12 @@
-/* ===== PAGE WRAPPER: gradiente na tela toda ===== */
 .authWrapper {
   min-height: 100vh;
   display: grid;
   place-items: center;
   padding: 1rem;
-
   background:
-    linear-gradient(
-      135deg,
+    linear-gradient(135deg,
       color-mix(in srgb, var(--color-primary) 8%, transparent),
-      color-mix(in srgb, var(--color-primary) 3%, transparent)
-    );
+      color-mix(in srgb, var(--color-primary) 3%, transparent));
   position: relative;
   overflow: hidden;
 }
@@ -19,15 +15,12 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(
-    ellipse at top,
-    color-mix(in srgb, var(--color-primary) 6%, transparent),
-    transparent 70%
-  );
+  background: radial-gradient(ellipse at top,
+      color-mix(in srgb, var(--color-primary) 6%, transparent),
+      transparent 70%);
   pointer-events: none;
 }
 
-/* ===== CARD ===== */
 .authContainer {
   position: relative;
   width: 100%;
@@ -40,7 +33,6 @@
   box-shadow: 0 10px 30px color-mix(in srgb, var(--color-border) 45%, transparent);
 }
 
-/* ===== HEADER ===== */
 .authHeader {
   text-align: center;
   margin-bottom: 1.25rem;
@@ -60,7 +52,6 @@
   margin: 0;
 }
 
-/* ===== ERROR ALERT ===== */
 .errorAlert {
   background-color: var(--color-error-container, #fde7e9);
   border: 1px solid var(--color-error, #d14343);
@@ -93,7 +84,6 @@
   background: color-mix(in srgb, var(--color-error) 10%, transparent);
 }
 
-/* ===== FORM ===== */
 .authForm {
   margin-top: .25rem;
 }
@@ -140,7 +130,6 @@
   margin-top: .35rem;
 }
 
-/* Check “válido” */
 .iconCheck {
   position: absolute;
   right: .75rem;
@@ -151,7 +140,14 @@
   color: var(--color-success, #10b981);
 }
 
-/* ===== SUBMIT BUTTON ===== */
+.inputWrapper:has(.revealBtn) input {
+  padding-right: 2.75rem;
+}
+
+.inputWrapper:has(.revealBtn) .iconCheck {
+  right: 2.75rem;
+}
+
 .submitButton {
   width: 100%;
   padding: .9rem;
@@ -186,21 +182,21 @@
   box-shadow: none;
 }
 
-/* Spinner */
 .spinner {
   width: 1rem;
   height: 1rem;
-  border: 2px solid rgba(255,255,255,.35);
+  border: 2px solid rgba(255, 255, 255, .35);
   border-top: 2px solid #fff;
   border-radius: 50%;
   animation: spin .8s linear infinite;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-/* ===== SWITCH AUTH (links entre as telas) ===== */
 .switchAuth {
   text-align: center;
   margin-top: 1rem;
@@ -218,7 +214,6 @@
   text-decoration: underline;
 }
 
-/* ===== RESPONSIVO / A11Y ===== */
 @media (max-width: 520px) {
   .authContainer {
     padding: 1.75rem 1.25rem;
@@ -226,9 +221,51 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .submitButton,
   .authForm input,
   .authForm textarea {
     transition: none !important;
   }
+}
+
+.revealBtn {
+  position: absolute;
+  right: .5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-on-surface-variant);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: .25rem;
+  border-radius: 8px;
+  line-height: 0;
+}
+
+.revealBtn:hover {
+  color: var(--color-on-surface);
+  background: color-mix(in srgb, var(--color-on-surface-variant) 10%, transparent);
+}
+
+.revealBtn:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
+  outline-offset: 2px;
+}
+
+.revealIcon {
+  width: 20px;
+  height: 20px;
+  color: currentColor;
+}
+
+.revealIcon path,
+.revealIcon circle,
+.revealIcon line,
+.revealIcon polyline {
+  fill: currentColor;
+  stroke: currentColor;
 }

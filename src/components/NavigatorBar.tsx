@@ -13,7 +13,7 @@ import SearchBar from '@/components/SearchBar';
 import styles from '@/styles/NavigatorBar.module.css';
 
 import { meService } from '@/services/me';
-import { FiBell } from 'react-icons/fi';
+import { FiInbox, FiBell } from 'react-icons/fi';
 
 function pickUrl(...vals: Array<string | null | undefined>) {
   const v = vals.find((x) => !!x && String(x).trim() !== '');
@@ -60,8 +60,24 @@ export default function NavigatorBar() {
   const [searchTerm, setSearchTerm] = useState('');
   const [unreadCount, setUnreadCount] = useState<number | null>(null);
 
+  type MiniNotification = {
+    id: number;
+    title: string;
+    message: string;
+    type: string;
+    isRead: boolean;
+    createdAt: string;
+  };
+
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [miniNotifications, setMiniNotifications] = useState<MiniNotification[]>([]);
+  const [miniLoading, setMiniLoading] = useState(false);
+
+  const notifMenuRootRef = useRef<HTMLDivElement | null>(null);
+
   const currentPath = useMemo(() => pathname, [pathname]);
 
+  // Atualiza badge de não lidas (poll + uso direto)
   const fetchUnreadCount = useCallback(async () => {
     if (!isLoggedIn) {
       setUnreadCount(0);
@@ -89,14 +105,18 @@ export default function NavigatorBar() {
   const userMenuRootRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
-      if (!isUserMenuOpen) return;
-      if (!userMenuRootRef.current) return;
-      if (!userMenuRootRef.current.contains(e.target as Node)) setIsUserMenuOpen(false);
+      if (isUserMenuOpen && userMenuRootRef.current && !userMenuRootRef.current.contains(e.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+      if (isNotifOpen && notifMenuRootRef.current && !notifMenuRootRef.current.contains(e.target as Node)) {
+        setIsNotifOpen(false);
+      }
     }
     function onEsc(e: KeyboardEvent) {
       if (e.key === 'Escape') {
         setIsUserMenuOpen(false);
         setIsMenuOpen(false);
+        setIsNotifOpen(false);
       }
     }
     document.addEventListener('mousedown', onDocClick);
@@ -105,13 +125,47 @@ export default function NavigatorBar() {
       document.removeEventListener('mousedown', onDocClick);
       document.removeEventListener('keydown', onEsc);
     };
-  }, [isUserMenuOpen]);
+  }, [isUserMenuOpen, isNotifOpen]);
 
-  useEffect(() => {
-    if (isMenuOpen) document.body.style.overflow = 'hidden';
-    else document.body.style.overflow = '';
-    return () => { document.body.style.overflow = ''; };
-  }, [isMenuOpen]);
+  // Busca SOMENTE não lidas (mais recentes) para o dropdown e atualiza badge imediatamente
+  const fetchMiniNotifications = useCallback(async () => {
+    if (!isLoggedIn) {
+      setMiniNotifications([]);
+      setUnreadCount(0);
+      return;
+    }
+    setMiniLoading(true);
+    try {
+      const resp = await meService.getMyNotifications({ page: 1, limit: 5, unreadOnly: true });
+      const items = (resp?.notifications?.notifications ?? [])
+        .filter((n: MiniNotification) => !n.isRead)
+        .sort((a: MiniNotification, b: MiniNotification) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+
+      setMiniNotifications(items);
+      // Atualiza a badge com a contagem vinda da API (fallback para total/pagination/length)
+      const apiUnread = typeof resp?.unreadCount === 'number' ? resp.unreadCount
+        : typeof resp?.pagination?.total === 'number' ? resp.pagination.total
+        : items.length;
+      setUnreadCount(apiUnread);
+    } catch (err) {
+      console.error('Erro ao buscar resumo de notificações', err);
+      setMiniNotifications([]);
+      // fallback para manter coerência
+      await fetchUnreadCount();
+    } finally {
+      setMiniLoading(false);
+    }
+  }, [isLoggedIn, fetchUnreadCount]);
+
+  const toggleNotifMenu = async () => {
+    const next = !isNotifOpen;
+    setIsNotifOpen(next);
+    if (next) {
+      await fetchMiniNotifications();
+    }
+  };
 
   const openMobileMenu = () => setIsMenuOpen(true);
   const closeMobileMenu = () => setIsMenuOpen(false);
@@ -129,6 +183,7 @@ export default function NavigatorBar() {
   const closeAllMenus = useCallback(() => {
     setIsUserMenuOpen(false);
     setIsMenuOpen(false);
+    setIsNotifOpen(false);
   }, []);
 
   const doLogout = useCallback(async () => {
@@ -244,10 +299,12 @@ export default function NavigatorBar() {
   return (
     <header ref={headerRef} className={styles.navBar}>
       <div className={styles.navBarContainer}>
-        <div className={styles.brand} aria-label="Banco de Talentos">
-          <span className={styles.small}>Banco&nbsp;de</span>
-          <span className={styles.strong}>Talentos</span>
-        </div>
+        <Link href={path.home()} className={styles.logoLink}>
+          <div className={styles.brand} aria-label="Banco de Talentos">
+            <span className={styles.small}>Banco&nbsp;de</span>
+            <span className={styles.strong}>Talentos</span>
+          </div>
+        </Link>
 
         <nav className={styles.links} aria-label="primary">
           <Link href={path.home()} data-active={isActive(path.home()) || undefined}>Início</Link>
@@ -266,18 +323,61 @@ export default function NavigatorBar() {
           />
 
           {isLoggedIn && (
-            <Link
-              href={path.notifications()}
-              className={styles.notificationsBtn}
-              title="Notificações"
-              aria-label="Notificações"
-              data-active={isActive(path.notifications(), 'startsWith') || undefined}
-            >
-              <FiBell />
-              {unreadCount !== null && unreadCount > 0 && (
-                <span className={styles.unreadBadge}>{unreadCount > 99 ? '99+' : unreadCount}</span>
-              )}
-            </Link>
+            <div className={styles.notificationsRoot} ref={notifMenuRootRef}>
+              <button
+                className={styles.notificationsBtn}
+                title="Notificações"
+                aria-label="Notificações"
+                aria-haspopup="menu"
+                aria-expanded={isNotifOpen}
+                onClick={toggleNotifMenu}
+                type="button"
+              >
+                <FiBell />
+                {unreadCount !== null && unreadCount > 0 && (
+                  <span className={styles.unreadBadge}>{unreadCount > 99 ? '99+' : unreadCount}</span>
+                )}
+              </button>
+
+              <div
+                role="menu"
+                aria-label="Resumo de notificações"
+                className={styles.notificationsDropdown}
+                data-open={isNotifOpen || undefined}
+              >
+                <div className={styles.notificationsDropdownHeader}>
+                  <strong>Notificações</strong>
+                  <Link href={path.notifications()} className={styles.viewMoreLink} onClick={() => setIsNotifOpen(false)}>
+                    Ver mais
+                  </Link>
+                </div>
+
+                <div className={styles.notificationsDropdownBody}>
+                  {miniLoading ? (
+                    <div className={styles.notificationsDropdownEmpty}>Carregando…</div>
+                  ) : miniNotifications.length === 0 ? (
+                    <div className={styles.notificationsDropdownEmpty}>
+                      <FiInbox />
+                      <span>Nenhuma notificação</span>
+                    </div>
+                  ) : (
+                    <ul className={styles.notificationsDropdownList} role="list">
+                      {miniNotifications.slice(0, 5).map((n) => (
+                        <li key={n.id} className={styles.notificationsDropdownItem}>
+                          <div className={styles.notificationsDropdownItemMain}>
+                            <strong className={styles.notificationsDropdownItemTitle}>{n.title}</strong>
+                            <span className={styles.notificationsDropdownItemMsg}>{n.message}</span>
+                          </div>
+                          <small className={styles.notificationsDropdownItemDate}>
+                            {new Date(n.createdAt).toLocaleString()}
+                          </small>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
           )}
 
           <ThemeToggle />

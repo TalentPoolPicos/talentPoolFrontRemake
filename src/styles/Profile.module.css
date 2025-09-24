@@ -393,3 +393,236 @@
   font-size: 1.05rem;
   color: var(--color-error);
 }
+
+.jobsGrid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: .75rem;
+}
+
+@media (max-width: 800px) {
+  .jobsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.jobCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+  border: 1px solid var(--color-outline-variant);
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--color-surface) 96%, transparent),
+      color-mix(in srgb, var(--color-surface) 92%, transparent));
+  padding: .95rem 1rem .95rem 1.15rem;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 7%);
+  transition:
+    transform .18s ease,
+    box-shadow .22s ease,
+    border-color .18s ease,
+    background .22s ease,
+    filter .18s ease;
+  overflow: hidden;
+  will-change: transform, box-shadow;
+}
+
+.jobCard:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-border-hover);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
+  filter: saturate(1.02);
+}
+
+.jobCard::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--color-primary) 84%, transparent),
+      color-mix(in srgb, var(--color-primary) 64%, transparent));
+  border-top-left-radius: 14px;
+  border-bottom-left-radius: 14px;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-primary) 40%, transparent) inset,
+    0 3px 10px color-mix(in srgb, var(--color-primary) 22%, transparent);
+  transition: width .22s ease, box-shadow .22s ease;
+  will-change: width;
+}
+
+.jobCard:hover::before,
+.jobCard:focus-within::before {
+  width: 7px;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-primary) 52%, transparent) inset,
+    0 6px 16px color-mix(in srgb, var(--color-primary) 28%, transparent);
+}
+
+.jobCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .6rem .8rem;
+}
+
+.jobTitle {
+  color: var(--color-on-surface);
+  font-weight: 900;
+  text-decoration: none;
+  font-size: 1.08rem;
+  line-height: 1.25;
+  letter-spacing: .1px;
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jobTitle:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.jobMeta {
+  display: flex;
+  align-items: center;
+  gap: .65rem .9rem;
+  flex-wrap: wrap;
+  color: var(--color-on-surface-variant);
+  font-weight: 700;
+  font-size: .9rem;
+  letter-spacing: .1px;
+}
+
+.jobBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: .22rem .6rem;
+  font-size: .72rem;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--color-on-primary-container);
+  background: var(--color-primary-container);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 10%);
+}
+
+.jobCard:focus-within {
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .jobCard,
+  .jobCard::before,
+  .jobCard:hover,
+  .jobCard:focus-within::before {
+    transition: none !important;
+  }
+}
+
+.jobDate {
+  opacity: .9;
+}
+
+.jobApps {
+  opacity: .9;
+}
+
+.job_published {
+  background: color-mix(in srgb, var(--color-primary) 14%, var(--color-primary-container));
+}
+
+.job_draft {
+  background: color-mix(in srgb, #888 12%, var(--color-surface-variant));
+}
+
+.job_paused {
+  background: color-mix(in srgb, #ff9800 14%, var(--color-surface-variant));
+}
+
+.job_closed {
+  background: color-mix(in srgb, #f44336 14%, var(--color-surface-variant));
+}
+
+.job_expired {
+  background: color-mix(in srgb, #9e9e9e 14%, var(--color-surface-variant));
+}
+
+.jobsEmpty {
+  margin-top: .75rem;
+  text-align: center;
+  color: var(--color-on-surface-variant);
+  font-weight: 700;
+  border: 1px dashed var(--color-outline-variant);
+  background: var(--color-surface);
+  padding: 1rem;
+  border-radius: 12px;
+}
+
+.jobsLoadMoreSentinel {
+  width: 100%;
+  height: 1px;
+}
+
+.jobsLoadingMore,
+.jobsEndList {
+  text-align: center;
+  padding: .75rem .5rem .25rem;
+  color: var(--color-on-surface-variant);
+  font-weight: 700;
+  font-size: .9rem;
+}
+
+.jobCard:has(.jobBadge.job_published)::before {
+  background: linear-gradient(180deg,
+      color-mix(in srgb, #29a66a 85%, transparent),
+      color-mix(in srgb, #29a66a 62%, transparent));
+}
+
+.jobCard:has(.jobBadge.job_draft)::before {
+  background: linear-gradient(180deg,
+      color-mix(in srgb, #888 85%, transparent),
+      color-mix(in srgb, #888 62%, transparent));
+}
+
+.jobCard:has(.jobBadge.job_paused)::before {
+  background: linear-gradient(180deg,
+      color-mix(in srgb, #ff9800 85%, transparent),
+      color-mix(in srgb, #ff9800 62%, transparent));
+}
+
+.jobCard:has(.jobBadge.job_closed)::before {
+  background: linear-gradient(180deg,
+      color-mix(in srgb, #f44336 85%, transparent),
+      color-mix(in srgb, #f44336 62%, transparent));
+}
+
+.jobCard:has(.jobBadge.job_expired)::before {
+  background: linear-gradient(180deg,
+      color-mix(in srgb, #9e9e9e 85%, transparent),
+      color-mix(in srgb, #9e9e9e 62%, transparent));
+}
+
+.jobTitleDisabled {
+  color: var(--color-on-surface-variant);
+  pointer-events: none;
+  cursor: default;
+  text-decoration: none !important;
+}
+
+.jobCard:hover .jobTitleDisabled {
+  color: var(--color-on-surface-variant);
+  text-decoration: none;
+}

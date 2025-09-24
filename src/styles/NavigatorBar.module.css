@@ -419,3 +419,130 @@
 .unreadBadge.animate-in {
   transform: scale(1);
 }
+
+.notificationsRoot {
+  position: relative;
+}
+
+.notificationsDropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: min(360px, 92vw);
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--color-border) 40%, transparent);
+  z-index: 1300;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition: all .18s ease;
+  overflow: hidden;
+}
+
+.notificationsDropdown[data-open] {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.notificationsDropdownHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  padding: .65rem .8rem;
+  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface) 90%, transparent);
+}
+
+.notificationsDropdownHeader strong {
+  font-weight: 800;
+}
+
+.viewMoreLink {
+  text-decoration: none;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.viewMoreLink:hover {
+  text-decoration: underline;
+}
+
+.notificationsDropdownBody {
+  max-height: 360px;
+  overflow: auto;
+  padding: .4rem;
+}
+
+.notificationsDropdownList {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notificationsDropdownItem {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: .4rem .75rem;
+  padding: .6rem .65rem;
+  border-radius: 10px;
+  transition: background .15s ease;
+}
+
+.notificationsDropdownItem:hover {
+  background: color-mix(in srgb, var(--color-primary) 7%, transparent);
+}
+
+.notificationsDropdownItemMain {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.notificationsDropdownItemTitle {
+  font-weight: 700;
+  font-size: .95rem;
+  color: var(--color-on-surface);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notificationsDropdownItemMsg {
+  font-size: .85rem;
+  color: var(--color-on-surface-variant);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.notificationsDropdownItemDate {
+  color: var(--color-on-surface-variant);
+  font-size: .75rem;
+  white-space: nowrap;
+  align-self: start;
+}
+
+.notificationsDropdownEmpty {
+  padding: 1.2rem .8rem;
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  color: var(--color-on-surface-variant);
+}
+
+.notificationsDropdownEmpty svg {
+  width: 18px;
+  height: 18px;
+}
+

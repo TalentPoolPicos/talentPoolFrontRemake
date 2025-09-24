@@ -18,7 +18,7 @@ type Props = {
 
 type JobDraft = {
   title: string;
-  body: string;
+  body: string;       // agora: texto simples
   expiresAt: string;
 };
 
@@ -51,6 +51,16 @@ const toISOFromInputs = (date: string, time: string) => {
   }
 };
 
+// Normaliza a descrição para texto puro (remove tags e espaços “sobrando”)
+const normalizePlainText = (input: string) =>
+  input
+    .replace(/<[^>]*>/g, '')            // remove quaisquer tags HTML
+    .replace(/\r\n/g, '\n')             // normaliza quebras
+    .replace(/\u00A0/g, ' ')            // NBSP -> espaço
+    .replace(/[ \t]+\n/g, '\n')         // tira espaços antes da quebra
+    .replace(/\n{3,}/g, '\n\n')         // evita muitas linhas vazias seguidas
+    .trim();
+
 export default function JobEditor({ mode, jobUuid, onClose }: Props) {
   const router = useRouter();
   const { isBootstrapped, isLoggedIn, isEnterprise } = useAuth();
@@ -60,7 +70,7 @@ export default function JobEditor({ mode, jobUuid, onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const [title, setTitle] = useState('');
-  const [body, setBody] = useState('<p></p>');
+  const [body, setBody] = useState(''); // texto simples
   const [date, setDate] = useState('');
   const [time, setTime] = useState('23:59');
 
@@ -79,7 +89,8 @@ export default function JobEditor({ mode, jobUuid, onClose }: Props) {
           setError('Somente vagas em rascunho podem ser editadas.');
         }
         setTitle(job.title ?? '');
-        setBody(job.body ?? '<p></p>');
+        // Caso o backend ainda retorne HTML em body, normalizamos para texto puro
+        setBody(normalizePlainText(job.body ?? ''));
         const { date: d, time: t } = toLocalInputs(job.expiresAt ?? undefined);
         setDate(d);
         setTime(t || '23:59');
@@ -100,33 +111,33 @@ export default function JobEditor({ mode, jobUuid, onClose }: Props) {
     }
   }, [isBootstrapped, isLoggedIn, isEnterprise, isEdit, jobUuid, router]);
 
+  const normalizedBody = useMemo(() => normalizePlainText(body), [body]);
+
   const isValid = useMemo(() => {
     const titleOk = title.trim().length >= 4 && title.trim().length <= 140;
-    const bodyOk = body.trim().length > 0;
+    const bodyOk = normalizedBody.length > 0;
     const iso = toISOFromInputs(date, time);
     const expOk = !!iso && !Number.isNaN(new Date(iso).getTime());
     return titleOk && bodyOk && expOk;
-  }, [title, body, date, time]);
+  }, [title, normalizedBody, date, time]);
 
   const payload: JobDraft = useMemo(() => ({
     title: title.trim(),
-    body: body.trim(),
+    body: normalizedBody,              // envia apenas texto simples
     expiresAt: toISOFromInputs(date, time),
-  }), [title, body, date, time]);
+  }), [title, normalizedBody, date, time]);
 
   const onSubmit = useCallback(async () => {
     if (!isValid) return;
     setSaving(true); setError(null);
     try {
       if (isEdit && jobUuid) {
-        const updated = await meService.updateJobContent(jobUuid, payload as UpdateJobContentDto);
+        await meService.updateJobContent(jobUuid, payload as UpdateJobContentDto);
         alert('Vaga atualizada com sucesso!');
-        // Fechar o modal em vez de redirecionar
-        if (onClose) onClose(); 
+        if (onClose) onClose();
       } else {
-        const created = await meService.createJob(payload as CreateJobDto);
+        await meService.createJob(payload as CreateJobDto);
         alert('Vaga criada com sucesso!');
-        // Fechar o modal em vez de redirecionar
         if (onClose) onClose();
       }
     } catch (e: any) {
@@ -134,7 +145,7 @@ export default function JobEditor({ mode, jobUuid, onClose }: Props) {
     } finally {
       setSaving(false);
     }
-  }, [isEdit, jobUuid, payload, isValid, router, onClose]);
+  }, [isEdit, jobUuid, payload, isValid, onClose]);
 
   const onCancel = () => {
     if (onClose) return onClose();
@@ -164,7 +175,9 @@ export default function JobEditor({ mode, jobUuid, onClose }: Props) {
               ×
             </button>
           </header>
+
           {error && <div className={styles.error}>{error}</div>}
+
           <div className={styles.content}>
             <form
               className={styles.form}
@@ -180,20 +193,23 @@ export default function JobEditor({ mode, jobUuid, onClose }: Props) {
                   required
                 />
               </div>
+
               <div className={`${styles.field} ${styles.fullWidth}`}>
-                <label htmlFor="job-body">Descrição (HTML)</label>
+                <label htmlFor="job-body">Descrição (texto)</label>
                 <textarea
                   id="job-body"
                   value={body}
                   onChange={(e) => setBody(e.target.value)}
-                  placeholder="<p>Estamos procurando um desenvolvedor Frontend...</p>"
+                  placeholder="Descreva a vaga, requisitos, responsabilidades e benefícios…"
                   rows={8}
+                  spellCheck
                   required
                 />
                 <small className={styles.muted}>
-                  Cole HTML (ex.: do seu editor rich text). No detalhe da vaga será renderizado como HTML.
+                  Use apenas texto simples. Se colar conteúdo com formatação, iremos remover as marcações automaticamente.
                 </small>
               </div>
+
               <div className={styles.row}>
                 <div className={styles.field}>
                   <label htmlFor="job-date">Data de expiração</label>
@@ -217,6 +233,7 @@ export default function JobEditor({ mode, jobUuid, onClose }: Props) {
               </div>
             </form>
           </div>
+
           <footer className={styles.footer}>
             <button type="button" className={styles.ghostBtn} onClick={onCancel}>
               Cancelar

@@ -459,7 +459,7 @@ export default function JobDetailsPage() {
                 Início
               </Link>
               <span className={styles.bcSep}>/</span>
-              <Link href="/search?tab=jobs" className={styles.bcLink}>
+              <Link href={path.jobsPublished()} className={styles.bcLink}>
                 Vagas
               </Link>
               <span className={styles.bcSep}>/</span>
@@ -535,7 +535,7 @@ export default function JobDetailsPage() {
 
                 <button
                   className={styles.secondaryBtn}
-                  onClick={() => router.push('/search?tab=jobs')}
+                  onClick={() => router.push(path.jobsPublished())}
                   type="button"
                 >
                   Ver outras vagas
