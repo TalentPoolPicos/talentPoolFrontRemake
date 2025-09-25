@@ -20,6 +20,8 @@ import type {
   Role,
 } from '@/types';
 
+import LikesModal from '@/components/LikesModal';
+
 import type { IconType } from 'react-icons';
 import { FiMail, FiMapPin, FiDownload, FiLink, FiFileText, FiEdit } from 'react-icons/fi';
 import {
@@ -123,6 +125,19 @@ export default function ProfileView({ uuid }: { uuid?: string }) {
     const hasSocials = (user?.socialMedia?.length ?? 0) > 0;
     return Boolean(hasLattes || hasSocials);
   }, [user]);
+
+  // ---- Modal de curtidas ----
+  const [likesModalOpen, setLikesModalOpen] = useState(false);
+  const [likesModalType, setLikesModalType] = useState<'received' | 'sent'>('received');
+
+  const openLikesReceived = () => {
+    setLikesModalType('received');
+    setLikesModalOpen(true);
+  };
+  const openLikesSent = () => {
+    setLikesModalType('sent');
+    setLikesModalOpen(true);
+  };
 
   // ---------- Perfil ----------
   const refresh = useCallback(async () => {
@@ -658,7 +673,14 @@ export default function ProfileView({ uuid }: { uuid?: string }) {
             <div className={`${styles.card} ${styles.stats}`}>
               <h3 className={styles.cardTitle}>Estatísticas</h3>
 
-              <div className={styles.statItem} role="group" aria-label="Curtidas recebidas">
+              <div
+                className={styles.statItem}
+                role="button"
+                tabIndex={0}
+                aria-label="Abrir lista de curtidas recebidas"
+                onClick={openLikesReceived}
+                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openLikesReceived()}
+              >
                 <div className={styles.likesContainer}>
                   <span className={styles.statNumber}>
                     {initiators?.total ?? privateStats?.totalLikesReceived ?? 0}
@@ -679,7 +701,14 @@ export default function ProfileView({ uuid }: { uuid?: string }) {
                 <span className={styles.statLabel}>Curtidas recebidas</span>
               </div>
 
-              <div className={styles.statItem} role="group" aria-label="Curtidas enviadas">
+              <div
+                className={styles.statItem}
+                role="button"
+                tabIndex={0}
+                aria-label="Abrir lista de curtidas enviadas"
+                onClick={openLikesSent}
+                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openLikesSent()}
+              >
                 <div className={styles.likesContainer}>
                   <span className={styles.statNumber}>
                     {receivers?.total ?? privateStats?.totalLikesGiven ?? 0}
@@ -703,6 +732,13 @@ export default function ProfileView({ uuid }: { uuid?: string }) {
           </aside>
         </div>
       )}
+
+      <LikesModal
+        userUuid={user?.uuid}
+        type={likesModalType}
+        isOpen={likesModalOpen}
+        onClose={() => setLikesModalOpen(false)}
+      />
     </LoadingBrand>
   );
 }

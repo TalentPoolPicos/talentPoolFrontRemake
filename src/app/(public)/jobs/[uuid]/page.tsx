@@ -20,6 +20,7 @@ import { jobsService } from '@/services/jobs';
 import { meService } from '@/services/me';
 import { searchService } from '@/services/search';
 import { path } from '@/lib/path';
+import { markdownToHtml, sanitizeHtml } from '@/helpers/markdown';
 
 import type { JobResponseDto, ApplicationListResponseDto } from '@/types';
 import styles from '@/styles/JobDetails.module.css';
@@ -269,10 +270,8 @@ export default function JobDetailsPage() {
         setApplications((list) =>
           list.map((a) => {
             const uname = a.student?.username?.toLowerCase();
-            if (!uname) return a;
-            const patch = updates[uname];
+            const patch = uname ? updates[uname] : undefined;
             if (!patch) return a;
-
             return {
               ...a,
               student: {
@@ -288,6 +287,12 @@ export default function JobDetailsPage() {
 
     void run();
   }, [applications, isOwner]);
+
+  const jobBodyHtml = useMemo(() => {
+    const md = job?.body ?? '';
+    const html = markdownToHtml(md);   // Markdown -> HTML
+    return sanitizeHtml(html);         // Sanitiza (whitelist)
+  }, [job?.body]);
 
   const handleApply = async () => {
     if (!job) return;
@@ -573,7 +578,7 @@ export default function JobDetailsPage() {
                 <h2 className={styles.blockTitle}>Descrição da vaga</h2>
                 <div
                   className={styles.jobBody}
-                  dangerouslySetInnerHTML={{ __html: job.body }}
+                  dangerouslySetInnerHTML={{ __html: jobBodyHtml }}
                 />
               </section>
 
@@ -618,10 +623,10 @@ export default function JobDetailsPage() {
                             <div className={styles.appActions} role="group" aria-label="Ações da candidatura">
                               <span
                                 className={`${styles.badge} ${a.status === 'approved'
-                                  ? styles.status_published
-                                  : a.status === 'rejected'
-                                    ? styles.status_closed
-                                    : styles.status_draft
+                                    ? styles.status_published
+                                    : a.status === 'rejected'
+                                      ? styles.status_closed
+                                      : styles.status_draft
                                   }`}
                                 title="Status da candidatura"
                               >

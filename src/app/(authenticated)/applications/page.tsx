@@ -34,6 +34,14 @@ type AppItem = JobApplicationStudentResponseDto & {
   };
 };
 
+// Tipo para dados do usuário da empresa
+type EnterpriseUserData = {
+  uuid: string;
+  username?: string;
+  name?: string;
+  avatarUrl?: string | null;
+};
+
 function ApplicationsPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -54,8 +62,9 @@ function ApplicationsPageInner() {
     return Number.isFinite(n) && n >= 0 ? n : 0;
   });
 
-  const [enterpriseUserUuid, setEnterpriseUserUuid] = useState<Record<string, string>>({});
-  const uuidCache = useRef<Map<string, string>>(new Map());
+  // Mudança: armazenar dados completos do usuário da empresa
+  const [enterpriseUsers, setEnterpriseUsers] = useState<Record<string, EnterpriseUserData>>({});
+  const userCache = useRef<Map<string, EnterpriseUserData>>(new Map());
 
   const page = useMemo(() => Math.floor(offset / limit) + 1, [offset, limit]);
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / limit)), [total, limit]);
@@ -87,34 +96,55 @@ function ApplicationsPageInner() {
     void load();
   }, [load]);
 
+  // Buscar dados completos dos usuários das empresas
   useEffect(() => {
     const usernames = Array.from(
       new Set(
         apps
           .map((a) => a.job?.company?.username?.trim())
-          .filter((u): u is string => !!u && !uuidCache.current.has(u))
+          .filter((u): u is string => !!u && !userCache.current.has(u))
       )
     );
     if (usernames.length === 0) return;
 
     (async () => {
-      const entries: Array<[string, string]> = [];
+      const userData: Array<[string, EnterpriseUserData]> = [];
+      
       for (const username of usernames) {
         try {
-          const res = await searchService.users({ q: username, role: 'enterprise', limit: 5, offset: 0 });
-          const hit = (res.hits || []).find((h) => h.username?.toLowerCase() === username.toLowerCase());
+          const res = await searchService.users({ 
+            q: username, 
+            role: 'enterprise', 
+            limit: 5, 
+            offset: 0 
+          });
+          
+          const hit = (res.hits || []).find((h) => 
+            h.username?.toLowerCase() === username.toLowerCase()
+          );
+          
           if (hit?.uuid) {
-            uuidCache.current.set(username, hit.uuid);
-            entries.push([username, hit.uuid]);
+            const enterpriseUserData: EnterpriseUserData = {
+              uuid: hit.uuid,
+              username: hit.username,
+              name: hit.name,
+              avatarUrl: hit.avatarUrl // Avatar do usuário, não da empresa
+            };
+            
+            userCache.current.set(username, enterpriseUserData);
+            userData.push([username, enterpriseUserData]);
           }
         } catch {
-
+          // Silently fail
         }
       }
-      if (entries.length) {
-        setEnterpriseUserUuid((prev) => {
+      
+      if (userData.length) {
+        setEnterpriseUsers((prev) => {
           const next = { ...prev };
-          for (const [u, id] of entries) next[u] = id;
+          for (const [username, data] of userData) {
+            next[username] = data;
+          }
           return next;
         });
       }
@@ -224,7 +254,10 @@ function ApplicationsPageInner() {
               const company = job?.company;
               const companyName = company?.name || company?.username || 'Empresa';
               const status = (app.status as ApplicationStatusType) ?? 'pending';
-              const profileUuid = company?.username ? enterpriseUserUuid[company.username] : undefined;
+              
+              // Buscar dados do usuário da empresa
+              const enterpriseUser = company?.username ? enterpriseUsers[company.username] : undefined;
+              const profileUuid = enterpriseUser?.uuid;
 
               return (
                 <li key={app.uuid} className={styles.card}>
@@ -263,7 +296,7 @@ function ApplicationsPageInner() {
                     <div className={styles.colCompany}>
                       <div className={styles.companyCard}>
                         <CircleAvatar
-                          avatarUrl={company?.avatarUrl ?? null}
+                          avatarUrl={enterpriseUser?.avatarUrl ?? undefined} // Avatar do usuário da empresa
                           username={company?.username}
                           alt={companyName}
                           width={44}
