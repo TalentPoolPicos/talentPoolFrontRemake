@@ -626,3 +626,5 @@
   color: var(--color-on-surface-variant);
   text-decoration: none;
 }
+
+.statItem[role="button"] { cursor: pointer; }
