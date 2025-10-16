@@ -137,17 +137,15 @@ export default function NavigatorBar() {
     setMiniLoading(true);
     try {
       const resp = await meService.getMyNotifications({ page: 1, limit: 5, unreadOnly: true });
-      const items = (resp?.notifications?.notifications ?? [])
+      const list = Array.isArray(resp?.notifications) ? resp.notifications : [];
+      const items = list
         .filter((n: MiniNotification) => !n.isRead)
-        .sort((a: MiniNotification, b: MiniNotification) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
       setMiniNotifications(items);
-      // Atualiza a badge com a contagem vinda da API (fallback para total/pagination/length)
       const apiUnread = typeof resp?.unreadCount === 'number' ? resp.unreadCount
         : typeof resp?.pagination?.total === 'number' ? resp.pagination.total
-        : items.length;
+          : items.length;
       setUnreadCount(apiUnread);
     } catch (err) {
       console.error('Erro ao buscar resumo de notificações', err);
@@ -464,7 +462,7 @@ export default function NavigatorBar() {
                     <IconClipboard /> Minhas vagas
                   </Link>
                 )}
-                
+
                 <button onClick={() => void doLogout()} className={`${styles.mobileAuthLink} ${styles.menuItemDestructive}`} type="button">
                   <IconLogout /> Sair
                 </button>

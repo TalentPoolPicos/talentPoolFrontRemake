@@ -179,10 +179,10 @@ export type NotificationItem = {
 };
 
 export type NotificationListDto = {
-  notifications: { notifications: NotificationItem[] };
+  notifications: NotificationItem[];
   unreadCount: number;
   stats: { total: number; unread: number; byType: Record<string, number> };
-  pagination: { page: number; limit: number; total: number };
+  pagination: { page: number; limit: number; total: number; hasMore: boolean };
 };
 
 export type User = {

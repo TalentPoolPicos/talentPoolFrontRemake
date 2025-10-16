@@ -16,6 +16,9 @@ import {
   FiMessageSquare,
   FiInbox,
 } from 'react-icons/fi';
+
+import type { NotificationItem as ApiNotification, NotificationListDto } from '@/types';
+
 import styles from '@/styles/NotificationsPage.module.css';
 
 enum NotificationType {
@@ -32,7 +35,7 @@ enum NotificationType {
   custom = 'custom',
 }
 
-const notificationIcons: Record<NotificationType, React.FC<any>> = {
+const notificationIcons: Partial<Record<string, React.FC<any>>> = {
   [NotificationType.job_application_received]: FiBriefcase,
   [NotificationType.job_application_updated]: FiBriefcase,
   [NotificationType.job_published]: FiBriefcase,
@@ -46,26 +49,6 @@ const notificationIcons: Record<NotificationType, React.FC<any>> = {
   [NotificationType.custom]: FiMessageSquare,
 };
 
-type NotificationItem = {
-  id: number;
-  title: string;
-  message: string;
-  type: keyof typeof NotificationType;
-  isRead: boolean;
-  createdAt: string;
-  readAt: string | null;
-};
-
-type NotificationsResponse = {
-  notifications: { notifications: NotificationItem[] };
-  unreadCount: number;
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-  };
-};
-
 type NotificationFilter = 'unread' | 'read';
 
 const notificationStatusLabels: Record<NotificationFilter, string> = {
@@ -74,7 +57,7 @@ const notificationStatusLabels: Record<NotificationFilter, string> = {
 };
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [notifications, setNotifications] = useState<ApiNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'unread' | 'read'>('unread');
@@ -90,8 +73,9 @@ export default function NotificationsPage() {
     setLoading(true);
     try {
       const params: any = { limit, offset };
-      const { notifications: notifData, unreadCount: countData, pagination } = await meService.getMyNotifications(params);
-      setNotifications(notifData.notifications as NotificationItem[]);
+      const { notifications: list, unreadCount: countData, pagination } =
+        await meService.getMyNotifications(params);
+      setNotifications(Array.isArray(list) ? (list as ApiNotification[]) : []);
       setUnreadCount(countData);
       setTotal(pagination.total);
     } catch (error) {
@@ -203,7 +187,7 @@ export default function NotificationsPage() {
             </div>
           ) : (
             displayedNotifications.map((notification) => {
-              const IconComponent = notificationIcons[notification.type as NotificationType];
+              const IconComponent = notificationIcons[notification.type] ?? FiMessageSquare;
               return (
                 <div
                   key={notification.id}
